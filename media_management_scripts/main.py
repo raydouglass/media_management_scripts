@@ -50,7 +50,7 @@ def build_argparse():
                                             parents=[parent_parser, input_parser])
     metadata_parser.add_argument('--popup', action='store_const', const=True, default=False)
 
-    concat_mp4_parser = subparsers.add_parser('concat-mp4', help='Remove the playlist index prefix from files',
+    concat_mp4_parser = subparsers.add_parser('concat-mp4', help='Concat multiple mp4 files together',
                                               parents=[])  # No input dir
     concat_mp4_parser.add_argument('output', help='The output file')
     concat_mp4_parser.add_argument('input', nargs='*',
@@ -84,11 +84,12 @@ def build_argparse():
                                                 help='Whether to convert video streams to H.264 and audio to AAC',
                                                 action='store_const', const=True, default=False)
 
-    combine_all_parser = subparsers.add_parser('combine-all', help='Combine a video files with subtitle file',
+    combine_all_parser = subparsers.add_parser('combine-all', help='Combine a directory tree of video files with subtitle file',
                                                parents=[parent_parser, input_parser, convert_parent_parser])
     combine_all_parser.add_argument('--convert',
                                     help='Whether to convert video streams to H.264 and audio to AAC',
                                     action='store_const', const=True, default=False)
+
     rename_parser = subparsers.add_parser('rename', help='Renames files in a directory to sXXeYY',
                                           parents=[parent_parser])
     rename_parser.add_argument('-s', '--season', default=1, help='The season to use', type=int)
