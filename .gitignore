@@ -1,0 +1,13 @@
+*.log
+dist/
+deploy.sh
+*.pyc
+node_modules/
+build/
+static/
+*.sqlite3
+.idea/
+awsCredentials.py
+temperature_package.tgz
+.coverage
+*.egg-info/
