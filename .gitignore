@@ -11,3 +11,5 @@ awsCredentials.py
 temperature_package.tgz
 .coverage
 *.egg-info/
+
+__pycache__/
