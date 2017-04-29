@@ -8,9 +8,9 @@ from media_management_scripts.utils import compare_gt
 
 patterns = [re.compile('[Ss](\d?\d)[Ee](\d?\d)'),
             re.compile('(\d?\d)x(\d?\d)'),
-            re.compile('(\d?\d)(\d\d)'),
-            re.compile('Series\s*(\d+).*Episode\s*(\d+)'),
-            re.compile('Season\s*(\d+).*Episode\s*(\d+)')]
+            re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'),
+            re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'),
+            re.compile('(\d)(\d\d)')]
 
 part_patterns = [re.compile('[Pp]art\s*(\d+)'), re.compile('pt\s*(\d+)')]
 

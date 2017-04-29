@@ -33,7 +33,10 @@ def print_metadata(input, show_popup=False):
     o.append(os.path.basename(input))
     o.append(output('Directory: {}', os.path.dirname(input)))
     size = os.path.getsize(input)
+    if meta.title:
+        o.append(output('Title: {}', meta.title))
     o.append(output('Size: {}', sizeof_fmt(size)))
+    o.append(output('Format: {}', meta.format))
 
     durations = [float(s.duration) for s in meta.streams if s.duration]
     if len(durations) > 0:
@@ -42,15 +45,15 @@ def print_metadata(input, show_popup=False):
     o.append(output('Bitrate: {:.2f} kb/s', float(meta.bit_rate) / 1024.0))
     for video in meta.video_streams:
         o.append(output('Video: {} ({}x{})', video.codec, video.width, video.height))
+
     audio_streams = []
     for audio in meta.audio_streams:
-        audio_streams.append((audio.codec, audio.language))
+        audio_streams.append((audio.codec, audio.language, audio.channel_layout))
     audio_streams.sort()
-    result = []
-    for key, valuesiter in groupby(audio_streams, key=lambda k: k[0]):
-        result.append(dict(type=key, items=list(v[1] for v in valuesiter)))
-    for r in result:
-        o.append(output('Audio: {} ({})', r['type'], ', '.join(r['items'])))
+    o.append(output('Audio:'))
+    for a in audio_streams:
+        o.append(output('  {} ({}, {})', *a))
+
     subtitles = [s.language for s in meta.subtitle_streams]
     if len(subtitles) == 0:
         subtitles = ['None']

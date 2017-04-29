@@ -2,6 +2,9 @@ import unittest
 
 from media_management_scripts import utils
 from media_management_scripts.support.episode_finder import extract
+from tests import create_test_video
+import os
+from media_management_scripts.print_metadata import print_metadata
 
 
 class UtilsTestCase(unittest.TestCase):
@@ -29,3 +32,10 @@ class EpisodeFinderTestCase(unittest.TestCase):
         for key in test_strs:
             result = extract(key)
             self.assertEquals(test_strs[key], result)
+
+
+class TestFileTestCase(unittest.TestCase):
+    def test(self):
+        with create_test_video(length=5) as file:
+            self.assertTrue(os.path.isfile(file.name))
+            print_metadata(file.name)

@@ -8,6 +8,7 @@ import re
 import operator
 from typing import List, Tuple
 from media_management_scripts.support.encoding import Resolution, resolution_name
+from media_management_scripts.support.interlace import find_interlace, InterlaceReport
 
 DATE_PATTERN = re.compile('\d{4}_\d{2}_\d{2}')
 ONLY_DATE_PATTERN = re.compile('^\d{4}-\d{2}-\d{2}$')
@@ -36,31 +37,13 @@ FORMATS = {
 }
 
 
-class MetadataExtractor():
-    def __init__(self, extractor_config):
-        self._ffprobe_exe = extractor_config['ffprobe_exe']
-        self.extractor_attributes = {'title': 'Title'}
-
-    def _execute(self, file):
-        args = [self._ffprobe_exe, '-v', 'quiet', '-show_chapters', '-show_streams', '-show_format', '-print_format',
-                'json', file]
-        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        p.wait()
-        if stderr:
-            raise Exception(stderr)
-        return json.loads(stdout.decode('UTF-8'))
-
-    def extract(self, file):
-        if not os.path.isfile(file):
-            raise FileNotFoundError(file)
-        output = self._execute(file)
-        return Metadata(file, output)
-
-
 class Metadata():
-    def __init__(self, file, ffprobe_output):
+    def __init__(self, file, ffprobe_output, interlace_report: InterlaceReport = None):
         self.file = file
+        self._ffprobe_output = ffprobe_output
+        self.interlace_report = interlace_report
+        if 'streams' not in ffprobe_output:
+            raise Exception('Invalid ffprobe output: {}'.format(ffprobe_output))
         self.streams = [Stream(s) for s in ffprobe_output['streams']]
         format = ffprobe_output['format']
         self.size = format['size']
@@ -68,6 +51,7 @@ class Metadata():
         self.format = format['format_name']
         self.format_long_name = format['format_long_name']
         self.tags = copy.copy(format.get('tags', {}))
+        self.title = self.tags.get('title', None)
         self._output = ffprobe_output
         self.audio_streams = [s for s in self.streams if s.is_audio()]
         self.video_streams = [s for s in self.streams if s.is_video()]
@@ -139,14 +123,18 @@ class Stream():
         self.codec = stream['codec_name']
         self.codec_long_name = stream['codec_long_name']
         self.codec_type = stream['codec_type']
-        self.width = stream.get('width', None)
-        self.height = stream.get('height', None)
+        self.width = int(stream['width']) if 'width' in stream else None
+        self.height = int(stream['height']) if 'height' in stream else None
         self.tags = copy.copy(stream.get('tags', {}))
         self.language = self.tags.get('language', 'unknown')
-        self.duration = stream.get('duration', None)
+        self.duration = float(stream['duration']) if 'duration' in stream else None
         self._data = stream
         if self.is_audio():
-            self.audio_channels = stream.get('channels', None)
+            self.channels = int(stream['channels']) if 'channels' in stream else None
+            self.channel_layout = stream.get('channel_layout', None)
+        if not self.duration and 'DURATION' in self.tags:
+            parts = [float(s) for s in self.tags['DURATION'].split(':')]
+            self.duration = parts[0] * 60 * 60 + parts[1] * 60 + parts[2]
 
     def is_audio(self):
         return self.codec_type == 'audio'
@@ -162,3 +150,29 @@ class Stream():
                                                                                             self.codec_type,
                                                                                             self.language, self.width,
                                                                                             self.height)
+
+
+class MetadataExtractor():
+    def __init__(self, extractor_config):
+        self._ffprobe_exe = extractor_config['ffprobe_exe']
+        self.extractor_attributes = {'title': 'Title'}
+
+    def _execute(self, file):
+        args = [self._ffprobe_exe, '-v', 'quiet', '-show_chapters', '-show_streams', '-show_format', '-print_format',
+                'json', file]
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        p.wait()
+        if stderr:
+            raise Exception(stderr)
+        return json.loads(stdout.decode('UTF-8'))
+
+    def extract(self, file, detect_interlace=False) -> Metadata:
+        if not os.path.isfile(file):
+            raise FileNotFoundError(file)
+        output = self._execute(file)
+        if detect_interlace:
+            interlace_report = find_interlace(file)
+        else:
+            interlace_report = None
+        return Metadata(file, output, interlace_report)

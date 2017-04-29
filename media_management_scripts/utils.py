@@ -59,7 +59,7 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 
-def create_metadata_extractor():
+def create_metadata_extractor() -> MetadataExtractor:
     return MetadataExtractor({'ffprobe_exe': '/usr/local/bin/ffprobe'})
 
 

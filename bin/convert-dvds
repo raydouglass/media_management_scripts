@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+# PYTHON_ARGCOMPLETE_OK
+from media_management_scripts.convert_daemon import main
+
+main()

@@ -1,0 +1,69 @@
+import tmdbsimple as tmdb
+import os
+import re
+from media_management_scripts.utils import create_metadata_extractor
+
+
+class NameInformation():
+    def __init__(self, title, year, metadata):
+        self.title = title.replace(':', '')
+        self.year = year
+        self.metadata = metadata
+
+    def __repr__(self):
+        return '<NameInformation: title={}, year={}, meta={}>'.format(self.title, self.year, self.metadata)
+
+    @property
+    def name(self):
+        if self.metadata.resolution:
+            res = self.metadata.resolution.height
+            return '{} ({}) - {}p'.format(self.title, self.year, res)
+        else:
+            return '{} ({})'.format(self.title.self.year)
+
+    def new_name(self, file):
+        filename, file_extension = os.path.splitext(file)
+        new_name = self.name + file_extension
+        new_path = os.path.join(os.path.dirname(file), new_name)
+        return new_path
+
+
+class MovieDbApi():
+    def __init__(self, api_key='***REMOVED***'):
+        tmdb.API_KEY = api_key
+        self.extractor = create_metadata_extractor()
+
+    def search_file(self, file, single_result=True):
+        if not os.path.exists(file) or not os.path.isfile(file):
+            raise FileNotFoundError(file)
+
+        metadata = self.extractor.extract(file)
+        title = metadata.title
+        results = []
+        if title:
+            search_results = self._search(title)
+            for r in search_results:
+                if r['title'] == title:
+                    year = r['release_date'].split('-')[0]
+                    results.append(NameInformation(title, year, metadata))
+
+        if single_result and len(results) > 0:
+            return results[0]
+        elif single_result:
+            return None
+
+        # TODO Support searching filenames?
+        pattern = re.compile('(.+)_t\d+')
+        filename, file_extension = os.path.splitext(file)
+
+        # Ripped files often have the title number appended, so remove that
+        m = pattern.match(filename)
+        if m:
+            filename = m.group(1)
+
+        return results
+
+    def _search(self, query):
+        search = tmdb.Search()
+        response = search.movie(query=query)
+        return search.results
