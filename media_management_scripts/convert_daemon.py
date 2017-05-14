@@ -12,6 +12,7 @@ import configparser
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Tuple
+import shlex
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class ProcessStatus():
     """
     This class tracks the status of an input file whether it was successfully backed up or converted.
     """
+
     def __init__(self, input_file, output_file, backup=False, convert=False):
         self.input_file = input_file
         self.output_file = output_file
@@ -85,6 +87,7 @@ class ConvertDvds():
 
         # Backup
         self.rclone_exe = config.get('backup', 'rclone')
+        self.rclone_args = shlex.split(config.get('backup', 'rclone.args', fallback=''))
         self.split_exe = config.get('backup', 'split')
         self.backup_path = config.get('backup', 'backup.path')
         self.max_size = int(config.get('backup', 'max.size')) * (1024 ** 3)
@@ -94,8 +97,8 @@ class ConvertDvds():
         crf = config.get('transcode', 'crf', fallback=DEFAULT_CRF)
         preset = config.get('transcode', 'preset', fallback=DEFAULT_PRESET)
         bitrate = config.get('transcode', 'bitrate', fallback=None)
-        deinterlace = config.get('transcode', 'deinterlace', fallback=False)
-        deinterlace_threshold = config.get('transcode', 'deinterlace_threshold', fallback=.5)
+        deinterlace = bool(config.get('transcode', 'deinterlace', fallback=False))
+        deinterlace_threshold = float(config.get('transcode', 'deinterlace_threshold', fallback='.5'))
         self.convert_config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate, deinterlace=deinterlace,
                                             deinterlace_threshold=deinterlace_threshold, include_meta=True)
 
@@ -115,9 +118,10 @@ class ConvertDvds():
 
     def backup_file(self, file, target_dir) -> subprocess.Popen:
         target_path = os.path.join(self.backup_path, target_dir)
-        args = [self.rclone_exe, 'copy', '--transfers=1', '--timeout=4h0m0s',
-                file,
-                target_path]
+        args = [self.rclone_exe, 'copy', '--transfers=1']
+        if self.rclone_args:
+            args.extend(self.rclone_args)
+        args.extend([file, target_path])
         logger.debug(args)
         return subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
