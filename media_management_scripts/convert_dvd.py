@@ -5,7 +5,6 @@ from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CR
 from media_management_scripts.utils import create_metadata_extractor
 from typing import NamedTuple
 from texttable import Texttable
-from collections import OrderedDict
 from media_management_scripts.support.executables import execute_with_output, ffmpeg
 
 logger = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ class ConvertConfig(NamedTuple):
 
 
 def convert_config_from_ns(ns):
-    vars = OrderedDict()
+    vars = {}
     for field in ConvertConfig._fields:
         value = ns.get(field, ConvertConfig._field_defaults.get(field, None))
         vars[field] = value

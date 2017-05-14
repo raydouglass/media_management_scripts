@@ -39,6 +39,7 @@ def resolution_name(height):
 class VideoCodec(Enum):
     H264 = ('libx264', 'h264')
     H265 = ('libx265', 'hevc')
+    MPEG2 = ('mpeg2video', 'mpeg2video')
 
     @property
     def ffmpeg_encoder_name(self):

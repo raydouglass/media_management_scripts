@@ -43,7 +43,7 @@ class MovieDbApi():
         if title:
             search_results = self._search(title)
             for r in search_results:
-                if r['title'] == title:
+                if r['title'].lower() == title.lower():
                     year = r['release_date'].split('-')[0]
                     results.append(NameInformation(title, year, metadata))
 

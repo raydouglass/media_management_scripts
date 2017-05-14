@@ -38,6 +38,8 @@ def build_argparse():
     metadata_parser = subparsers.add_parser('metadata', help='Show metadata for a file',
                                             parents=[parent_parser, input_parser])
     metadata_parser.add_argument('--popup', action='store_const', const=True, default=False)
+    metadata_parser.add_argument('--interlace', help='Try to detect interlacing',
+                                 choices=['none', 'summary', 'report'], default='none')
 
     concat_mp4_parser = subparsers.add_parser('concat-mp4', help='Concat multiple mp4 files together',
                                               parents=[])  # No input dir
@@ -55,7 +57,8 @@ def build_argparse():
                                        help='The preset for H.264 transcoding. Default={}'.format(DEFAULT_PRESET))
     convert_parent_parser.add_argument('--bitrate', default=None,
                                        help='Use variable bitrate up to this value. Default=None (ignored). Specify "auto" for automatic bitrate.')
-    convert_parent_parser.add_argument('--deinterlace', action='store_const', const=True, default=False, help="Attempt to detect interlacing and remove it")
+    convert_parent_parser.add_argument('--deinterlace', action='store_const', const=True, default=False,
+                                       help="Attempt to detect interlacing and remove it")
     convert_parent_parser.add_argument('--deinterlace-threshold', type=float, default=.5)
     convert_parent_parser.add_argument('output')
 
@@ -263,7 +266,7 @@ def execute(ns):
                     if not ns['dry_run']:
                         os.rename(source, out_path)
     elif cmd == 'metadata':
-        print_metadata(input_to_cmd, ns['popup'])
+        print_metadata(input_to_cmd, ns['popup'], ns['interlace'])
     elif cmd == 'concat-mp4':
         output_file = ns['output']
         concat_mp4(output_file, input_to_cmd)

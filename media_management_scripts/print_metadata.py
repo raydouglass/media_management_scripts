@@ -25,9 +25,9 @@ def popup(text):
     os.system("osascript -e '{}'".format(applescript))
 
 
-def print_metadata(input, show_popup=False):
+def print_metadata(input, show_popup=False, interlace='none'):
     extractor = create_metadata_extractor()
-    meta = extractor.extract(input)
+    meta = extractor.extract(input, interlace != 'none')
     o = []
 
     o.append(os.path.basename(input))
@@ -59,6 +59,17 @@ def print_metadata(input, show_popup=False):
         subtitles = ['None']
     o.append(output('Subtitles: {}', ', '.join(subtitles)))
     o.append(output('Ripped: {}', meta.ripped))
+
+    if interlace == 'summary':
+        o.append(output('Interlaced: {}', meta.interlace_report.is_interlaced()))
+    elif interlace == 'report':
+        o.append(output('Interlaced:'))
+        single = meta.interlace_report.single
+        o.append(output('  Single: TFF={}, BFF={}, Progressive={}, Undetermined={} ({:.2f}%)', single.tff, single.bff,
+                        single.progressive, single.undetermined, single.ratio * 100))
+        multi = meta.interlace_report.multi
+        o.append(output('  Multi: TFF={}, BFF={}, Progressive={}, Undetermined={} ({:.2f}%)', multi.tff, multi.bff,
+                        multi.progressive, multi.undetermined, multi.ratio * 100))
 
     final = '\n'.join(o)
     if show_popup:
