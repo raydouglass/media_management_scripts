@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='media_management_scripts',
-      version='0.0.3',
+      version='0.0.4',
       description='Scripts for managing media',
       url='',
       author='Ray Douglass',
