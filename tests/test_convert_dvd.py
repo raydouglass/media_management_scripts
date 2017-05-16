@@ -41,7 +41,7 @@ class ConvertDvdTestCase(unittest.TestCase):
             config_parser = configparser.ConfigParser()
 
             movie_dir_in = TemporaryDirectory()
-            config_parser['directories']['movie.dir.in']
+            #config_parser['directories']['movie.dir.in']
 
         finally:
             for temp in temporary_dirs:

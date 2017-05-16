@@ -47,7 +47,7 @@ def create_test_video(length: int = 30,
             for audio_def in audio_defs:
                 audio_file = NamedTemporaryFile(suffix='.{}'.format(audio_def.codec.extension))
                 audio_files.append(audio_file)
-                args = [ffmpeg(), '-y', '-i', raw_audio_file.name, '-c:a', audio_def.codec.ffmpeg_codec_name, '-ac',
+                args = [ffmpeg(), '-y', '-i', raw_audio_file.name, '-strict', '-2', '-c:a', audio_def.codec.ffmpeg_codec_name, '-ac',
                         str(audio_def.channels.num_channels), '-t', str(length), audio_file.name]
                 _execute(args)
 

@@ -53,6 +53,7 @@ class VideoCodec(Enum):
 class AudioCodec(Enum):
     AAC = 'aac'
     AC3 = 'ac3'
+    DTS = 'dts'
 
     @property
     def extension(self):
@@ -67,6 +68,7 @@ class AudioChannelName(Enum):
     MONO = (1, ['mono'])
     STEREO = (2, ['stereo'])
     SURROUND_5_1 = (6, ['surround', '5.1'])
+    SURROUND_6_1 = (7, ['6.1'])
     SURROUND_7_1 = (8, ['7.1'])
 
     @property

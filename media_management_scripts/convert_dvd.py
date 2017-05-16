@@ -75,6 +75,12 @@ def convert_with_config(input, output, config, print_output=True, overwrite=Fals
             # Video is interlaced, so add the deinterlace filter
             args.extend(['-vf', 'yadif'])
     args.extend(['-c:a', 'aac'])
+    index = 0
+    for audio in metadata.audio_streams:
+        if audio.channels == 7:
+            # 6.1 sound, so mix it up to 7.1
+            args.extend(['-ac:a:{}'.format(index), '8'])
+        index += 1
     args.extend(['-c:s', 'copy'])
     args.extend(['-map', '0'])
     if config.include_meta:

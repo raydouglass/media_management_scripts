@@ -57,8 +57,11 @@ class Metadata():
         self.video_streams = [s for s in self.streams if s.is_video()]
         self.subtitle_streams = [s for s in self.streams if s.is_subtitle()]
 
-        max_height = max([s.height for s in self.video_streams])
-        self.resolution = resolution_name(max_height)
+        if self.video_streams:
+            max_height = max([s.height for s in self.video_streams])
+            self.resolution = resolution_name(max_height)
+        else:
+            self.resolution=None
 
         self.chapters = [Chapter(c) for c in ffprobe_output['chapters']]
         self.chapters.sort(key=lambda c: float(c.start_time))
