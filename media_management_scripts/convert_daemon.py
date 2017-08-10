@@ -1,5 +1,6 @@
-from media_management_scripts.convert_dvd import get_input_output, create_dirs, execute, convert_with_config, \
+from media_management_scripts.convert import execute, convert_with_config, \
     ConvertConfig
+from media_management_scripts.support.files import create_dirs, get_input_output
 from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET
 import logging
 import os
@@ -86,6 +87,7 @@ class ConvertDvds():
         self.tv_out_dir = config.get('directories', 'tv.dir.out')
 
         # Backup
+        self.backup_enabled = config.getboolean('backup', 'enabled', fallback=True)
         self.rclone_exe = config.get('backup', 'rclone')
         self.rclone_args = shlex.split(config.get('backup', 'rclone.args', fallback=''))
         self.split_exe = config.get('backup', 'split')
@@ -160,8 +162,11 @@ class ConvertDvds():
         # Start backup
         backup_popen, cleanup_dir = None, None
         if not status.backup:
-            logger.debug('No backup for {}'.format(input_file))
-            backup_popen, cleanup_dir = self.backup(root_dir, input_file)
+            if self.backup_enabled:
+                logger.debug('No backup for {}'.format(input_file))
+                backup_popen, cleanup_dir = self.backup(root_dir, input_file)
+            else:
+                logger.debug('No backup for {}, but backups are disabled'.format(input_file))
         if not status.convert:
             # Start convert
             logger.debug('Not converted: {}'.format(input_file))
@@ -174,7 +179,7 @@ class ConvertDvds():
                 result = convert_with_config(input_file, temp_file, self.convert_config, print_output=False)
                 if result == 0:
                     logger.debug('Conversion successful for {}'.format(input_file))
-                    os.rename(temp_file, output_file)
+                    shutil.move(temp_file, output_file)
                     status.convert = True
                 else:
                     logger.error('Error converting: code={}, file={}'.format(result, input_file))
@@ -228,6 +233,7 @@ def main():
     run_parser = subparsers.add_parser('run', help='Run the convert DVD process', parents=[parent_parser])
     list_parser = subparsers.add_parser('list', help='List files that have been processed successfully',
                                         parents=[parent_parser])
+    list_parser.add_argument('-0', action='store_const', const=True, default=False)
 
     argcomplete.autocomplete(parser)
     ns = vars(parser.parse_args())
@@ -238,8 +244,12 @@ def main():
     if cmd == 'run':
         convert_dvds.run()
     elif cmd == 'list':
-        for status in convert_dvds.db.get_all_existing_success():
-            print(status.input_file)
+        results = [status.input_file for status in convert_dvds.db.get_all_existing_success()]
+        for r in results:
+            if ns['0']:
+                print(r, end='\0')
+            else:
+                print(r)
 
 
 if __name__ == '__main__':

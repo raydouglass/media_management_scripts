@@ -1,11 +1,11 @@
 import requests
 import json
-import sys
 import shelve
+import os
 
 BASE_URL = 'https://api.thetvdb.com'
+DEFAULT_CONFIG_LOCATION = '~/.config/tvdb/tvdb.ini'
 
-SERIES = {}
 
 class TVDB():
     def __init__(self, api_key, username, user_key, shelve_file='./tvdb.shelve'):
@@ -32,20 +32,25 @@ class TVDB():
             else:
                 self._jwt = self._get_jwt()
 
-    def search_series(self, name):
+    def _search_series(self, name):
         if self._jwt is None:
             self.refresh()
+        headers = {'Authorization': 'Bearer ' + self._jwt}
+        params = {'name': name}
+        res = requests.get(BASE_URL + '/search/series', params=params, headers=headers)
+        res.raise_for_status()
+        # if res.status_code == requests.codes.ok:
+        return res.json()
+
+    def search_series(self, name):
         series_id = self._db.get(name, None)
         if series_id is None:
-            headers = {'Authorization': 'Bearer ' + self._jwt}
-            params = {'name': name}
-            res = requests.get(BASE_URL + '/search/series', params=params, headers=headers)
-            if res.status_code == requests.codes.ok:
-                res = res.json()
-                for s in res['data']:
-                    if s['seriesName'] == name:
-                        series_id = int(s['id'])
-                        self._db[name] = series_id
+            result = self._search_series(name)
+            for s in result['data']:
+                if s['seriesName'] == name:
+                    series_id = int(s['id'])
+                    self._db[name] = series_id
+                    return series_id
         return series_id
 
     def get_episodes(self, series_id):
@@ -64,15 +69,19 @@ class TVDB():
 
     @staticmethod
     def season_number(e):
-        return (e['airedSeason'], e['airedEpisodeNumber'])
+        return e['airedSeason'], e['airedEpisodeNumber']
 
-    def find_episode(self, series, episode=None, air_date=None):
+    @staticmethod
+    def season_number_dvd(e):
+        return e['dvdSeason'], e['dvdEpisodeNumber']
+
+    def find_episode(self, series_name, episode=None, air_date=None):
         if episode is None and air_date is None:
             raise Exception('Both episode and air_date cannot be null')
-        series = self.search_series(series)
-        if series:
+        series_id = self.search_series(series_name)
+        if series_id:
             if episode:
-                episodes = self.get_episodes(series)
+                episodes = self.get_episodes(series_id)
                 for e in episodes:
                     if e['episodeName'] == episode:
                         return [e]
@@ -81,29 +90,21 @@ class TVDB():
                     self.refresh()
                 headers = {'Authorization': 'Bearer ' + self._jwt}
                 params = {'firstAired': air_date}
-                res = requests.get(BASE_URL + '/series/{}/episodes/query'.format(id),
+                res = requests.get(BASE_URL + '/series/{}/episodes/query'.format(series_id),
                                    headers=headers,
                                    params=params)
                 res = res.json()
+                print(res)
                 if 'data' in res:
                     return res['data']
 
         return []
 
-    def test(self):
-        # /series/{id}/episodes/query
-        if self._jwt is None:
-            self.refresh()
-        headers = {'Authorization': 'Bearer ' + self._jwt}
-        series_id = self.search_series('Parking Wars').id
-        res = requests.get(BASE_URL + '/series/{}/episodes/query/params'.format(series_id), headers=headers)
-        return res.json()
-
     def query(self, series_name, firstAired):
         if self._jwt is None:
             self.refresh()
         headers = {'Authorization': 'Bearer ' + self._jwt}
-        series_id = self.search_series(series_name).id
+        series_id = self.search_series(series_name)
         params = {'firstAired': firstAired}
         res = requests.get(BASE_URL + '/series/{}/episodes/query'.format(series_id), headers=headers, params=params)
         return res.json()
@@ -120,20 +121,46 @@ class TVDB():
             pass
 
 
+def from_config(config: str = DEFAULT_CONFIG_LOCATION) -> TVDB:
+    if config is None:
+        config = DEFAULT_CONFIG_LOCATION
+    import configparser
+    parser = configparser.ConfigParser()
+    parser.read(config)
+    username = parser.get('tvdb', 'username')
+    user_key = parser.get('tvdb', 'userkey')
+    api_key = parser.get('tvdb', 'apikey')
+    shelve_file = os.path.expanduser(parser.get('tvdb', 'shelve.file', fallback='~/.config/tvdb/tvdb.shelve'))
 
-if __name__ == '__main__':
-    username = '***REMOVED***'
-    userkey = '***REMOVED***'
-    apikey = '***REMOVED***'
+    return TVDB(api_key, username, user_key, shelve_file)
 
-    tvdb = TVDB(apikey, username, userkey)
-    series = tvdb.search_series('8 Out of 10 Cats Does Countdown')
-    episodes = tvdb.get_episodes(series)
-    episodes = sorted(episodes, key=TVDB.season_number)
-    for ep in episodes:
-        season, num = TVDB.season_number(ep)
-        print('s{}e{}'.format(season, num))
-        print('   Name: {}'.format(ep['episodeName']))
-        print('   Aired: {}'.format(ep['firstAired']))
-        print('   Overview: {}'.format(ep['overview']))
-        print('----------')
+
+def _run_command(cmd, ns):
+    config = os.path.expanduser(ns['config'])
+    tvdb = from_config(config)
+
+    if cmd == 'episodes':
+        series_name = ns['series']
+        series_id = tvdb.search_series(series_name)
+        episodes = tvdb.get_episodes(series_id)
+        episodes = sorted(episodes, key=TVDB.season_number)
+        print(json.dumps(episodes))
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('--config', type=str, default='~/.config/tvdb/tvdb.ini')
+
+    subparsers = parser.add_subparsers(help='Sub commands', dest='command')
+
+    episodes_parser = subparsers.add_parser('episodes', parents=[parent_parser])
+    episodes_parser.add_argument('series', type=str)
+
+    ns = vars(parser.parse_args())
+    cmd = ns.get('command', None)
+    if not cmd:
+        parser.print_usage()
+    else:
+        _run_command(cmd, ns)

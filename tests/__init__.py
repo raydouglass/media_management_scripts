@@ -2,8 +2,8 @@ from media_management_scripts.support.encoding import Resolution, VideoCodec, Vi
     AudioChannelName
 from media_management_scripts.support.executables import ffmpeg, ffprobe
 from tempfile import NamedTemporaryFile, _TemporaryFileWrapper
-from media_management_scripts.convert_dvd import execute
-from typing import List, Tuple, NamedTuple
+from media_management_scripts.convert import execute
+from typing import List, Tuple, NamedTuple, Dict
 from collections import namedtuple
 
 
@@ -28,7 +28,8 @@ def _execute(args):
 def create_test_video(length: int = 30,
                       video_def: VideoDefinition = VideoDefinition(),
                       audio_defs: List[AudioDefition] = [AudioDefition()],
-                      output_file=None) -> _TemporaryFileWrapper:
+                      output_file=None,
+                      metadata: Dict[str, str] = None) -> _TemporaryFileWrapper:
     """
     Creates a video file matching the given video & audio definitions. If an output_file is not provided, a NamedTemporaryFile is used and returned
     :param length: the length of the file in seconds (Note, depending on codecs, the exact length may vary slightly)
@@ -47,7 +48,8 @@ def create_test_video(length: int = 30,
             for audio_def in audio_defs:
                 audio_file = NamedTemporaryFile(suffix='.{}'.format(audio_def.codec.extension))
                 audio_files.append(audio_file)
-                args = [ffmpeg(), '-y', '-i', raw_audio_file.name, '-strict', '-2', '-c:a', audio_def.codec.ffmpeg_codec_name, '-ac',
+                args = [ffmpeg(), '-y', '-i', raw_audio_file.name, '-strict', '-2', '-c:a',
+                        audio_def.codec.ffmpeg_codec_name, '-ac',
                         str(audio_def.channels.num_channels), '-t', str(length), audio_file.name]
                 _execute(args)
 
@@ -61,14 +63,19 @@ def create_test_video(length: int = 30,
     for f in audio_files:
         args.extend(['-i', f.name])
     args.extend(['-c:v', video_def.codec.ffmpeg_encoder_name])
+
+    if video_def.interlaced:
+        args.extend(['-vf', 'tinterlace=6'])
+
     if len(audio_defs) > 0:
         args.extend(['-c:a', 'copy'])
 
     for i in range(len(audio_defs) + 1):
         args.extend(['-map', str(i)])
 
-    if video_def.interlaced:
-        args.extend(['-vf', 'tinterlace=6'])
+    if metadata:
+        for key, value in metadata.items():
+            args.extend(['-metadata', '{}={}'.format(key, value)])
 
     if output_file:
         args.extend(['-t', str(length), output_file])

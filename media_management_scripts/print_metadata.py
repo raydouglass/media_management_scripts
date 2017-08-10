@@ -1,20 +1,14 @@
 import os
+import json
 from itertools import groupby
 
-from media_management_scripts.utils import create_metadata_extractor, sizeof_fmt
+from media_management_scripts.utils import create_metadata_extractor
+from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str
 
 
 def output(text, *args):
     return '   {}'.format(text).format(*args)
 
-
-def duration_to_str(seconds):
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-    if h > 0:
-        return '%dh%02dm%02ds' % (h, m, s)
-    else:
-        return '%02dm%02ds' % (m, s)
 
 
 def popup(text):
@@ -23,6 +17,17 @@ def popup(text):
     """.format(text)
 
     os.system("osascript -e '{}'".format(applescript))
+
+
+class Encoder(json.JSONEncoder):
+    def default(self, o):
+        return o.to_dict()
+
+
+def print_metadata_json(input, interlace='none'):
+    extractor = create_metadata_extractor()
+    meta = extractor.extract(input, interlace != 'none')
+    print(json.dumps(meta, cls=Encoder))
 
 
 def print_metadata(input, show_popup=False, interlace='none'):

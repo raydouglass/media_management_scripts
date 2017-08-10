@@ -1,6 +1,8 @@
 from media_management_scripts.utils import create_metadata_extractor
-from media_management_scripts.utils import find_files, MOVIE_FILES
+from media_management_scripts.support.files import list_files, movie_files_filter
 from media_management_scripts.support.encoding import AudioChannelName
+import os
+import shelve
 
 
 class SearchParameters():
@@ -48,9 +50,33 @@ class SearchParameters():
             return result
 
 
-def search(input_dir, search_params):
-    extractor = create_metadata_extractor()
-    for file in find_files(input_dir, MOVIE_FILES):
-        metadata = extractor.extract(file)
-        if search_params.match(metadata):
-            yield (file, metadata)
+def search(input_dir: str, query: str, db_file: str = None):
+    from media_management_scripts.support.search_parser import parse
+    query = parse(query)
+    with create_metadata_extractor(db_file) as extractor:
+        for file in list_files(input_dir, movie_files_filter):
+            path = os.path.join(input_dir, file)
+            metadata = extractor.extract(path)
+            context = {
+                'v': {
+                    'codec': [v.codec for v in metadata.video_streams],
+                    'width': [v.width for v in metadata.video_streams],
+                    'height': [v.height for v in metadata.video_streams]
+                },
+                'a': {
+                    'codec': [a.codec for a in metadata.audio_streams],
+                    'channels': [a.channels for a in metadata.audio_streams],
+                    'lang': [a.language for a in metadata.audio_streams],
+                },
+                's': {
+                    'codec': [s.codec for s in metadata.subtitle_streams],
+                    'lang': [s.language for s in metadata.subtitle_streams]
+                },
+                'ripped': metadata.ripped,
+                'bit_rate': metadata.bit_rate,
+                'resolution': metadata.resolution._name_,
+                'meta': metadata.to_dict()
+
+            }
+            if query.exec(context) is True:
+                yield (file, metadata)

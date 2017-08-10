@@ -1,8 +1,7 @@
-from media_management_scripts.utils import find_files
 import os
 import re
-from media_management_scripts.utils import get_input_output
-from media_management_scripts.convert_dvd import combine
+from media_management_scripts.support.files import get_input_output
+from media_management_scripts.convert import combine
 
 LANG_PATTERN = re.compile('\.(\w+)\.srt')
 

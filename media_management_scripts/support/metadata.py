@@ -9,6 +9,8 @@ import operator
 from typing import List, Tuple
 from media_management_scripts.support.encoding import Resolution, resolution_name
 from media_management_scripts.support.interlace import find_interlace, InterlaceReport
+from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str
+import shelve
 
 DATE_PATTERN = re.compile('\d{4}_\d{2}_\d{2}')
 ONLY_DATE_PATTERN = re.compile('^\d{4}-\d{2}-\d{2}$')
@@ -43,25 +45,29 @@ class Metadata():
         self._ffprobe_output = ffprobe_output
         self.interlace_report = interlace_report
         if 'streams' not in ffprobe_output:
-            raise Exception('Invalid ffprobe output: {}'.format(ffprobe_output))
+            raise Exception('Invalid ffprobe output ({}): {}'.format(file, ffprobe_output))
         self.streams = [Stream(s) for s in ffprobe_output['streams']]
         format = ffprobe_output['format']
-        self.size = format['size']
-        self.bit_rate = format['bit_rate']
+        self.size = float(format['size'])
+        self.bit_rate = float(format['bit_rate'])
         self.format = format['format_name']
         self.format_long_name = format['format_long_name']
         self.tags = copy.copy(format.get('tags', {}))
         self.title = self.tags.get('title', None)
-        self._output = ffprobe_output
+        if not self.title:
+            self.title = self.tags.get('Title', None)
         self.audio_streams = [s for s in self.streams if s.is_audio()]
         self.video_streams = [s for s in self.streams if s.is_video()]
         self.subtitle_streams = [s for s in self.streams if s.is_subtitle()]
+
+        durs = [s.duration for s in self.streams if s.duration]
+        self.estimated_duration = max(durs) if durs else None
 
         if self.video_streams:
             max_height = max([s.height for s in self.video_streams])
             self.resolution = resolution_name(max_height)
         else:
-            self.resolution=None
+            self.resolution = None
 
         self.chapters = [Chapter(c) for c in ffprobe_output['chapters']]
         self.chapters.sort(key=lambda c: float(c.start_time))
@@ -104,6 +110,23 @@ class Metadata():
             air_date = air_date.split('T')[0]
         return air_date
 
+    def to_dict(self):
+        return {
+            'file': self.file,
+            'title': self.title,
+            'duration': duration_to_str(self.estimated_duration) if self.estimated_duration else None,
+            'size': sizeof_fmt(self.size),
+            'resolution': self.resolution._name_,
+            'bit_rate': self.bit_rate,
+            'ripped': self.ripped,
+            'format': self.format,
+            'format_long_name': self.format_long_name,
+            'tags': self.tags,
+            'streams': [s.to_dict() for s in self.streams],
+            'chapters': [c.to_dict() for c in self.chapters] if self.chapters else [],
+            'interlace': self.interlace_report.to_dict() if self.interlace_report else None
+        }
+
     def __repr__(self):
         return '<Metadata: file={}, streams={}, format={}, size={}>'.format(self.file, len(self.streams), self.format,
                                                                             self.size)
@@ -112,9 +135,17 @@ class Metadata():
 class Chapter():
     def __init__(self, chapter):
         self.id = chapter['id']
-        self.start_time = chapter['start_time']
-        self.end_time = chapter['end_time']
+        self.start_time = float(chapter['start_time'])
+        self.end_time = float(chapter['end_time'])
         self.title = chapter['tags'].get('title', None)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'start': duration_to_str(self.start_time),
+            'end': duration_to_str(self.end_time)
+        }
 
     def __repr__(self):
         return '<Chapter start={}, end={}, title={}>'.format(self.start_time, self.end_time, self.title)
@@ -129,7 +160,10 @@ class Stream():
         self.width = int(stream['width']) if 'width' in stream else None
         self.height = int(stream['height']) if 'height' in stream else None
         self.tags = copy.copy(stream.get('tags', {}))
-        self.language = self.tags.get('language', 'unknown')
+        self.title = self.tags.get('title', None)
+        if not self.title:
+            self.title = self.tags.get('Title', None)
+        self.language = self.tags.get('language', self.tags.get('LANGUAGE', 'unknown'))
         self.duration = float(stream['duration']) if 'duration' in stream else None
         self._data = stream
         if self.is_audio():
@@ -148,6 +182,30 @@ class Stream():
     def is_subtitle(self):
         return self.codec_type == 'subtitle'
 
+    @property
+    def type(self):
+        return 'audio' if self.is_audio() else (
+            'video' if self.is_video() else ('subtitle' if self.is_subtitle() else None))
+
+    def to_dict(self):
+        d = {
+            'index': self.index,
+            'type': self.type,
+            'codec': self.codec,
+            'codec_long_name': self.codec_long_name,
+            'duration': duration_to_str(self.duration) if self.duration else None
+        }
+        if self.is_audio():
+            d['channels'] = self.channels
+            d['channel_layout'] = self.channel_layout
+        if self.is_audio() or self.is_subtitle():
+            d['language'] = self.language
+        if self.is_video():
+            d['width'] = self.width
+            d['height'] = self.height
+        d['tags'] = self.tags
+        return d
+
     def __repr__(self):
         return '<Stream: index={}, codec={}, type={}, lang={}, width={}, height={}>'.format(self.index, self.codec,
                                                                                             self.codec_type,
@@ -156,9 +214,20 @@ class Stream():
 
 
 class MetadataExtractor():
-    def __init__(self, extractor_config):
+    def __init__(self, extractor_config, db_file=None):
         self._ffprobe_exe = extractor_config['ffprobe_exe']
         self.extractor_attributes = {'title': 'Title'}
+        if db_file:
+            self.db = shelve.open(db_file)
+        else:
+            self.db = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.db is not None:
+            self.db.close()
 
     def _execute(self, file):
         args = [self._ffprobe_exe, '-v', 'quiet', '-show_chapters', '-show_streams', '-show_format', '-print_format',
@@ -171,11 +240,25 @@ class MetadataExtractor():
         return json.loads(stdout.decode('UTF-8'))
 
     def extract(self, file, detect_interlace=False) -> Metadata:
-        if not os.path.isfile(file):
-            raise FileNotFoundError(file)
-        output = self._execute(file)
+        if self.db is not None and file in self.db:
+            output = self.db[file]
+        else:
+            if not os.path.isfile(file):
+                raise FileNotFoundError(file)
+            output = self._execute(file)
+            if self.db is not None:
+                self.db[file] = output
+
+        metadata = Metadata(file, output)
         if detect_interlace:
-            interlace_report = find_interlace(file)
+            interlace_report = find_interlace(file, metadata=metadata)
         else:
             interlace_report = None
-        return Metadata(file, output, interlace_report)
+
+        metadata.interlace_report = interlace_report
+        return metadata
+
+    def add_interlace_report(self, metadata: Metadata):
+        if metadata.interlace_report is None:
+            metadata.interlace_report = find_interlace(metadata.file, metadata=metadata)
+        return metadata

@@ -3,10 +3,11 @@ import re
 import sys
 from os import listdir
 from os.path import isfile, join, basename
+from typing import Tuple
 
 from media_management_scripts.utils import compare_gt
 
-patterns = [re.compile('[Ss](\d?\d)[Ee](\d?\d)'),
+patterns = [re.compile('[Ss](\d?\d)\s*[Ee](\d?\d)'),
             re.compile('(\d?\d)x(\d?\d)'),
             re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'),
             re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'),
@@ -33,9 +34,9 @@ class EpisodePart():
         if not self.season or not self.episode:
             return '{}: No match'.format(self.name)
         if self.part:
-            return '{}: s{}e{} pt{}'.format(self.name, self.season, self.episode, self.part)
+            return '{}: s{}e{:02d} pt{}'.format(self.name, self.season, self.episode, self.part)
         else:
-            return '{}: s{}e{}'.format(self.name, self.season, self.episode)
+            return '{}: s{}e{:02d}'.format(self.name, self.season, self.episode)
 
     def __repr__(self):
         return self.__str__()
@@ -59,7 +60,7 @@ class EpisodePart():
         return not self.__gt__(other)
 
 
-def extract(name):
+def extract(name) -> Tuple[int, int, int]:
     season = None
     ep = None
     part = None

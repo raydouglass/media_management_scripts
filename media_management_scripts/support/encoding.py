@@ -26,7 +26,9 @@ class Resolution(Enum):
 
 
 def resolution_name(height):
-    if height <= 576:
+    if height <= 240:
+        return Resolution.LOW_DEF
+    elif height <= 576:
         return Resolution.STANDARD_DEF
     elif height <= 800:
         return Resolution.MEDIUM_DEF
@@ -95,6 +97,8 @@ class AudioChannelName(Enum):
 class VideoFileContainer(Enum):
     MP4 = 'mp4'
     MKV = 'mkv'
+    MPEG = 'mpeg'
+    WTV = 'wtv'
 
     @property
     def extension(self):

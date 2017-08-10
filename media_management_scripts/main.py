@@ -1,6 +1,7 @@
 import argparse
 import argcomplete
 
+import media_management_scripts.support.files
 from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, AudioChannelName
 from itertools import chain
 
@@ -9,10 +10,14 @@ def build_argparse():
     parser = argparse.ArgumentParser()
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--print-args', action='store_const', const=True, default=False)
-    parent_parser.add_argument('--dry-run', action='store_const', const=True, default=False)
+    parent_parser.add_argument('-n', '--dry-run', action='store_const', const=True, default=False)
 
     input_parser = argparse.ArgumentParser(add_help=False)
     input_parser.add_argument('input', help='Input directory')
+
+    output_parser = argparse.ArgumentParser(add_help=False)
+    output_parser.add_argument('output', help='Output target')
+    output_parser.add_argument('-y', '--overwrite', help='Overwrite output target if it exists', action='store_const', default=False, const=True)
 
     subparsers = parser.add_subparsers(help='Sub commands', dest='command')
 
@@ -37,17 +42,18 @@ def build_argparse():
 
     metadata_parser = subparsers.add_parser('metadata', help='Show metadata for a file',
                                             parents=[parent_parser, input_parser])
-    metadata_parser.add_argument('--popup', action='store_const', const=True, default=False)
+    metadata_group = metadata_parser.add_mutually_exclusive_group()
+    metadata_group.add_argument('--popup', action='store_const', const=True, default=False)
+    metadata_group.add_argument('--json', '-j', action='store_const', const=True, default=False)
     metadata_parser.add_argument('--interlace', help='Try to detect interlacing',
                                  choices=['none', 'summary', 'report'], default='none')
-
     concat_mp4_parser = subparsers.add_parser('concat-mp4', help='Concat multiple mp4 files together',
                                               parents=[])  # No input dir
     concat_mp4_parser.add_argument('output', help='The output file')
     concat_mp4_parser.add_argument('input', nargs='*',
                                    help='The input files to concat. These must be mp4 with h264 codec.')
 
-    convert_parent_parser = argparse.ArgumentParser(add_help=False)
+    convert_parent_parser = argparse.ArgumentParser(add_help=False, parents=[output_parser])
     convert_parent_parser.add_argument('--crf', default=DEFAULT_CRF, type=int,
                                        help='The CRF value for H.264 transcoding. Default={}'.format(DEFAULT_CRF))
     convert_parent_parser.add_argument('--preset', default=DEFAULT_PRESET,
@@ -60,7 +66,9 @@ def build_argparse():
     convert_parent_parser.add_argument('--deinterlace', action='store_const', const=True, default=False,
                                        help="Attempt to detect interlacing and remove it")
     convert_parent_parser.add_argument('--deinterlace-threshold', type=float, default=.5)
-    convert_parent_parser.add_argument('output')
+    convert_parent_parser.add_argument('--add-ripped-metadata', action='store_const', const=True, default=False,
+                                       help='Adds a metadata item to the output indicating this is a ripped video',
+                                       dest='include_meta')
 
     convert_dvd_parser = subparsers.add_parser('convert-dvds', help='Convert ripped DVDs',
                                                parents=[parent_parser, input_parser, convert_parent_parser])
@@ -68,8 +76,6 @@ def build_argparse():
 
     convert_parser = subparsers.add_parser('convert', help='Convert to H.264 & AAC',
                                            parents=[parent_parser, input_parser, convert_parent_parser])
-    convert_parser.add_argument('--add-ripped-metadata', action='store_const', const=True, default=False,
-                                help='Adds a metadata item to the output indicating this is a ripped video')
 
     combine_video_subtitles_parser = subparsers.add_parser('combine', help='Combine a video files with subtitle file',
                                                            parents=[parent_parser, input_parser, convert_parent_parser])
@@ -95,21 +101,29 @@ def build_argparse():
                                   help='The directories to search for files. These will be processed in order.')
 
     movie_rename_parser = subparsers.add_parser('movie-rename', help='Renames a file based on TheMovieDB',
-                                                parents=[parent_parser, input_parser])
+                                                parents=[parent_parser])
     movie_rename_parser.add_argument('--confirm',
                                      help='Ask for confirmation before renaming, exiting with non-zero if no',
                                      action='store_const', const=True, default=False)
+    movie_rename_parser.add_argument('--username')
+    movie_rename_parser.add_argument('--host')
+    movie_rename_parser.add_argument('--pkey')
+    movie_rename_parser.add_argument('--output-path')
+    movie_rename_parser.add_argument('--move-source-path', default=None)
+    movie_rename_parser.add_argument('input', nargs='+', help='Input Files')
 
     search_parser = subparsers.add_parser('search', help='Searches files matching parameters',
                                           parents=[parent_parser, input_parser])
-    search_parser.add_argument('-v', '--video-codec', help='Match video codec', type=str)
-    search_parser.add_argument('-a', '--audio-codec', help='Match audio codec', type=str)
-    search_parser.add_argument('--ac', '--audio-channels', help='Match audio channels', type=str, dest='audio_channels',
-                               choices=list(chain(*[ac.names for ac in list(AudioChannelName)])))
-    search_parser.add_argument('-s', '--subtitle', help='Match subtitle language', type=str)
-    search_parser.add_argument('-c', '--container', help='Match container', type=str)
-    search_parser.add_argument('-r', '--resolution', help='Match resolution', type=str)
-    search_parser.add_argument('--not', help='Invert filter', action='store_const', const=True, default=False)
+    search_parser.add_argument('--db', default=None, dest='db_file')
+    # search_parser.add_argument('-v', '--video-codec', help='Match video codec', type=str)
+    # search_parser.add_argument('-a', '--audio-codec', help='Match audio codec', type=str)
+    # search_parser.add_argument('--ac', '--audio-channels', help='Match audio channels', type=str, dest='audio_channels',
+    #                            choices=list(chain(*[ac.names for ac in list(AudioChannelName)])))
+    # search_parser.add_argument('-s', '--subtitle', help='Match subtitle language', type=str)
+    # search_parser.add_argument('-c', '--container', help='Match container', type=str)
+    # search_parser.add_argument('-r', '--resolution', help='Match resolution', type=str)
+    # search_parser.add_argument('--not', help='Invert filter', action='store_const', const=True, default=False)
+    search_parser.add_argument('query')
     search_parser.add_argument('-0', help='Output with null byte', action='store_const', const=True, default=False)
 
     split_parser = subparsers.add_parser('split', help='Split a file', parents=[parent_parser, input_parser])
@@ -163,11 +177,27 @@ Examples:
     Result: 'Season unknown Episode .mp4'
     """)
 
-    rename_parser.add_argument('-r', '--regex', type=str, default=None)
+    rename_parser.add_argument('-x', '--regex', type=str, default=None)
+    rename_parser.add_argument('--ignore-missing-regex', action='store_const', default=False, const=True,
+                               dest='ignore_missing_regex')
     rename_parser.add_argument('-i', '--index-start', type=int, default=1)
     rename_parser.add_argument('-o', '--output', default=None)
+    rename_parser.add_argument('-r', '--recursive', action='store_const', default=False, const=True)
+    rename_parser.add_argument('--filter-by-ext', type=str, default=None)
     rename_parser.add_argument('template')
     rename_parser.add_argument('input', nargs='+', help='Input files')
+
+    itunes_parser = subparsers.add_parser('itunes', parents=[parent_parser])
+    itunes_parser.add_argument('-o', '--output', type=str, default='./')
+    itunes_parser.add_argument('--meta-shelve', type=str, default=None, dest='meta_shelve')
+    itunes_parser.add_argument('input', nargs='+', help='Input files')
+    itunes_parser.add_argument('--dvd', action='store_const', default=False, const=True)
+    itunes_parser.add_argument('--fuzzy', action='store_const', default=False, const=True)
+
+    stream_select_parser = subparsers.add_parser('stream-select',
+                                                 parents=[parent_parser, input_parser, convert_parent_parser])
+    stream_select_parser.add_argument('-c', '--convert', action='store_const', default=False, const=True,
+                               help='Whether to convert the file or just remux it')
 
     argcomplete.autocomplete(parser)
     return parser
@@ -186,6 +216,7 @@ def _find_episodes_command(ns):
     out_dir = ns['output']
     ignore_parts = ns['ignore_parts']
     season_folders = ns.get('seasons', False)
+    # for ep in sorted(find_episodes(input, ns['strip_youtube_dl']), key=lambda x: (x.season, x.episode, x.part)):
     for ep in find_episodes(input, ns['strip_youtube_dl']):
         if ep.part and ep.season and ep.episode and not ignore_parts:
             key = (ep.season, ep.episode)
@@ -198,18 +229,17 @@ def _find_episodes_command(ns):
             name, ext = os.path.splitext(filename)
 
             new_name = season_episode_name(ep.season, int(ep.episode), ext)
+            if season_folders:
+                season_f = os.path.join(out_dir, 'Season {}'.format(ep.season))
+            else:
+                season_f = out_dir
+            if not os.path.exists(season_f):
+                os.makedirs(season_f)
             if ns.get('rename', False):
-                out_dir = os.path.dirname(path)
-                out_file = os.path.join(out_dir, new_name)
+                out_file = os.path.join(season_f, new_name)
                 print('{} -> {}'.format(filename, out_file))
                 move(path, out_file)
             else:
-                if season_folders:
-                    season_f = os.path.join(out_dir, 'Season {}'.format(ep.season))
-                else:
-                    season_f = out_dir
-                if not os.path.exists(season_f):
-                    os.makedirs(season_f)
                 out_file = os.path.join(season_f, new_name)
                 print('{} -> {}'.format(filename, out_file))
                 copyfile(path, out_file)
@@ -240,9 +270,10 @@ def execute(ns):
     import sys
     import shutil
 
-    from media_management_scripts.convert_dvd import ConvertConfig, convert_config_from_ns
-    from media_management_scripts import convert_dvd, renamer
-    from media_management_scripts.print_metadata import print_metadata
+    from media_management_scripts.convert import ConvertConfig, convert_config_from_ns
+    from media_management_scripts.support.files import list_files
+    from media_management_scripts import convert, renamer
+    from media_management_scripts.print_metadata import print_metadata, print_metadata_json
     from media_management_scripts.support.concat_mp4 import concat_mp4
     from media_management_scripts.support.combine_all import combine_all, get_lang
     from media_management_scripts.search import search, SearchParameters
@@ -266,27 +297,30 @@ def execute(ns):
                     if not ns['dry_run']:
                         os.rename(source, out_path)
     elif cmd == 'metadata':
-        print_metadata(input_to_cmd, ns['popup'], ns['interlace'])
+        if ns['json']:
+            print_metadata_json(input_to_cmd, ns['interlace'])
+        else:
+            print_metadata(input_to_cmd, ns['popup'], ns['interlace'])
     elif cmd == 'concat-mp4':
         output_file = ns['output']
         concat_mp4(output_file, input_to_cmd)
     elif cmd == 'convert-dvds':
         output = ns['output']
         if ns['compare']:
-            convert_dvd.do_compare(input_to_cmd, output)
+            convert.do_compare(input_to_cmd, output)
         elif ns['dry_run']:
-            for i, o in convert_dvd.get_input_output(input_to_cmd, output):
+            for i, o in media_management_scripts.support.files.get_input_output(input_to_cmd, output):
                 print('{} -> {}'.format(i, o))
         else:
             config = convert_config_from_ns(ns)
-            convert_dvd.main(input_to_cmd, output, config)
+            convert.main(input_to_cmd, output, config)
     elif cmd == 'convert':
         output = ns['output']
         config = convert_config_from_ns(ns)
         if os.path.exists(output):
             print('Cowardly refusing to overwrite existing file: {}'.format(output))
         else:
-            convert_dvd.convert_with_config(input_to_cmd, output, config, print_output=True)
+            convert.convert_with_config(input_to_cmd, output, config, print_output=True)
     elif cmd == 'combine':
         srt_input = ns['input-subtitles']
         output = ns['output']
@@ -297,7 +331,7 @@ def execute(ns):
         preset = ns.get('preset', DEFAULT_PRESET)
         convert = ns.get('convert', False)
         lang = get_lang(srt_input)
-        convert_dvd.combine(input_to_cmd, srt_input, output, convert=convert, crf=crf, preset=preset, lang=lang)
+        convert.combine(input_to_cmd, srt_input, output, convert=convert, crf=crf, preset=preset, lang=lang)
     elif cmd == 'combine-all':
         crf = ns.get('crf', DEFAULT_CRF)
         preset = ns.get('preset', DEFAULT_PRESET)
@@ -312,28 +346,14 @@ def execute(ns):
         output = ns.get('output', None)
         renamer.run(input_to_cmd, season, episode, show, dry_run, output)
     elif cmd == 'movie-rename':
-        dry_run = ns.get('dry_run', False)
-        result = MovieDbApi().search_file(input_to_cmd)
-        if result:
-            new_name = result.new_name(input_to_cmd)
-            if ns['confirm']:
-                confirmed = ''
-                while confirmed.lower() not in ('y', 'n'):
-                    confirmed = input('{}: (y/n) '.format(new_name))
-                if confirmed.lower() == 'n':
-                    exit(2)
-            else:
-                print('{}'.format(new_name))
-            if not dry_run:
-                os.rename(input_to_cmd, new_name)
-        else:
-            print('No results')
-            exit(1)
+        from media_management_scripts.support.movie_rename import movie_rename
+        movie_rename(input_to_cmd, ns)
     elif cmd == 'search':
         null_byte = ns['0']
-        search_params = SearchParameters(ns)
+        query = ns['query']
+        db_file = ns['db_file']
         l = []
-        for file, metadata in search(input_to_cmd, search_params):
+        for file, metadata in search(input_to_cmd, query, db_file):
             if not null_byte:
                 print(file)
             else:
@@ -356,7 +376,25 @@ def execute(ns):
         output = ns['output']
         regex = ns['regex']
         index_start = ns['index_start']
-        results = renamer.rename_process(template, input_to_cmd, index_start, output, regex, ignore_missing_regex=False)
+        recursive = ns['recursive']
+        ignore_missing_regex = ns['ignore_missing_regex']
+        filter_by_ext = ns['filter_by_ext']
+        if recursive:
+            if filter_by_ext:
+                filter = lambda f: f.endswith(filter_by_ext)
+            else:
+                filter = lambda f: True
+            files = []
+            for f in input_to_cmd:
+                if os.path.isdir(f):
+                    files.extend(list_files(f, filter=filter))
+                else:
+                    files.append(f)
+        else:
+            files = input_to_cmd
+
+        results = renamer.rename_process(template, files, index_start, output, regex,
+                                         ignore_missing_regex=ignore_missing_regex)
         if ns['dry_run']:
             t = Texttable(max_width=0)
             t.set_deco(Texttable.VLINES | Texttable.HEADER)
@@ -366,6 +404,31 @@ def execute(ns):
             for src, dest in results:
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.move(src, dest)
+    elif cmd == 'curses':
+        from media_management_scripts.interface import do_interface
+        do_interface()
+    elif cmd == 'itunes':
+        from media_management_scripts.itunes import process_itunes_tv
+        from media_management_scripts.tvdb_api import from_config
+        tvdb = from_config(os.path.expanduser('~/.config/tvdb/tvdb.ini'))
+        output = ns['output']
+        dvd = ns['dvd']
+        fuzzy = ns['fuzzy']
+        meta_shelve = ns['meta_shelve']
+        dry_run = ns['dry_run']
+        if meta_shelve:
+            import shelve
+            with shelve.open(meta_shelve) as meta_store:
+                process_itunes_tv(input_to_cmd, output, tvdb, meta_shelve=meta_store, use_dvd=dvd, fuzzy=fuzzy,
+                                  dry_run=dry_run)
+        else:
+            process_itunes_tv(input_to_cmd, output, tvdb, meta_shelve=None, use_dvd=dvd, fuzzy=fuzzy, dry_run=dry_run)
+    elif cmd == 'stream-select':
+        from media_management_scripts.stream_selector import select_streams
+        convert_config = convert_config_from_ns(ns) if ns['convert'] else None
+        output_file=ns['output']
+        overwrite = ns['overwrite']
+        select_streams(input_to_cmd, output_file, overwrite=overwrite, convert_config=convert_config)
     else:
         raise Exception('Unknown command')
 

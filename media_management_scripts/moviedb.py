@@ -14,12 +14,16 @@ class NameInformation():
         return '<NameInformation: title={}, year={}, meta={}>'.format(self.title, self.year, self.metadata)
 
     @property
+    def simple_name(self):
+        return '{} ({})'.format(self.title, self.year)
+
+    @property
     def name(self):
         if self.metadata.resolution:
             res = self.metadata.resolution.height
             return '{} ({}) - {}p'.format(self.title, self.year, res)
         else:
-            return '{} ({})'.format(self.title.self.year)
+            return '{} ({})'.format(self.title, self.year)
 
     def new_name(self, file):
         filename, file_extension = os.path.splitext(file)
@@ -39,28 +43,21 @@ class MovieDbApi():
 
         metadata = self.extractor.extract(file)
         title = metadata.title
-        results = []
-        if title:
-            search_results = self._search(title)
-            for r in search_results:
-                if r['title'].lower() == title.lower():
-                    year = r['release_date'].split('-')[0]
-                    results.append(NameInformation(title, year, metadata))
-
+        results = self.search_title(title)
         if single_result and len(results) > 0:
             return results[0]
         elif single_result:
             return None
+        return results
 
-        # TODO Support searching filenames?
-        pattern = re.compile('(.+)_t\d+')
-        filename, file_extension = os.path.splitext(file)
-
-        # Ripped files often have the title number appended, so remove that
-        m = pattern.match(filename)
-        if m:
-            filename = m.group(1)
-
+    def search_title(self, title, metadata=None):
+        results = []
+        if title:
+            search_results = self._search(title)
+            for r in search_results:
+                moviedb_title = r['title']
+                year = r['release_date'].split('-')[0]
+                results.append(NameInformation(moviedb_title, year, metadata))
         return results
 
     def _search(self, query):

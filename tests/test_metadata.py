@@ -7,6 +7,28 @@ from tempfile import NamedTemporaryFile
 
 
 class MetadataTestCase(unittest.TestCase):
+    def test_metadata_in_file(self):
+        meta = {
+            'TestKey': 'test_value'
+        }
+        length = 2
+        with create_test_video(length=length,
+                               video_def=VideoDefinition(Resolution.HIGH_DEF, VideoCodec.H264, VideoFileContainer.WTV),
+                               metadata=meta) as file:
+            metadata = create_metadata_extractor().extract(file.name)
+            print(metadata.tags)
+            self.assertTrue('TestKey' in metadata.tags)
+            self.assertEqual('test_value', metadata.tags['TestKey'])
+
+        with create_test_video(length=length,
+                               video_def=VideoDefinition(Resolution.HIGH_DEF, VideoCodec.H264, VideoFileContainer.MKV),
+                               metadata=meta) as file:
+            metadata = create_metadata_extractor().extract(file.name)
+            print(metadata.tags)
+            # MKV stores as uppercase
+            self.assertTrue('TESTKEY' in metadata.tags)
+            self.assertEqual('test_value', metadata.tags['TESTKEY'])
+
     def test_h264_stereo(self):
         length = 5
         with create_test_video(length=length) as file:
@@ -154,7 +176,7 @@ class MetadataTestCase(unittest.TestCase):
             metadata = create_metadata_extractor().extract(file.name, True)
             self.assertEqual(1, len(metadata.video_streams))
             self.assertEqual(1, len(metadata.audio_streams))
-            self.assertTrue(metadata.interlace_report.is_interlaced())
+            self.assertTrue(metadata.interlace_report.is_interlaced(threshold=.4))
 
             v = metadata.video_streams[0]
             a = metadata.audio_streams[0]

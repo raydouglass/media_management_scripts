@@ -1,11 +1,14 @@
-import os
 import logging
-from media_management_scripts.utils import sizeof_fmt
-from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution, H264Preset
-from media_management_scripts.utils import create_metadata_extractor
-from typing import NamedTuple
+import os
+
 from texttable import Texttable
+from typing import NamedTuple
+
+from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution
 from media_management_scripts.support.executables import execute_with_output, ffmpeg
+from media_management_scripts.support.files import check_exists, create_dirs, get_input_output
+from media_management_scripts.support.formatting import sizeof_fmt
+from media_management_scripts.utils import create_metadata_extractor
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +20,9 @@ class ConvertConfig(NamedTuple):
     include_meta: bool = False
     deinterlace: bool = False
     deinterlace_threshold: float = .5
+    include_subtitles: bool = True
+    start: float = None
+    end: float = None
 
 
 def convert_config_from_ns(ns):
@@ -28,25 +34,34 @@ def convert_config_from_ns(ns):
 
 
 def execute(args, print_output=True):
-    ret, _ = execute_with_output(args, print_output)
+    ret, r = execute_with_output(args, print_output)
     return ret
 
 
-def check_exists(output):
-    if os.path.exists(output):
-        logger.warning('Cowardly refusing to overwrite existing file: {}'.format(output))
-        return True
-    return False
+def convert_with_config(input, output, config: ConvertConfig, print_output=True, overwrite=False, metadata=None,
+                        mappings=None):
+    """
 
-
-def convert_with_config(input, output, config, print_output=True, overwrite=False):
+    :param input:
+    :param output:
+    :param config:
+    :param print_output:
+    :param overwrite:
+    :param metadata:
+    :param mappings: List of mappings (for example ['0:0', '0:1'])
+    :return:
+    """
     if not overwrite and check_exists(output):
         return -1
     if print_output:
         print('Converting {} -> {}'.format(input, output))
         print('Using config: {}'.format(config))
-    # ffmpeg -i in -c:v libx264 -crf 15 -preset ultrafast -c:a aac -c:s copy -map 0 out
-    metadata = create_metadata_extractor().extract(input, detect_interlace=config.deinterlace)
+
+    if not metadata:
+        metadata = create_metadata_extractor().extract(input, detect_interlace=config.deinterlace)
+    elif config.deinterlace and not metadata.interlace_report:
+        raise Exception('Metadata provided without interlace report, but convert requires deinterlace checks')
+
     if metadata.resolution not in (Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF, Resolution.HIGH_DEF):
         print('{}: Resolution not supported for conversion: {}'.format(input, metadata.resolution))
         # TODO Handle converting 4k content in H.265/HVEC
@@ -81,8 +96,18 @@ def convert_with_config(input, output, config, print_output=True, overwrite=Fals
             # 6.1 sound, so mix it up to 7.1
             args.extend(['-ac:a:{}'.format(index), '8'])
         index += 1
-    args.extend(['-c:s', 'copy'])
-    args.extend(['-map', '0'])
+    if config.include_subtitles:
+        args.extend(['-c:s', 'copy'])
+
+    if not mappings:
+        args.extend(['-map', '0'])
+    else:
+        for m in mappings:
+            if type(m) == int:
+                args.extend(['-map', '0:{}'.format(m)])
+            else:
+                args.extend(['-map', m])
+
     if config.include_meta:
         args.extend(['-metadata', 'ripped=true'])
         args.extend(['-metadata:s:v:0', 'ripped=true'])
@@ -90,6 +115,21 @@ def convert_with_config(input, output, config, print_output=True, overwrite=Fals
 
     return execute(args, print_output)
 
+def remux(input_file, output_file, mappings, overwrite=False, print_output=True):
+    if not overwrite and check_exists(output_file):
+        return -1
+    args = [ffmpeg()]
+    if overwrite:
+        args.append('-y')
+    args.extend(['-i', input_file])
+    args.extend(['-c', 'copy'])
+    for m in mappings:
+        if type(m)==int:
+            args.extend(['-map', '0:{}'.format(m)])
+        else:
+            args.extend(['-map', m])
+    args.append(output_file)
+    return execute(args, print_output)
 
 def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None, include_meta=True, print_output=True):
     config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate, include_meta=include_meta)
@@ -134,33 +174,6 @@ def cut(input, output, start=None, end=None):
     return execute(args)
 
 
-def create_dirs(file):
-    dir = os.path.dirname(file)
-    if dir:
-        os.makedirs(dir, exist_ok=True)
-
-
-def list_files(input_dir):
-    for root, subdirs, files in os.walk(input_dir):
-        for file in files:
-            if not file.startswith('.') and file.endswith('.mkv'):
-                path = os.path.join(root, file).replace(input_dir, '')
-                if path.startswith('/'):
-                    path = path[1::]
-                yield path
-
-
-def get_input_output(input_dir, output_dir, work_dir=None):
-    for file in sorted(list_files(input_dir)):
-        input_file = os.path.join(input_dir, file)
-        output_file = os.path.join(output_dir, file)
-        if work_dir:
-            work_file = os.path.join(work_dir, file)
-            yield input_file, output_file, work_file
-        else:
-            yield input_file, output_file
-
-
 def main(input_dir, output_dir, config):
     files = list(get_input_output(input_dir, output_dir))
     logger.info('{} files to process'.format(len(files)))
@@ -172,7 +185,7 @@ def main(input_dir, output_dir, config):
                 try:
                     logger.info('Starting convert of {} -> {}'.format(input_file, output_file))
                     create_dirs(output_file)
-                    ret = convert_with_config(input_file, output_file, config, include_meta=True)
+                    ret = convert_with_config(input_file, output_file, config)
                     if ret == 0:
                         did_process = True
                     else:

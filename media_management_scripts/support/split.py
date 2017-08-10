@@ -1,6 +1,6 @@
 import os
 from media_management_scripts.utils import create_metadata_extractor
-from media_management_scripts.convert_dvd import cut
+from media_management_scripts.convert import cut
 
 
 def split_by_chapter(input, output_dir, number_of_pieces=4, initial_count=0):

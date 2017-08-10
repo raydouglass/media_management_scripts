@@ -15,7 +15,10 @@ REPORT_PATTERN = re.compile(
 class InterlaceGroup(namedtuple('InterlaceGroupBase', ['tff', 'bff', 'progressive', 'undetermined'])):
     @property
     def ratio(self):
-        return self.interlaced / self.total_frames
+        if self.total_frames:
+            return self.interlaced / self.total_frames
+        else:
+            return 0
 
     @property
     def interlaced(self):
@@ -25,8 +28,29 @@ class InterlaceGroup(namedtuple('InterlaceGroupBase', ['tff', 'bff', 'progressiv
     def total_frames(self):
         return self.tff + self.bff + self.progressive + self.undetermined
 
+    def is_undetermined(self, threshold=.5):
+        if self.total_frames:
+            return self.undetermined / self.total_frames >= threshold
+        else:
+            return True
+
     def is_interlaced(self, threshold=.5):
         return self.ratio >= threshold
+
+    def combine(self, other):
+        return InterlaceGroup(tff=self.tff + other.tff,
+                              bff=self.bff + other.bff,
+                              progressive=self.progressive + other.progressive,
+                              undetermined=self.undetermined + other.undetermined)
+
+    def to_dict(self):
+        return {
+            'tff': self.tff,
+            'bff': self.bff,
+            'progressive': self.progressive,
+            'undetermined': self.undetermined,
+            'total_frames': self.total_frames
+        }
 
 
 class InterlaceReport(namedtuple('InterlaceReportBase', ['single', 'multi'])):
@@ -35,7 +59,10 @@ class InterlaceReport(namedtuple('InterlaceReportBase', ['single', 'multi'])):
 
     @property
     def ratio(self):
-        return self.interlaced / self.total_frames
+        if self.total_frames:
+            return self.interlaced / self.total_frames
+        else:
+            return 0
 
     @property
     def interlaced(self):
@@ -53,17 +80,25 @@ class InterlaceReport(namedtuple('InterlaceReportBase', ['single', 'multi'])):
     def total_frames(self):
         return self.single.total_frames + self.multi.total_frames
 
+    def is_undetermined(self, threshold=.5):
+        return self.single.is_undetermined(threshold) or self.multi.is_undetermined(threshold)
+
     def is_interlaced(self, threshold=.5):
         return self.ratio >= threshold
 
+    def combine(self, other):
+        return InterlaceReport(single=self.single.combine(other.single),
+                               multi=self.multi.combine(other.multi))
 
-def find_interlace(input_file: str, frames: int = 100) -> InterlaceReport:
-    # fmpeg -filter:v idet -frames:v 100 -an -f rawvideo -y /dev/null -i
-    args = [ffmpeg(), '-filter:v', 'idet', '-frames:v', str(frames), '-an', '-f', 'rawvideo', '-y', '/dev/null', '-i',
-            input_file]
-    ret, output = execute_with_output(args, print_output=False)
-    if ret != 0:
-        raise Exception()
+    def to_dict(self):
+        return {
+            'interlaced': self.is_interlaced(),
+            'single': self.single.to_dict(),
+            'multi': self.single.to_dict()
+        }
+
+
+def _parse_output(output: str):
     lines = output.splitlines(False)
     lines = lines[-2::]
     single, multi = None, None
@@ -77,3 +112,41 @@ def find_interlace(input_file: str, frames: int = 100) -> InterlaceReport:
         else:
             raise Exception('Not matched: {}'.format(line))
     return InterlaceReport(single, multi)
+
+
+def _execute_ffmpeg(input_file: str, frames: int, start: int = 0):
+    args = [ffmpeg(), '-ss', str(start), '-i', input_file, '-filter:v', 'idet', '-frames:v', str(frames), '-an', '-f',
+            'rawvideo', '-y', '/dev/null']
+    ret, output = execute_with_output(args, print_output=False)
+    if ret != 0:
+        raise Exception('Non-zero ffmpeg return code: {}. Output={}'.format(ret, output))
+    return _parse_output(output)
+
+
+def _find_interlace(input_file: str, frames: int = 100, max_frames: int = 6400,
+                    undetermined_threshold: float = .5, metadata=None) -> InterlaceReport:
+    if frames > max_frames:
+        return None
+    # ffmpeg -filter:v idet -frames:v 100 -an -f rawvideo -y /dev/null -i
+    if metadata and metadata.estimated_duration and metadata.estimated_duration < 200:
+        start = 0
+    else:
+        # Skip the first three minutes as this is usually commercials or introduction
+        start = 180
+    report = _execute_ffmpeg(input_file, frames, start=start)
+    if metadata and metadata.estimated_duration:
+        midpoint = int(metadata.estimated_duration / 2)
+        report2 = _execute_ffmpeg(input_file, frames, start=midpoint)
+        report = report.combine(report2)
+    if report.is_undetermined(undetermined_threshold):
+        new_report = _find_interlace(input_file, frames * 2, max_frames, undetermined_threshold, metadata)
+        if new_report:
+            return new_report
+    return report
+
+
+def find_interlace(input_file: str, frames: int = 100, max_frames: int = 6400,
+                   undetermined_threshold: float = .33, metadata=None) -> InterlaceReport:
+    if frames > max_frames:
+        raise Exception('Frames cannot be larger than max')
+    return _find_interlace(input_file, frames, max_frames, undetermined_threshold, metadata)

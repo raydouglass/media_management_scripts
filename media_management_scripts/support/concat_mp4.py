@@ -41,8 +41,7 @@ def concat_mp4(output, files, overwrite=False):
     for f in files:
         file = os.path.abspath(f)
         tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.ts').name
-        temp_files\
-            .append(tmp)
+        temp_files.append(tmp)
         _temp_convert(file, tmp)
     _concat(temp_files, output)
     for f in temp_files:
