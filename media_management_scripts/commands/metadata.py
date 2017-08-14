@@ -1,3 +1,31 @@
+from . import SubCommand
+from .common import *
+
+
+class MetadataCommand(SubCommand):
+    @property
+    def name(self):
+        return 'metadata'
+
+    def build_argparse(self, subparser):
+        metadata_parser = subparser.add_parser(self.name, help='Show metadata for a file',
+                                               parents=[parent_parser, input_parser])
+        metadata_group = metadata_parser.add_mutually_exclusive_group()
+        metadata_group.add_argument('--popup', action='store_const', const=True, default=False)
+        metadata_group.add_argument('--json', '-j', action='store_const', const=True, default=False)
+        metadata_parser.add_argument('--interlace', help='Try to detect interlacing',
+                                     choices=['none', 'summary', 'report'], default='none')
+
+    def subexecute(self, ns):
+        input_to_cmd = ns['input']
+        if ns['json']:
+            print_metadata_json(input_to_cmd, ns['interlace'])
+        else:
+            print_metadata(input_to_cmd, ns['popup'], ns['interlace'])
+
+
+SubCommand.register(MetadataCommand)
+
 import os
 import json
 from itertools import groupby

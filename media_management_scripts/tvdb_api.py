@@ -124,6 +124,7 @@ class TVDB():
 def from_config(config: str = DEFAULT_CONFIG_LOCATION) -> TVDB:
     if config is None:
         config = DEFAULT_CONFIG_LOCATION
+    config = os.path.expanduser(config)
     import configparser
     parser = configparser.ConfigParser()
     parser.read(config)

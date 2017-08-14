@@ -1,3 +1,29 @@
+from . import SubCommand
+from .common import *
+
+
+class SelectStreamsCommand(SubCommand):
+    @property
+    def name(self):
+        return 'select-streams'
+
+    def build_argparse(self, subparser):
+        stream_select_parser = subparser.add_parser('select-streams',
+                                                     parents=[parent_parser, input_parser, convert_parent_parser])
+        stream_select_parser.add_argument('-c', '--convert', action='store_const', default=False, const=True,
+                                          help='Whether to convert the file or just remux it')
+
+    def subexecute(self, ns):
+        from media_management_scripts.convert import convert_config_from_ns
+        input_to_cmd = ns['input']
+        convert_config = convert_config_from_ns(ns) if ns['convert'] else None
+        output_file = ns['output']
+        overwrite = ns['overwrite']
+        select_streams(input_to_cmd, output_file, overwrite=overwrite, convert_config=convert_config)
+
+
+SubCommand.register(SelectStreamsCommand)
+
 from media_management_scripts.support.metadata import Stream
 from media_management_scripts.utils import extract_metadata
 from media_management_scripts.convert import ConvertConfig, convert_with_config, remux
@@ -71,6 +97,8 @@ def _get_stream_indexes(metadata) -> List[int]:
 def select_streams(file, output_file, overwrite=False, convert_config: ConvertConfig = None):
     metadata = extract_metadata(file)
     indexes = _get_stream_indexes(metadata)
+    if indexes is None:
+        return
     indexes = ['0:{}'.format(i) for i in indexes]
     if convert_config:
         raise Exception()

@@ -11,7 +11,7 @@ from media_management_scripts.support.encoding import Resolution, VideoCodec, Vi
     AudioChannelName
 from tests import create_test_video, VideoDefinition, AudioDefition
 from unittest import mock
-from media_management_scripts.search import search
+from media_management_scripts.commands.search import search
 
 H264_VIDEO_DEF = VideoDefinition(Resolution.LOW_DEF, VideoCodec.H264, VideoFileContainer.MP4)
 MPE2_VIDEO_DEF = VideoDefinition(Resolution.LOW_DEF, VideoCodec.MPEG2, VideoFileContainer.MP4)

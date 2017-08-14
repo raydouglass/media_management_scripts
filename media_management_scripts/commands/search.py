@@ -1,12 +1,49 @@
-from media_management_scripts.utils import create_metadata_extractor
-from media_management_scripts.support.files import list_files, movie_files_filter
-from media_management_scripts.support.encoding import AudioChannelName
+from . import SubCommand
+from .common import *
 import os
-import shelve
+
+
+class SearchCommand(SubCommand):
+    @property
+    def name(self):
+        return 'search'
+
+    def build_argparse(self, subparser):
+        search_parser = subparser.add_parser('search', help='Searches files matching parameters',
+                                             parents=[parent_parser, input_parser])
+        search_parser.add_argument('--db', default=None, dest='db_file')
+        # search_parser.add_argument('-v', '--video-codec', help='Match video codec', type=str)
+        # search_parser.add_argument('-a', '--audio-codec', help='Match audio codec', type=str)
+        # search_parser.add_argument('--ac', '--audio-channels', help='Match audio channels', type=str, dest='audio_channels',
+        #                            choices=list(chain(*[ac.names for ac in list(AudioChannelName)])))
+        # search_parser.add_argument('-s', '--subtitle', help='Match subtitle language', type=str)
+        # search_parser.add_argument('-c', '--container', help='Match container', type=str)
+        # search_parser.add_argument('-r', '--resolution', help='Match resolution', type=str)
+        # search_parser.add_argument('--not', help='Invert filter', action='store_const', const=True, default=False)
+        search_parser.add_argument('query')
+        search_parser.add_argument('-0', help='Output with null byte', action='store_const', const=True, default=False)
+
+    def subexecute(self, ns):
+        input_to_cmd = ns['input']
+        null_byte = ns['0']
+        query = ns['query']
+        db_file = ns['db_file']
+        l = []
+        for file, metadata in search(input_to_cmd, query, db_file):
+            if not null_byte:
+                print(file)
+            else:
+                l.append(file)
+        if null_byte:
+            print('\0'.join(l))
+
+
+SubCommand.register(SearchCommand)
 
 
 class SearchParameters():
     def __init__(self, ns):
+        from media_management_scripts.support.encoding import AudioChannelName
         self.video_codecs = set(ns['video_codec'].split(',')) if ns['video_codec'] else []
         self.audio_codecs = set(ns['audio_codec'].split(',')) if ns['audio_codec'] else []
         self.subtitles = set(ns['subtitle'].split(',')) if ns['subtitle'] else []
@@ -52,6 +89,8 @@ class SearchParameters():
 
 def search(input_dir: str, query: str, db_file: str = None):
     from media_management_scripts.support.search_parser import parse
+    from media_management_scripts.utils import create_metadata_extractor
+    from media_management_scripts.support.files import list_files, movie_files_filter
     query = parse(query)
     with create_metadata_extractor(db_file) as extractor:
         for file in list_files(input_dir, movie_files_filter):
