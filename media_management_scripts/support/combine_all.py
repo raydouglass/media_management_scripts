@@ -1,9 +1,13 @@
 import os
 import re
-from media_management_scripts.support.files import get_input_output
+from media_management_scripts.support.files import get_input_output, mp4_mkv_filter
 from media_management_scripts.convert import combine
 
 LANG_PATTERN = re.compile('\.(\w+)\.srt')
+
+
+def _filter(f: str):
+    return mp4_mkv_filter(f) or f.endswith('.srt')
 
 
 def get_lang(srt_file):
@@ -15,7 +19,7 @@ def get_lang(srt_file):
 
 def combine_all(input, output, convert=False, crf=15, preset='veryfast'):
     files = {}
-    for f, o in get_input_output(input, output):
+    for f, o in get_input_output(input, output, filter=_filter):
         filename = os.path.basename(f)
         no_ext, ext = os.path.splitext(filename)
         lang = None

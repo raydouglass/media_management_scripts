@@ -83,18 +83,18 @@ def execute_with_timeout(args, timeout: int, use_nice=True, log_output=False) ->
         a.extend(args)
         args = a
     logger.debug('Executing: {}'.format(args))
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    if stdout and log_output:
-        exe_logger.info(stdout)
-    if stderr and log_output:
-        exe_logger.error(stderr)
-    try:
-        return p.wait(timeout=timeout), stdout
-    except subprocess.TimeoutExpired as e:
-        p.kill()
-        p.communicate()
-        raise e
+    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+        stdout, stderr = p.communicate()
+        if stdout and log_output:
+            exe_logger.info(stdout)
+        if stderr and log_output:
+            exe_logger.error(stderr)
+        try:
+            return p.wait(timeout=timeout), stdout
+        except subprocess.TimeoutExpired as e:
+            p.kill()
+            p.communicate()
+            raise e
 
 
 def execute_with_output(args, print_output=False, use_nice=True) -> Tuple[int, str]:
@@ -108,36 +108,36 @@ def execute_with_output(args, print_output=False, use_nice=True) -> Tuple[int, s
     if DEBUG_MODE:
         logger.debug('Debug mod enabled, skipping actual execution')
         return 0
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output = StringIO()
-    while p.poll() is None:
-        l = p.stdout.read(1)
-        try:
-            l = l.decode('utf-8')
-            if print_output:
-                print(l, end='')
-            output.write(l)
-        except Exception as ex:
-            if print_output:
-                print(ex)
-            output.write(str(ex))
-    l = p.stdout.read()
-    if l:
-        try:
-            l = l.decode("utf-8")
-            if print_output:
-                print(l)
-            output.write(l)
-        except Exception as ex:
-            if print_output:
-                print(ex)
-            output.write(str(ex))
-    result = output.getvalue()
-    output.close()
-    if print_output:
-        exe_logger.debug(result)
-    output.close()
-    return p.poll(), result
+    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
+        output = StringIO()
+        while p.poll() is None:
+            l = p.stdout.read(1)
+            try:
+                l = l.decode('utf-8')
+                if print_output:
+                    print(l, end='')
+                output.write(l)
+            except Exception as ex:
+                if print_output:
+                    print(ex)
+                output.write(str(ex))
+        l = p.stdout.read()
+        if l:
+            try:
+                l = l.decode("utf-8")
+                if print_output:
+                    print(l)
+                output.write(l)
+            except Exception as ex:
+                if print_output:
+                    print(ex)
+                output.write(str(ex))
+        result = output.getvalue()
+        output.close()
+        if print_output:
+            exe_logger.debug(result)
+        output.close()
+        return p.poll(), result
 
 
 def execute_with_callback(args: List[str], callback: Callable[[str], None], use_nice: bool = True) -> int:
@@ -146,29 +146,29 @@ def execute_with_callback(args: List[str], callback: Callable[[str], None], use_
         a.extend(args)
         args = a
     logger.debug('Executing: {}'.format(args))
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output = StringIO()
+    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
+        output = StringIO()
 
-    while p.poll() is None:
-        try:
-            l = p.stdout.read(1)
-        except IOError:
-            continue
-        try:
-            if l:
+        while p.poll() is None:
+            try:
+                l = p.stdout.read(1)
+            except IOError:
+                continue
+            try:
+                if l:
+                    l = l.decode('utf-8')
+                    if l == '\n' or l == '\r':
+                        callback(output.getvalue())
+                        output = StringIO()
+                    else:
+                        output.write(l)
+            except Exception as ex:
+                raise ex
+        l = p.stdout.read()
+        if l:
+            try:
                 l = l.decode('utf-8')
-                if l == '\n' or l == '\r':
-                    callback(output.getvalue())
-                    output = StringIO()
-                else:
-                    output.write(l)
-        except Exception as ex:
-            raise ex
-    l = p.stdout.read()
-    if l:
-        try:
-            l = l.decode('utf-8')
-            callback(l)
-        except Exception as ex:
-            raise ex
-    return p.poll()
+                callback(l)
+            except Exception as ex:
+                raise ex
+        return p.poll()

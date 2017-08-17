@@ -58,6 +58,7 @@ def _get_new_name(input_to_cmd) -> NameInformation:
         result = _search(title, input_to_cmd, metadata)
 
     while result is None:
+        title=''
         d = Dialog(autowidgetsize=True)
         exit_code, title = d.inputbox('No matches found. Try a different title?', init=title,
                                       title=os.path.basename(input_to_cmd))

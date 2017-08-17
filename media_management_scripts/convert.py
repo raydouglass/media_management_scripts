@@ -136,11 +136,13 @@ def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None,
     return convert_with_config(input, output, config, print_output)
 
 
-def combine(video, srt, output, lang=None, convert=False, crf=DEFAULT_CRF, preset=DEFAULT_PRESET):
-    if check_exists(output):
+def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=DEFAULT_CRF, preset=DEFAULT_PRESET):
+    if not overwrite and check_exists(output):
         return -1
     create_dirs(output)
     args = [ffmpeg(), '-i', video]
+    if overwrite:
+        args.append('-y')
     args.extend(['-i', srt])
     if convert:
         args.extend(['-c:v', 'libx264', '-crf', str(crf), '-preset', preset])

@@ -94,7 +94,6 @@ class TVDB():
                                    headers=headers,
                                    params=params)
                 res = res.json()
-                print(res)
                 if 'data' in res:
                     return res['data']
 
@@ -146,6 +145,14 @@ def _run_command(cmd, ns):
         episodes = tvdb.get_episodes(series_id)
         episodes = sorted(episodes, key=TVDB.season_number)
         print(json.dumps(episodes))
+    elif cmd == 'search':
+        series_name = ns['series']
+        air_date = ns.get('air_date', None)
+        episode_name = ns.get('episode_name', None)
+        if not air_date and not episode_name:
+            raise Exception('Must provide air date or episode name')
+        result = tvdb.find_episode(series_name=series_name, air_date=air_date, episode=episode_name)
+        print(json.dumps(result))
 
 
 def main():
@@ -158,6 +165,13 @@ def main():
 
     episodes_parser = subparsers.add_parser('episodes', parents=[parent_parser])
     episodes_parser.add_argument('series', type=str)
+
+    search_parser = subparsers.add_parser('search', parents=[parent_parser],
+                                          help='Search for an episode by name or air date')
+    search_parser.add_argument('series', type=str)
+    group = search_parser.add_mutually_exclusive_group()
+    group.add_argument('--air-date', type=str)
+    group.add_argument('--episode-name', type=str)
 
     ns = vars(parser.parse_args())
     cmd = ns.get('command', None)

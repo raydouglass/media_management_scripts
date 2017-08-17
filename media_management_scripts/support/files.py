@@ -34,6 +34,9 @@ def create_dirs(file: str):
 
 def list_files(input_dir: str,
                filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
+    """
+    List relative files in directory
+    """
     for root, subdirs, files in os.walk(input_dir):
         for file in files:
             if not file.startswith('.') and filter(file):
@@ -47,6 +50,11 @@ def get_input_output(input_dir: str,
                      output_dir: str,
                      work_dir: str = None,
                      filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[Tuple[str, ...]]:
+    """
+    Mimic the file structure from input_dir into output_dir (and optionally work_dir.
+
+    The input files are filtered
+    """
     for file in sorted(list_files(input_dir, filter)):
         input_file = os.path.join(input_dir, file)
         output_file = os.path.join(output_dir, file)
