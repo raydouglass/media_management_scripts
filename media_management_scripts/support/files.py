@@ -33,13 +33,13 @@ def create_dirs(file: str):
 
 
 def list_files(input_dir: str,
-               filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
+               file_filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
     """
     List relative files in directory
     """
     for root, subdirs, files in os.walk(input_dir):
         for file in files:
-            if not file.startswith('.') and filter(file):
+            if not file.startswith('.') and file_filter(file):
                 path = os.path.join(root.replace(input_dir, ''), file)
                 if path.startswith('/'):
                     path = path[1::]

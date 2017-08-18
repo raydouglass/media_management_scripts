@@ -77,16 +77,19 @@ class RenameCommand(SubCommand):
         filter_by_ext = ns['filter_by_ext']
         if recursive:
             if filter_by_ext:
-                filter = lambda f: f.endswith(filter_by_ext)
+                file_filter = lambda f: f.endswith(filter_by_ext)
             else:
-                filter = lambda f: True
+                file_filter = lambda f: True
             files = []
             for f in input_to_cmd:
                 if os.path.isdir(f):
-                    files.extend(list_files(f, filter=filter))
-                else:
+                    files.extend(list_files(f, file_filter=file_filter))
+                elif file_filter(f):
                     files.append(f)
         else:
+            for f in input_to_cmd:
+                if os.path.isdir(f):
+                    raise Exception('Directory provided without recursive')
             files = input_to_cmd
 
         results = rename_process(template, files, index_start, output, regex,
