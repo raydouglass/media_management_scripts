@@ -69,8 +69,8 @@ def _find_match(metadata: Metadata, episodes, use_dvd=False, fuzzy=False):
 
 def _do_rename(input, output):
     print('{} => {}'.format(input, output))
-    dir = os.path.dirname(output)
-    os.makedirs(dir, exist_ok=True)
+    d = os.path.dirname(output)
+    os.makedirs(d, exist_ok=True)
     shutil.move(input, output)
 
 

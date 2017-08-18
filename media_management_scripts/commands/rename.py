@@ -19,7 +19,8 @@ class RenameCommand(SubCommand):
 
         The following variables are available:
             * i/index - The index of the current file being renamed
-            * ext - The file extension of the current file
+            * wo_ext - The file name basename without the extension
+            * ext - The file extension of the current file (without '.')
             * filename - The filename of the current file (basename)
             * re/regex - A list of regex match groups (use re[0], re[1], etc)
 
@@ -97,7 +98,9 @@ class RenameCommand(SubCommand):
             print(t.draw())
         else:
             for src, dest in results:
-                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                d = os.path.dirname(dest)
+                if d:
+                    os.makedirs(d, exist_ok=True)
                 self._move(src, dest)
 
 

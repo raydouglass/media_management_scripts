@@ -124,17 +124,19 @@ def rename_process(template, files, index_start=1, output_dir=None, regex=None, 
         else:
             dir = os.path.dirname(file)
         ext = os.path.splitext(file)[1][1::]
-        basename = os.path.basename(file)
+        wo_ext = os.path.splitext(file)[0]
+        base = os.path.basename(file)
         new_params = {
             'index': index,
             'i': index,
+            'wo_ext': wo_ext,
             'ext': ext,
-            'filename': basename,
+            'filename': base,
             're': RegexResults(ignore_missing=ignore_missing_regex)
         }
         new_params.update(params)
         if regex:
-            m = regex.search(basename)
+            m = regex.search(base)
             if m:
                 items = [m.group()]
                 m_index = 1
