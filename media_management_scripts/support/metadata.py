@@ -59,6 +59,7 @@ class Metadata():
         self.audio_streams = [s for s in self.streams if s.is_audio()]
         self.video_streams = [s for s in self.streams if s.is_video()]
         self.subtitle_streams = [s for s in self.streams if s.is_subtitle()]
+        self.other_stream = [s for s in self.streams if not s.is_other()]
 
         durs = [s.duration for s in self.streams if s.duration]
         self.estimated_duration = max(durs) if durs else None
@@ -154,8 +155,8 @@ class Chapter():
 class Stream():
     def __init__(self, stream):
         self.index = stream['index']
-        self.codec = stream['codec_name']
-        self.codec_long_name = stream['codec_long_name']
+        self.codec = stream.get('codec_name', None)
+        self.codec_long_name = stream.get('codec_long_name', None)
         self.codec_type = stream['codec_type']
         self.width = int(stream['width']) if 'width' in stream else None
         self.height = int(stream['height']) if 'height' in stream else None
@@ -182,10 +183,12 @@ class Stream():
     def is_subtitle(self):
         return self.codec_type == 'subtitle'
 
+    def is_other(self):
+        return not self.is_audio() and not self.is_video() and not self.is_subtitle()
+
     @property
     def type(self):
-        return 'audio' if self.is_audio() else (
-            'video' if self.is_video() else ('subtitle' if self.is_subtitle() else None))
+        return self.codec_type
 
     def to_dict(self):
         d = {
