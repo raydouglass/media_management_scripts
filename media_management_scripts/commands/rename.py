@@ -13,44 +13,44 @@ class RenameCommand(SubCommand):
                                              help="Renames a set of files to the specified template",
                                              formatter_class=argparse.RawTextHelpFormatter,
                                              description="""
-        Rename files based on a template.
-
-        Templates can include variables or expressions by surrounding with ${...}. Functions can be called like ${upper(i)} or ${i | upper}.
-
-        The following variables are available:
-            * i/index - The index of the current file being renamed
-            * wo_ext - The file name basename without the extension
-            * ext - The file extension of the current file (without '.')
-            * filename - The filename of the current file (basename)
-            * re/regex - A list of regex match groups (use re[0], re[1], etc)
-
-        The following functions are available:
-            * upper - Upper cases the input
-            * lower - Lower cases the input
-            * ifempty(a, b) - If a is not null, then a, otherwise b
-            * lpad(a, b:int) - Left pads a to length b (defaults to 2) with spaces
-            * zpad(a, b:int) - Left pads a to length b (defaults to 2) with zeros
-
-        Regular Expressions:
-        If a regex is included, the match groups (0=whole match, >0=match group) are avaiable in a list 're' or 'regex'.
-        Each match group is converted to an int if possible, so a zero padded int will lose the zeros.
-
-        Examples:
-            Input: S02E04.mp4
-            Regex: S(\d+)E(\d+)
-
-            Template: 'Season ${re[1]} Episode ${re[2]}.{ext}'
-            Result: 'Season 2 Episode 4.mp4'
-
-            Template: Template: 'Season ${re[1] | zpad} Episode ${zpad(re[2], 3)}.{ext}'
-            Results: 'Season 02 Episode 004.mp4'
-
-
-            Input: whatever.mp4
-            Regex: S(\d+)E(\d)
-            Template: 'Season ${ifempty(re[1], 'unknown')} Episode ${re[2]}.{ext}'
-            Result: 'Season unknown Episode .mp4'
-            """)
+    Rename files based on a template.
+    
+    Templates can include variables or expressions by surrounding with ${...}. Functions can be called like ${upper(i)} or ${i | upper}.
+    
+    The following variables are available:
+        * i/index - The index of the current file being renamed
+        * wo_ext - The file name basename without the extension
+        * ext - The file extension of the current file (without '.')
+        * filename - The filename of the current file (basename)
+        * re/regex - A list of regex match groups (use re[0], re[1], etc)
+    
+    The following functions are available:
+        * upper - Upper cases the input
+        * lower - Lower cases the input
+        * ifempty(a, b) - If a is not null, then a, otherwise b
+        * lpad(a, b:int) - Left pads a to length b (defaults to 2) with spaces
+        * zpad(a, b:int) - Left pads a to length b (defaults to 2) with zeros
+    
+    Regular Expressions:
+    If a regex is included, the match groups (0=whole match, >0=match group) are avaiable in a list 're' or 'regex'.
+    Each match group is converted to an int if possible, so a zero padded int will lose the zeros.
+    
+    Examples:
+    Input: S02E04.mp4
+    Regex: S(\d+)E(\d+)
+    
+    Template: 'Season ${re[1]} Episode ${re[2]}.{ext}'
+    Result: 'Season 2 Episode 4.mp4'
+    
+    Template: Template: 'Season ${re[1] | zpad} Episode ${zpad(re[2], 3)}.{ext}'
+    Results: 'Season 02 Episode 004.mp4'
+    
+    
+    Input: whatever.mp4
+    Regex: S(\d+)E(\d)
+    Template: 'Season ${ifempty(re[1], 'unknown')} Episode ${re[2]}.{ext}'
+    Result: 'Season unknown Episode .mp4'
+""")
 
         rename_parser.add_argument('-x', '--regex', type=str, default=None)
         rename_parser.add_argument('--ignore-missing-regex', action='store_const', default=False, const=True,

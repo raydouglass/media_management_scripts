@@ -1,5 +1,6 @@
 from . import SubCommand
 from .common import *
+import argparse
 import os
 
 
@@ -9,19 +10,49 @@ class SearchCommand(SubCommand):
         return 'search'
 
     def build_argparse(self, subparser):
-        search_parser = subparser.add_parser('search', help='Searches files matching parameters',
-                                             parents=[parent_parser, input_parser])
+        search_parser = subparser.add_parser('search', parents=[parent_parser, input_parser],
+                                             formatter_class=argparse.RawTextHelpFormatter,
+                                             description="""
+    Searches a directory for video files matching parameters.
+    
+    If a video has multiple streams, comparisons mean at least one stream matches.
+    
+    Available parameters:
+    Video:
+        v.codec - The video codec (h264, h265, mpeg2, etc)
+        v.width - The video pixel width
+        v.height - The video pixel height
+    Audio:
+        a.codec - The audio codec (aac, ac3)
+        a.channels - The number of audio channels (stereo=2, 5.1=6, etc)
+        a.lang - The language of the audio track
+    Subtitles:
+        s.codec - The subtitle codec (srt, hdmv_pgs, mov_text, etc)
+        s.lang - The language of the subtitle track
+    Others:
+        ripped - Whether the video is marked as ripped or not
+        bit_rate - The overall average bitrate
+        resolution - The resolution name (LOW_DEF, HIGH_DEF, etc)
+    Metadata:
+        meta.xyz - Follows the basic JSON metadata output
+    
+    Examples:
+        Find all videos that are H264
+            v.codec = h264
+        Find all videos that are H264 with stereo AAC
+            v.codec = h264 and a.codec = aac and a.channels = 2
+        Find all videos that are H265 or H264 and AAC
+            a.codec = aac and (v.codec = h265 or v.codec = h264)
+            a.codec = aac and v.codec in [h265, h264]
+        Find all videos without English Subtitles
+            s.lang != eng
+        Find videos that are lower resolution than 1080
+            v.height < 1080
+""")
         search_parser.add_argument('--db', default=None, dest='db_file')
-        # search_parser.add_argument('-v', '--video-codec', help='Match video codec', type=str)
-        # search_parser.add_argument('-a', '--audio-codec', help='Match audio codec', type=str)
-        # search_parser.add_argument('--ac', '--audio-channels', help='Match audio channels', type=str, dest='audio_channels',
-        #                            choices=list(chain(*[ac.names for ac in list(AudioChannelName)])))
-        # search_parser.add_argument('-s', '--subtitle', help='Match subtitle language', type=str)
-        # search_parser.add_argument('-c', '--container', help='Match container', type=str)
-        # search_parser.add_argument('-r', '--resolution', help='Match resolution', type=str)
-        # search_parser.add_argument('--not', help='Invert filter', action='store_const', const=True, default=False)
-        search_parser.add_argument('query')
-        search_parser.add_argument('-0', help='Output with null byte', action='store_const', const=True, default=False)
+        search_parser.add_argument('query',
+                                   help="The query to run. Recommended to enclose in single-quotes to avoid bash completions")
+        search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.', action='store_const', const=True, default=False)
 
     def subexecute(self, ns):
         input_to_cmd = ns['input']
@@ -114,7 +145,7 @@ def search(input_dir: str, query: str, db_file: str = None):
                 'ripped': metadata.ripped,
                 'bit_rate': metadata.bit_rate,
                 'resolution': metadata.resolution._name_,
-                'meta': metadata.to_dict()
+                'meta': metadata.to_0dict()
 
             }
             if query.exec(context) is True:
