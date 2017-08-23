@@ -36,6 +36,10 @@ class SearchCommand(SubCommand):
     Metadata:
         meta.xyz - Follows the basic JSON metadata output
     
+    Functions:
+        isNull(xyz) - Returns true if the value is null
+        all(xyz) - Instead of one stream matching, check all of them
+    
     Examples:
         Find all videos that are H264
             v.codec = h264
@@ -48,11 +52,14 @@ class SearchCommand(SubCommand):
             s.lang != eng
         Find videos that are lower resolution than 1080
             v.height < 1080
+        Find all videos that have ONLY AAC audio
+            all(a.codec) = aac
 """)
         search_parser.add_argument('--db', default=None, dest='db_file')
         search_parser.add_argument('query',
                                    help="The query to run. Recommended to enclose in single-quotes to avoid bash completions")
-        search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.', action='store_const', const=True, default=False)
+        search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.',
+                                   action='store_const', const=True, default=False)
 
     def subexecute(self, ns):
         input_to_cmd = ns['input']
@@ -145,7 +152,7 @@ def search(input_dir: str, query: str, db_file: str = None):
                 'ripped': metadata.ripped,
                 'bit_rate': metadata.bit_rate,
                 'resolution': metadata.resolution._name_,
-                'meta': metadata.to_0dict()
+                'meta': metadata.to_dict()
 
             }
             if query.exec(context) is True:

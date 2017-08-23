@@ -81,8 +81,10 @@ class SimpleTest(unittest.TestCase, ParseTestCase):
 
     def test_all(self):
         self.parse('a = 1', True, {'a': [1, 2]})
-        # TODO
-        # self.parse('all(a) = 1', True, {'a': [1, 1]})
+        self.parse('all(a) = 1', True, {'a': [1, 1]})
+        self.parse('all(a) = 1', False, {'a': [1, 2]})
+        self.parse('all(a) != 1', True, {'a': [1, 2]})
+        self.parse('all(a) != 1', False, {'a': [1, 1]})
 
     def test_string(self):
         self.parse('"test"', 'test')

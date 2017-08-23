@@ -85,7 +85,7 @@ class ComparisonOperation(Operation):
             raise Exception()
 
     def __repr__(self):
-        return 'ComparisonOperation<{} {} {}>'.format(self.t[0][0], self.t[0][1], self.t[0][1])
+        return 'ComparisonOperation<{} {} {}>'.format(self.t[0][0], self.t[0][1], self.t[0][2])
 
 
 class Addition(TwoOperandOperation):
@@ -157,10 +157,19 @@ class IsNullOperation(Operation):
 
 class AllOperation(Operation):
     def _exec(self, context):
-        value = self.resolve(context, self.t[2])
-        if type(value) == list:
-            for i in value:
-                pass
+        self.value = self.resolve(context, self.t[2])
+        if issubclass(type(self.value), Variable):
+            self.value = self.value.value
+        return self
+
+    def __eq__(self, other):
+        if type(self.value) == list:
+            for i in self.value:
+                if i != other:
+                    return False
+            return True
+        else:
+            return self.value == other
 
     def __repr__(self):
         return 'AllOperation<{}>'.format(self.t[2])
