@@ -10,11 +10,13 @@ class ConfigTestCase(unittest.TestCase):
     def test_namespace(self):
         ns = {
             'crf': 10,
-            'preset': 'ultrafast'
+            'preset': 'ultrafast',
+            'auto_bitrate_720': 1000
         }
         config = convert_config_from_ns(ns)
         self.assertEqual(10, config.crf)
         self.assertEqual('ultrafast', config.preset)
+        self.assertEqual(1000, config.auto_bitrate_720)
 
 
 class ConvertTestCase(unittest.TestCase):
@@ -25,6 +27,11 @@ class ConvertTestCase(unittest.TestCase):
 
     def test_auto_bitrate_convert(self):
         config = ConvertConfig(bitrate='auto')
+        with create_test_video(length=10) as file, NamedTemporaryFile(suffix='.mkv') as output:
+            convert_with_config(file.name, output.name, config, overwrite=True)
+
+    def test_auto_bitrate_custom_convert(self):
+        config = ConvertConfig(bitrate='auto', auto_bitrate_240=300)
         with create_test_video(length=10) as file, NamedTemporaryFile(suffix='.mkv') as output:
             convert_with_config(file.name, output.name, config, overwrite=True)
 

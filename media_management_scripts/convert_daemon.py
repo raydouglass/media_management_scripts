@@ -1,7 +1,7 @@
 from media_management_scripts.convert import execute, convert_with_config, \
     ConvertConfig
 from media_management_scripts.support.files import create_dirs, get_input_output
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET
+from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
 import logging
 import os
 import shelve
@@ -101,8 +101,17 @@ class ConvertDvds():
         bitrate = config.get('transcode', 'bitrate', fallback=None)
         deinterlace = bool(config.get('transcode', 'deinterlace', fallback=False))
         deinterlace_threshold = float(config.get('transcode', 'deinterlace_threshold', fallback='.5'))
-        self.convert_config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate, deinterlace=deinterlace,
-                                            deinterlace_threshold=deinterlace_threshold, include_meta=True)
+
+        auto_bitrate_240 = config.getint('transcode', 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
+        auto_bitrate_480 = config.getint('transcode', 'auto_bitrate_480', fallback=Resolution.STANDARD_DEF.auto_bitrate)
+        auto_bitrate_720 = config.getint('transcode', 'auto_bitrate_720', fallback=Resolution.MEDIUM_DEF.auto_bitrate)
+        auto_bitrate_1080 = config.getint('transcode', 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
+
+        self.convert_config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
+                                            auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,
+                                            auto_bitrate_720=auto_bitrate_720, auto_bitrate_1080=auto_bitrate_1080,
+                                            deinterlace=deinterlace, deinterlace_threshold=deinterlace_threshold,
+                                            include_meta=True)
 
         # Logging
         level = config.get('logging', 'level', fallback='INFO')

@@ -1,9 +1,11 @@
 from setuptools import setup
 
+from media_management_scripts import version
+
 setup(name='media_management_scripts',
-      version='0.1.1',
+      version=version,
       description='Scripts for managing media',
-      url='',
+      url='https://raydouglass.com',
       author='Ray Douglass',
       author_email='ray@raydouglass.com',
       license='MIT',

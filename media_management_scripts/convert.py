@@ -2,7 +2,7 @@ import logging
 import os
 
 from texttable import Texttable
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution
 from media_management_scripts.support.executables import execute_with_output, ffmpeg
@@ -23,6 +23,10 @@ class ConvertConfig(NamedTuple):
     include_subtitles: bool = True
     start: float = None
     end: float = None
+    auto_bitrate_240: int = Resolution.LOW_DEF.auto_bitrate
+    auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
+    auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
+    auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
 
 
 def convert_config_from_ns(ns):
@@ -36,6 +40,19 @@ def convert_config_from_ns(ns):
 def execute(args, print_output=True):
     ret, r = execute_with_output(args, print_output)
     return ret
+
+
+def auto_bitrate_from_config(resolution, convert_config):
+    if resolution == Resolution.LOW_DEF:
+        return convert_config.auto_bitrate_240
+    elif resolution == Resolution.STANDARD_DEF:
+        return convert_config.auto_bitrate_480
+    elif resolution == Resolution.MEDIUM_DEF:
+        return convert_config.auto_bitrate_720
+    elif resolution == Resolution.HIGH_DEF:
+        return convert_config.auto_bitrate_1080
+    else:
+        raise Exception('Not auto bitrate for {}'.format(resolution))
 
 
 def convert_with_config(input, output, config: ConvertConfig, print_output=True, overwrite=False, metadata=None,
@@ -62,7 +79,8 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     elif config.deinterlace and not metadata.interlace_report:
         raise Exception('Metadata provided without interlace report, but convert requires deinterlace checks')
 
-    if metadata.resolution not in (Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF, Resolution.HIGH_DEF):
+    if metadata.resolution not in (
+    Resolution.LOW_DEF, Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF, Resolution.HIGH_DEF):
         print('{}: Resolution not supported for conversion: {}'.format(input, metadata.resolution))
         # TODO Handle converting 4k content in H.265/HVEC
         return -2
@@ -78,7 +96,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         crf = 1
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
         if config.bitrate == 'auto':
-            bitrate = metadata.resolution.auto_bitrate
+            bitrate = auto_bitrate_from_config(metadata.resolution, config)
         params = 'vbv-maxrate={}:vbv-bufsize={}:crf-max=25:qpmax=34'.format(str(bitrate), str(bitrate * 2))
         args.extend(['-x264-params', params])
     args.extend(['-crf', str(crf), '-preset', config.preset])
@@ -115,6 +133,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
 
     return execute(args, print_output)
 
+
 def remux(input_file, output_file, mappings, overwrite=False, print_output=True):
     if not overwrite and check_exists(output_file):
         return -1
@@ -124,12 +143,13 @@ def remux(input_file, output_file, mappings, overwrite=False, print_output=True)
     args.extend(['-i', input_file])
     args.extend(['-c', 'copy'])
     for m in mappings:
-        if type(m)==int:
+        if type(m) == int:
             args.extend(['-map', '0:{}'.format(m)])
         else:
             args.extend(['-map', m])
     args.append(output_file)
     return execute(args, print_output)
+
 
 def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None, include_meta=True, print_output=True):
     config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate, include_meta=include_meta)
