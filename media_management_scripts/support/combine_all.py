@@ -7,7 +7,7 @@ LANG_PATTERN = re.compile('\.(\w+)\.srt')
 
 
 def _filter(f: str):
-    return mp4_mkv_filter(f) or f.endswith('.srt')
+    return mp4_mkv_filter(f) or f.endswith('.srt') or f.endswith('.idx')
 
 
 def get_lang(srt_file):
@@ -17,14 +17,14 @@ def get_lang(srt_file):
     return None
 
 
-def combine_all(input, output, convert=False, crf=15, preset='veryfast'):
+def combine_all(input, output, convert=False, crf=15, preset='veryfast', forced_language=None):
     files = {}
     for f, o in get_input_output(input, output, filter=_filter):
         filename = os.path.basename(f)
         no_ext, ext = os.path.splitext(filename)
-        lang = None
-        if ext == '.srt':
-            # subtitle
+        lang = forced_language
+        if not lang and (ext == '.srt' or ext == '.idx'):
+            #  subtitle
             m = LANG_PATTERN.search(filename)
             if m:
                 no_ext, lang = os.path.splitext(no_ext)
@@ -42,7 +42,7 @@ def combine_all(input, output, convert=False, crf=15, preset='veryfast'):
         srt_file = None
         language = None
         for file, ext, lang, o in l:
-            if ext == '.srt':
+            if ext == '.srt' or ext == '.idx':
                 srt_file = file
                 language = lang
             else:
@@ -50,7 +50,7 @@ def combine_all(input, output, convert=False, crf=15, preset='veryfast'):
                 output_file = o
                 output_file = output_file.replace(ext, '.mkv')
         if not srt_file:
-            print('No SRT for {}'.format(video_file))
+            print('No subtitles for {}'.format(video_file))
         else:
             combine(video_file, srt_file, output_file, crf=crf, preset=preset, convert=convert, lang=language)
         current += 1

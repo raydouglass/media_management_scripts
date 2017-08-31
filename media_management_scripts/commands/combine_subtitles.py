@@ -50,6 +50,7 @@ class CombineSubtitlesDirectoryCommand(SubCommand):
         combine_all_parser.add_argument('--convert',
                                         help='Whether to convert video streams to H.264 and audio to AAC',
                                         action='store_const', const=True, default=False)
+        combine_all_parser.add_argument('-l', '--language', help='Set the language to use')
 
     def subexecute(self, ns):
         from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET
@@ -59,7 +60,8 @@ class CombineSubtitlesDirectoryCommand(SubCommand):
         preset = ns.get('preset', DEFAULT_PRESET)
         convert = ns.get('convert', False)
         output = ns['output']
-        combine_all(input_to_cmd, output, convert, crf, preset)
+        language = ns.get('language', None)
+        combine_all(input_to_cmd, output, convert, crf, preset, language)
 
 
 SubCommand.register(CombineSubtitlesDirectoryCommand)
