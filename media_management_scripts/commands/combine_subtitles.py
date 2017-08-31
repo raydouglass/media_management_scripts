@@ -16,6 +16,7 @@ class CombineSubtitlesCommand(SubCommand):
         combine_video_subtitles_parser.add_argument('--convert',
                                                     help='Whether to convert video streams to H.264 and audio to AAC',
                                                     action='store_const', const=True, default=False)
+        combine_video_subtitles_parser.add_argument('-l', '--language', help='Set the language to use')
 
     def subexecute(self, ns):
         import sys
@@ -31,7 +32,7 @@ class CombineSubtitlesCommand(SubCommand):
         crf = ns.get('crf', DEFAULT_CRF)
         preset = ns.get('preset', DEFAULT_PRESET)
         convert = ns.get('convert', False)
-        lang = get_lang(srt_input)
+        lang = ns.get('language') if 'language' in ns else get_lang(srt_input)
         combine(input_to_cmd, srt_input, output, convert=convert, crf=crf, preset=preset, lang=lang)
 
 
