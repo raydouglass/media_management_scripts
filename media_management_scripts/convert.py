@@ -163,18 +163,18 @@ def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=D
     args = [ffmpeg(), '-i', video]
     if overwrite:
         args.append('-y')
-    args.extend(['-i', srt])
     if convert:
         args.extend(['-c:v', 'libx264', '-crf', str(crf), '-preset', preset])
         args.extend(['-c:a', 'aac'])
     else:
         args.extend(['-c:v', 'copy'])
         args.extend(['-c:a', 'copy'])
+    args.extend(['-map', '0'])
     args.extend(['-c:s', 'copy', '-map', '1:0'])
+    args.extend(['-i', srt])
     # -metadata:s:s:0 language=eng
     if lang:
         args.extend(['-metadata:s:s:0', 'language=' + lang])
-    args.extend(['-map', '0'])
     args.append(output)
     return execute(args)
 

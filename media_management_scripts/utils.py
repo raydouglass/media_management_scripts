@@ -3,11 +3,23 @@ from media_management_scripts.support.metadata import MetadataExtractor, Metadat
 
 def compare_gt(this, other):
     if this is not None and other is not None:
-        return this > other
+        return int(this > other)
     elif this is not None:
-        return True
-    else:
         return False
+    else:
+        return True
+
+
+def compare(this, other):
+    if this is not None and other is not None:
+        if this == other:
+            return 0
+        else:
+            return -1 if this > other else 1
+    elif this is not None:
+        return 1
+    else:
+        return -1
 
 
 def compare_lt(this, other):

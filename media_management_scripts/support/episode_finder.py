@@ -4,18 +4,20 @@ import sys
 from os import listdir
 from os.path import isfile, join, basename
 from typing import Tuple
+import functools
 
-from media_management_scripts.utils import compare_gt
+from media_management_scripts.utils import compare
 
 patterns = [re.compile('[Ss](\d?\d)\s*[Ee](\d?\d)'),
             re.compile('(\d?\d)x(\d?\d)'),
             re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'),
-            re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'),
-            re.compile('(\d)(\d\d)')]
+            re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)')]
+pattern_101 = re.compile('(\d)(\d\d)')
 
 part_patterns = [re.compile('[Pp]art\s*(\d+)'), re.compile('pt\s*(\d+)')]
 
 
+@functools.total_ordering
 class EpisodePart():
     def __init__(self, name, path, season, episode, part):
         self.name = name
@@ -31,36 +33,45 @@ class EpisodePart():
         self.part = part
 
     def __str__(self):
-        if not self.season or not self.episode:
+        if self.season is None or self.episode is None:
             return '{}: No match'.format(self.name)
-        if self.part:
-            return '{}: s{}e{:02d} pt{}'.format(self.name, self.season, self.episode, self.part)
+        if self.part is not None:
+            return '{}: s{:02d}e{:02d} pt{}'.format(self.name, self.season, self.episode, self.part)
         else:
-            return '{}: s{}e{:02d}'.format(self.name, self.season, self.episode)
+            return '{}: s{:02d}e{:02d}'.format(self.name, self.season, self.episode)
 
     def __repr__(self):
         return self.__str__()
 
+    @property
+    def season_episode(self):
+        if self.part is not None:
+            return 'S{:02d}E{:02d} pt{}'.format(self.season, self.episode, self.part)
+        else:
+            return 'S{:02d}E{:02d}'.format(self.season, self.episode)
+
     def __eq__(self, other):
-        if issubclass(other.__cls__, EpisodePart):
-            return self.season == other.season and self.episode == other.episode and self.part == other.part
+        if issubclass(type(other), EpisodePart):
+            return self.name == other.name and self.season == other.season \
+                   and self.episode == other.episode and self.part == other.part
         return False
 
     def __gt__(self, other):
-        if compare_gt(self.season, other.season):
+        if not issubclass(type(other), EpisodePart):
+            raise Exception()
+        cmp = compare(self.season, other.season)
+        if cmp == 0:
+            cmp = compare(self.episode, other.episode)
+        if cmp == 0:
+            cmp = compare(self.part, other.part)
+        if cmp == 0:
+            cmp = compare(self.name, other.name)
+        if cmp <= 0:
             return True
-        elif compare_gt(self.episode, other.episode):
-            return True
-        elif compare_gt(self.part, other.part):
-            return True
-        else:
-            return self.name > other.name
-
-    def __lt__(self, other):
-        return not self.__gt__(other)
+        return False
 
 
-def extract(name) -> Tuple[int, int, int]:
+def extract(name, use101) -> Tuple[int, int, int]:
     season = None
     ep = None
     part = None
@@ -69,11 +80,12 @@ def extract(name) -> Tuple[int, int, int]:
         if m:
             season = m.group(1)
             ep = m.group(2)
-            if season == '1' and ep == '01':
-                season = None
-                ep = None
-            else:
-                break
+            break
+    if season is None and ep is None and use101:
+        m = pattern_101.search(name)
+        if m:
+            season = m.group(1)
+            ep = m.group(2)
     for pattern in part_patterns:
         m = pattern.search(name)
         if m:
@@ -82,7 +94,7 @@ def extract(name) -> Tuple[int, int, int]:
     return season, ep, part
 
 
-def find_episodes(dir, strip_youtubedl):
+def find_episodes(dir, strip_youtubedl, use101=False):
     for root, subdirs, files in os.walk(dir):
         for file in files:
             path = os.path.join(root, file)
@@ -93,7 +105,7 @@ def find_episodes(dir, strip_youtubedl):
                     name = name[index + 3::]
                 except ValueError:
                     pass
-            season, ep, part = extract(name)
+            season, ep, part = extract(name, use101)
             yield EpisodePart(name, path, season, ep, part)
 
 
@@ -102,3 +114,9 @@ def main(dir):
     for file in files:
         name = basename(file)[6::]
         season, ep, part = extract(name)
+
+
+if __name__ == '__main__':
+    left = EpisodePart('left', 'left', 1, 2, None)
+    right = EpisodePart('right', 'right', 1, None, None)
+    print(left > right)

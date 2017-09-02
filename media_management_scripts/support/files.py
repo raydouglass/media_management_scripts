@@ -19,9 +19,10 @@ def movie_files_filter(file):
     return file.endswith('.mkv') or file.endswith('.mp4') or file.endswith('.avi') or file.endswith('.m4v')
 
 
-def check_exists(output: str):
+def check_exists(output: str, log=True):
     if os.path.exists(output):
-        logger.warning('Cowardly refusing to overwrite existing file: {}'.format(output))
+        if log:
+            logger.warning('Cowardly refusing to overwrite existing file: {}'.format(output))
         return True
     return False
 

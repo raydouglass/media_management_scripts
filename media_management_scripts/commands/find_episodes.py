@@ -17,6 +17,8 @@ class FindEpisodesCommand(SubCommand):
         find_episode_parser.add_argument('--seasons', action='store_const', const=True, default=False,
                                          help='If renaming, moves files into season directories')
         find_episode_parser.add_argument('--ignore-parts', action='store_const', const=True, default=False)
+        find_episode_parser.add_argument('--use-101-pattern', '--101', action='store_const', const=True, default=False,
+                                         help='Use a \d\d\d pattern')
 
         group = find_episode_parser.add_mutually_exclusive_group()
         group.add_argument('--rename', action='store_const', const=True, default=False,
@@ -29,6 +31,7 @@ class FindEpisodesCommand(SubCommand):
         from media_management_scripts.support.episode_finder import find_episodes
         from media_management_scripts.utils import season_episode_name
         from media_management_scripts.support.concat_mp4 import concat_mp4
+        from texttable import Texttable
 
         concat = {}
         input = ns['input']
@@ -36,8 +39,12 @@ class FindEpisodesCommand(SubCommand):
         out_dir = ns['output']
         ignore_parts = ns['ignore_parts']
         season_folders = ns.get('seasons', False)
+
+        table = []
         # for ep in sorted(find_episodes(input, ns['strip_youtube_dl']), key=lambda x: (x.season, x.episode, x.part)):
-        for ep in find_episodes(input, ns['strip_youtube_dl']):
+        results = list(find_episodes(input, ns['strip_youtube_dl'], ns.get('use_101_pattern')))
+        for ep in sorted(results):
+            # for ep in find_episodes(input, ns['strip_youtube_dl']):
             if ep.part and ep.season and ep.episode and not ignore_parts:
                 key = (ep.season, ep.episode)
                 eps = concat.get(key, [])
@@ -53,25 +60,26 @@ class FindEpisodesCommand(SubCommand):
                     season_f = os.path.join(out_dir, 'Season {}'.format(ep.season))
                 else:
                     season_f = out_dir
-                if not os.path.exists(season_f):
-                    os.makedirs(season_f)
-                if ns.get('rename', False):
-                    out_file = os.path.join(season_f, new_name)
-                    print('{} -> {}'.format(filename, out_file))
-                    self._move(path, out_file)
-                else:
-                    out_file = os.path.join(season_f, new_name)
-                    print('{} -> {}'.format(filename, out_file))
-                    self._copy(path, out_file)
+                out_file = os.path.join(season_f, new_name)
+                table.append((ep.path, ep.season_episode, out_file))
+            elif ep.season and ep.episode:
+                table.append((ep.path, ep.season_episode, None))
             else:
-                print(ep)
+                table.append((ep.path, None, None))
+        columns = ('Original', 'Episode', 'New Path')
+        if ns.get('rename', False):
+            self._bulk_move(table, column_descriptions=columns, src_index=0, dest_index=2, print_table=True)
+        elif ns.get('copy', False):
+            self._bulk_copy(table, column_descriptions=columns, src_index=0, dest_index=2, print_table=True)
+        else:
+            self._bulk_print(table, column_descriptions=columns, src_index=0, dest_index=2)
         for key in concat:
-            list = sorted(concat[key])
+            concats = sorted(concat[key])
             print('s{}e{}'.format(key[0], key[1]))
-            for item in list:
+            for item in concats:
                 print('   {} pt{}'.format(item.name, item.part))
             if ns['concat_files']:
-                to_concat = [item.path for item in list]
+                to_concat = [item.path for item in concats]
                 if len(to_concat) > 1:
                     if season_folders:
                         season_f = os.path.join(out_dir, 'Season {}'.format(key[0]))
