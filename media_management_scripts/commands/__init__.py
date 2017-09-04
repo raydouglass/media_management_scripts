@@ -5,6 +5,9 @@ from media_management_scripts.support.files import check_exists, create_dirs
 
 
 class SubCommand(metaclass=ABCMeta):
+    def __init__(self):
+        self.dry_run = False
+
     @property
     @abstractmethod
     def name(self):

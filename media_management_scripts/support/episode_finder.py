@@ -71,7 +71,7 @@ class EpisodePart():
         return False
 
 
-def extract(name, use101) -> Tuple[int, int, int]:
+def extract(name, use101=False) -> Tuple[int, int, int]:
     season = None
     ep = None
     part = None
@@ -107,14 +107,6 @@ def find_episodes(dir, strip_youtubedl, use101=False):
                     pass
             season, ep, part = extract(name, use101)
             yield EpisodePart(name, path, season, ep, part)
-
-
-def main(dir):
-    files = sorted([f for f in listdir(dir) if isfile(join(dir, f)) and not f.startswith('.')])
-    for file in files:
-        name = basename(file)[6::]
-        season, ep, part = extract(name)
-
 
 if __name__ == '__main__':
     left = EpisodePart('left', 'left', 1, 2, None)
