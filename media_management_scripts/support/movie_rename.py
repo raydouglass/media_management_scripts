@@ -9,6 +9,9 @@ from scp import SCPClient
 from media_management_scripts.support.formatting import sizeof_fmt
 from media_management_scripts.utils import create_metadata_extractor
 
+OK = 0
+CANCEL = 1
+
 
 def _transfer(result: NameInformation, input_file, username, pkey_file, host, output_path):
     output_file = os.path.join(output_path, os.path.basename(input_file))
@@ -37,17 +40,19 @@ def _transfer(result: NameInformation, input_file, username, pkey_file, host, ou
 def _search(title, file, metadata):
     results = MovieDbApi().search_title(title, metadata)
     # Sort by closeness to file's title, then title, then year
-    results.sort(key=lambda x: (-SequenceMatcher(None, x.title, x.metadata.title).ratio(), x.title, x.year))
-    result = None
     if len(results) > 0:
+        metadata_title = metadata.title if metadata.title is not None else ''
+        results.sort(key=lambda x: (-SequenceMatcher(None, x.title, metadata_title).ratio(), x.title, x.year))
         choices = []
         for i in range(len(results)):
             choices.append((str(i), results[i].simple_name))
         d = Dialog(autowidgetsize=True)
         code, tag = d.menu('Choices:', choices=choices, title=os.path.basename(file))
         if code == d.OK:
-            return results[int(tag)]
-    return None
+            return OK, results[int(tag)]
+        else:
+            return CANCEL, None
+    return OK, None
 
 
 def _get_new_name(input_to_cmd) -> NameInformation:
@@ -55,15 +60,18 @@ def _get_new_name(input_to_cmd) -> NameInformation:
     result = None
     title = metadata.title
     if title:
-        result = _search(title, input_to_cmd, metadata)
-
+        code, result = _search(title, input_to_cmd, metadata)
+        if code == CANCEL:
+            return None
     while result is None:
-        title=''
+        title = ''
         d = Dialog(autowidgetsize=True)
         exit_code, title = d.inputbox('No matches found. Try a different title?', init=title,
                                       title=os.path.basename(input_to_cmd))
         if exit_code == d.OK:
-            result = _search(title, input_to_cmd, metadata)
+            code, result = _search(title, input_to_cmd, metadata)
+            if code == CANCEL:
+                return None
         else:
             return None
 

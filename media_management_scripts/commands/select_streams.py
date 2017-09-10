@@ -103,4 +103,4 @@ def select_streams(file, output_file, overwrite=False, convert_config: ConvertCo
     if convert_config:
         raise Exception()
     else:
-        remux(file, output_file, mappings=indexes, overwrite=overwrite, print_output=True)
+        remux([file], output_file, mappings=indexes, overwrite=overwrite, print_output=True)

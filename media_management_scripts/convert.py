@@ -2,7 +2,7 @@ import logging
 import os
 
 from texttable import Texttable
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, List
 
 from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution
 from media_management_scripts.support.executables import execute_with_output, ffmpeg
@@ -80,7 +80,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         raise Exception('Metadata provided without interlace report, but convert requires deinterlace checks')
 
     if metadata.resolution not in (
-    Resolution.LOW_DEF, Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF, Resolution.HIGH_DEF):
+            Resolution.LOW_DEF, Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF, Resolution.HIGH_DEF):
         print('{}: Resolution not supported for conversion: {}'.format(input, metadata.resolution))
         # TODO Handle converting 4k content in H.265/HVEC
         return -2
@@ -134,13 +134,14 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     return execute(args, print_output)
 
 
-def remux(input_file, output_file, mappings, overwrite=False, print_output=True):
+def remux(input_files: List[str], output_file: str, mappings: List, overwrite=False, print_output=True):
     if not overwrite and check_exists(output_file):
         return -1
     args = [ffmpeg()]
     if overwrite:
         args.append('-y')
-    args.extend(['-i', input_file])
+    for input_file in input_files:
+        args.extend(['-i', input_file])
     args.extend(['-c', 'copy'])
     for m in mappings:
         if type(m) == int:
@@ -163,15 +164,15 @@ def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=D
     args = [ffmpeg(), '-i', video]
     if overwrite:
         args.append('-y')
+    args.extend(['-i', srt])
+    args.extend(['-map', '0', '-map', '1:0'])
     if convert:
         args.extend(['-c:v', 'libx264', '-crf', str(crf), '-preset', preset])
         args.extend(['-c:a', 'aac'])
     else:
         args.extend(['-c:v', 'copy'])
         args.extend(['-c:a', 'copy'])
-    args.extend(['-map', '0'])
-    args.extend(['-c:s', 'copy', '-map', '1:0'])
-    args.extend(['-i', srt])
+    args.extend(['-c:s', 'copy'])
     # -metadata:s:s:0 language=eng
     if lang:
         args.extend(['-metadata:s:s:0', 'language=' + lang])
