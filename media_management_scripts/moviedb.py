@@ -1,6 +1,5 @@
 import tmdbsimple as tmdb
 import os
-import re
 from media_management_scripts.utils import create_metadata_extractor
 
 
@@ -33,8 +32,19 @@ class NameInformation():
 
 
 class MovieDbApi():
-    def __init__(self, api_key='***REMOVED***'):
-        tmdb.API_KEY = api_key
+    def __init__(self, api_key=None, config_file=None):
+        if api_key is not None:
+            tmdb.API_KEY = api_key
+        else:
+            import configparser
+            if config_file is None:
+                config_file = os.path.expanduser('~/.config/moviedb/moviedb.ini')
+                if not os.path.exists(config_file):
+                    raise Exception('Must provide either api_key or config_file')
+            config = configparser.ConfigParser()
+            config.read(config_file)
+            tmdb.API_KEY = config.get('moviedb', 'apikey')
+
         self.extractor = create_metadata_extractor()
 
     def search_file(self, file, single_result=True):
