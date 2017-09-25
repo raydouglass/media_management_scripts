@@ -4,21 +4,39 @@ import subprocess
 import re
 from typing import Tuple, Callable, List, NamedTuple
 
+import configparser
+import os
+import shutil
+
+ffmpeg_exe = shutil.which('ffmpeg')
+ffprobe_exe = shutil.which('ffprobe')
+comskip_exe = shutil.which('comskip')
+ccextractor_exe = shutil.which('ccextractor')
+
+config_file = os.path.expanduser('~/.config/mms/executables.ini')
+if os.path.exists(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    ffmpeg_exe = config.get('main', 'ffmpeg', fallback=ffmpeg_exe)
+    ffprobe_exe = config.get('main', 'ffprobe', fallback=ffprobe_exe)
+    comskip_exe = config.get('main', 'comskip', fallback=comskip_exe)
+    ccextractor_exe = config.get('main', 'ccextractor', fallback=ccextractor_exe)
+
 
 def ffmpeg():
-    return '/usr/local/bin/ffmpeg'
+    return ffmpeg_exe
 
 
 def ffprobe():
-    return '/usr/local/bin/ffprobe'
+    return ffprobe_exe
 
 
 def comskip():
-    return '/usr/local/bin/comskip'
+    return comskip_exe
 
 
 def ccextractor():
-    return '/usr/local/bin/ccextractor'
+    return ccextractor_exe
 
 
 exe_logger = logging.getLogger('executable-logger')

@@ -109,5 +109,4 @@ __all__ = ['SubCommand',
            'search',
            'select_streams',
            'split',
-           'strip_youtube_dl',
            'tv_rename']
