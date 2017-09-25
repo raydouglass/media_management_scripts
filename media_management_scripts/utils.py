@@ -5,9 +5,9 @@ def compare_gt(this, other):
     if this is not None and other is not None:
         return int(this > other)
     elif this is not None:
-        return False
+        return -1
     else:
-        return True
+        return 1
 
 
 def compare(this, other):
@@ -23,7 +23,7 @@ def compare(this, other):
 
 
 def compare_lt(this, other):
-    return not compare_gt(this, other)
+    return -compare_gt(this, other)
 
 
 def create_metadata_extractor(db_file=None) -> MetadataExtractor:

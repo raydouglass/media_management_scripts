@@ -17,8 +17,8 @@ import shlex
 
 logger = logging.getLogger(__name__)
 
-TV_NAME_REGEX = re.compile('.+ - S\d\dE\d\d(-E\d\d)? - .+\.mkv')
-MOVIE_NAME_REGEX = re.compile('.+ \(\d{4}\)( - \d+p)?\.mkv')
+TV_NAME_REGEX = re.compile('.+ - S\d{2,}E\d{2,}(-E\d{2,})?( - .+)?\.mkv')
+MOVIE_NAME_REGEX = re.compile('.+ \(\d{4}\)( - .+)?\.mkv')
 
 
 class ProcessStatus():

@@ -9,14 +9,16 @@ from media_management_scripts.commands.metadata import print_metadata
 
 class UtilsTestCase(unittest.TestCase):
     def test_compare_gt(self):
-        self.assertTrue(utils.compare_gt(0, -1))
-        self.assertTrue(utils.compare_gt(1, None))
-        self.assertFalse(utils.compare_gt(None, 1))
+        self.assertEqual(0, utils.compare_gt(0, 0))
+        self.assertEqual(1, utils.compare_gt(0, -1))
+        self.assertEqual(-1, utils.compare_gt(1, None))
+        self.assertEquals(1, utils.compare_gt(None, 1))
 
     def test_compare_lt(self):
-        self.assertFalse(utils.compare_lt(0, -1))
-        self.assertFalse(utils.compare_lt(1, None))
-        self.assertTrue(utils.compare_lt(None, 1))
+        self.assertEqual(0, utils.compare_lt(0, 0))
+        self.assertEqual(-1, utils.compare_lt(0, -1))
+        self.assertEqual(1, utils.compare_lt(1, None))
+        self.assertEquals(-1, utils.compare_lt(None, 1))
 
 
 class EpisodeFinderTestCase(unittest.TestCase):

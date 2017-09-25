@@ -42,6 +42,29 @@ class BackupMock():
         return self.return_code
 
 
+class ConvertDvdRegexTest(unittest.TestCase):
+    def test_movie(self):
+        from media_management_scripts.convert_daemon import MOVIE_NAME_REGEX
+        self.assertIsNotNone(MOVIE_NAME_REGEX.fullmatch('Test (1999).mkv'))
+        self.assertIsNotNone(MOVIE_NAME_REGEX.fullmatch('Test (1999) - 1080p.mkv'))
+        self.assertIsNotNone(MOVIE_NAME_REGEX.fullmatch('Test (1999) - Extended 1080p.mkv'))
+        self.assertIsNotNone(MOVIE_NAME_REGEX.fullmatch('Test (1999) - Extended.mkv'))
+        self.assertIsNotNone(MOVIE_NAME_REGEX.fullmatch('Name with Spaces (2833) - 720p.mkv'))
+        self.assertIsNone(MOVIE_NAME_REGEX.fullmatch('Test - Extended.mkv'))
+        self.assertIsNone(MOVIE_NAME_REGEX.fullmatch('Test (1999) - .mkv'))
+
+    def test_tv(self):
+        from media_management_scripts.convert_daemon import TV_NAME_REGEX
+        self.assertIsNotNone(TV_NAME_REGEX.fullmatch('TV Show Name - S01E01 - Episode Name.mkv'))
+        self.assertIsNotNone(TV_NAME_REGEX.fullmatch('TV Show Name - S13E05 - Episode Name.mkv'))
+        self.assertIsNotNone(TV_NAME_REGEX.fullmatch('TV Show Name - S13E05.mkv'))
+        self.assertIsNotNone(TV_NAME_REGEX.fullmatch('TV Show Name - S2008E05.mkv'))
+        self.assertIsNotNone(TV_NAME_REGEX.fullmatch('TV Show Name - S13E05-E06.mkv'))
+        self.assertIsNone(TV_NAME_REGEX.fullmatch('Test - Extended.mkv'))
+        self.assertIsNone(TV_NAME_REGEX.fullmatch('Test - S1E01 - Name.mkv'))
+        self.assertIsNone(TV_NAME_REGEX.fullmatch('Test - S01E1 - Name.mkv'))
+
+
 class ConvertDvdTestCase(unittest.TestCase):
     def setUp(self):
         self.files = []
