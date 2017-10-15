@@ -1,5 +1,7 @@
 from . import SubCommand
 from .common import *
+import argparse
+import os
 
 
 class SelectStreamsCommand(SubCommand):
@@ -8,8 +10,11 @@ class SelectStreamsCommand(SubCommand):
         return 'select-streams'
 
     def build_argparse(self, subparser):
+        input_parser = argparse.ArgumentParser(add_help=False)
+        input_parser.add_argument('input', nargs='+', help='Input directory')
+
         stream_select_parser = subparser.add_parser('select-streams',
-                                                     parents=[parent_parser, input_parser, convert_parent_parser])
+                                                    parents=[parent_parser, input_parser, convert_parent_parser])
         stream_select_parser.add_argument('-c', '--convert', action='store_const', default=False, const=True,
                                           help='Whether to convert the file or just remux it')
 
@@ -26,7 +31,7 @@ SubCommand.register(SelectStreamsCommand)
 
 from media_management_scripts.support.metadata import Stream
 from media_management_scripts.utils import extract_metadata
-from media_management_scripts.convert import ConvertConfig, convert_with_config, remux
+from media_management_scripts.convert import ConvertConfig, convert_with_config, create_remux_args
 from dialog import Dialog
 from typing import Tuple, List
 
@@ -94,13 +99,35 @@ def _get_stream_indexes(metadata) -> List[int]:
     return tags
 
 
-def select_streams(file, output_file, overwrite=False, convert_config: ConvertConfig = None):
-    metadata = extract_metadata(file)
-    indexes = _get_stream_indexes(metadata)
-    if indexes is None:
+def select_streams(files, output_file, overwrite=False, convert_config: ConvertConfig = None):
+    from media_management_scripts.support.executables import execute_ffmpeg_with_dialog
+    if os.path.exists(output_file):
+        print('Output file exists: {}'.format(output_file))
         return
-    indexes = ['0:{}'.format(i) for i in indexes]
+    final_indexes = []
+    max_duration = 0
+    for i, file in enumerate(files):
+        metadata = extract_metadata(file)
+        if metadata.estimated_duration and metadata.estimated_duration > max_duration:
+            max_duration = metadata.estimated_duration
+        indexes = _get_stream_indexes(metadata)
+        if indexes is not None:
+            final_indexes.extend(['{}:{}'.format(i, index) for index in indexes])
+        else:
+            # User selected cancel
+            return
+
+    if max_duration == 0:
+        max_duration = None
+
     if convert_config:
-        raise Exception()
+        raise Exception('Convert is not supported in select-streams currently')
+    elif len(final_indexes) > 0:
+        args = create_remux_args(files, output_file, mappings=final_indexes, overwrite=overwrite, print_output=True)
+        if len(files) == 1:
+            title = os.path.basename(files[0])
+        else:
+            title = 'Remuxing {} files'.format(len(files))
+        execute_ffmpeg_with_dialog(args, duration=max_duration, title=title)
     else:
-        remux([file], output_file, mappings=indexes, overwrite=overwrite, print_output=True)
+        print('No stream selected.')

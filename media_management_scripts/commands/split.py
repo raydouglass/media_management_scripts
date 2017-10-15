@@ -8,20 +8,36 @@ class SplitCommand(SubCommand):
         return 'split'
 
     def build_argparse(self, subparser):
-        split_parser = subparser.add_parser('split', help='Split a file', parents=[parent_parser, input_parser])
-        split_parser.add_argument('-c', '--by-chapters', help='Split file by chapters, specifying number of episodes',
+        split_parser = subparser.add_parser('split', help='Split a file', parents=[parent_parser])
+        split_parser.add_argument('-c', '--by-chapters',
+                                  help='Split file by chapters, specifying number of chapters per file',
                                   type=int)
+
+        split_parser.add_argument('--start', type=str)
+        split_parser.add_argument('--end', type=str)
+        split_parser.add_argument('input', nargs='+', help='Input directory')
         split_parser.add_argument('--output', '-o', default='./', dest='output')
 
     def subexecute(self, ns):
+        from media_management_scripts.support.files import get_files_in_directories
         from media_management_scripts.support.split import split_by_chapter
+        from media_management_scripts.convert import cut
+        import os
         input_to_cmd = ns['input']
+
         output = ns['output']
-        if 'by_chapters' in ns:
-            episodes = ns['by_chapters']
-            split_by_chapter(input_to_cmd, output, episodes)
+        if ns.get('by_chapters', None) is not None:
+            chapters = ns['by_chapters']
+            count = 0
+            for file in get_files_in_directories(input_to_cmd):
+                count += split_by_chapter(file, output, chapters, initial_count=count)
+                # print(file)
         else:
-            raise Exception('Unsupported')
+            if os.path.isdir(output):
+                raise Exception('Output cannot be a directory')
+            start = ns['start']
+            end = ns.get('end')
+            cut(input_to_cmd[0], output, start, end)
 
 
 SubCommand.register(SplitCommand)

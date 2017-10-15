@@ -12,6 +12,7 @@ ffmpeg_exe = shutil.which('ffmpeg')
 ffprobe_exe = shutil.which('ffprobe')
 comskip_exe = shutil.which('comskip')
 ccextractor_exe = shutil.which('ccextractor')
+nice_exe = shutil.which('nice')
 
 config_file = os.path.expanduser('~/.config/mms/executables.ini')
 if os.path.exists(config_file):
@@ -21,6 +22,7 @@ if os.path.exists(config_file):
     ffprobe_exe = config.get('main', 'ffprobe', fallback=ffprobe_exe)
     comskip_exe = config.get('main', 'comskip', fallback=comskip_exe)
     ccextractor_exe = config.get('main', 'ccextractor', fallback=ccextractor_exe)
+    nice_exe = config.get('main', 'nice', fallback=nice_exe)
 
 
 def ffmpeg():
@@ -40,7 +42,6 @@ def ccextractor():
 
 
 exe_logger = logging.getLogger('executable-logger')
-nice_exe = '/usr/bin/nice'
 
 DEBUG_MODE = False
 logger = logging.getLogger(__name__)
@@ -58,8 +59,6 @@ class FFMpegProgress(NamedTuple):
     time: str
     bitrate: str
     speed: float
-    percent: int
-    remaining_time: float
 
     @property
     def time_as_seconds(self):
@@ -67,11 +66,11 @@ class FFMpegProgress(NamedTuple):
         return float(v[0]) * 60 * 60 + float(v[1]) * 60 + float(v[2])
 
     def progress(self, duration: float):
-        return self.time // duration
+        return self.time_as_seconds / duration
 
     def remaining_time(self, duration: float):
         speed = float(self.speed[:-1])
-        return (duration - self.time) / speed
+        return (duration - self.time_as_seconds) / speed
 
 
 def create_ffmpeg_callback(cb: Callable[[FFMpegProgress], None]) -> Callable[[str], None]:
@@ -80,7 +79,7 @@ def create_ffmpeg_callback(cb: Callable[[FFMpegProgress], None]) -> Callable[[st
     :param cb:
     :return:
     """
-    pattern = re.compile('(\w+)=\s*([\w:/\.]+)')
+    pattern = re.compile('(\w+)=\s*([-\w:/\.]+)')
 
     def wrapper(line):
         values = {}
@@ -181,6 +180,7 @@ def execute_with_callback(args: List[str], callback: Callable[[str], None], use_
                     else:
                         output.write(l)
             except Exception as ex:
+                p.kill()
                 raise ex
         l = p.stdout.read()
         if l:
@@ -188,5 +188,28 @@ def execute_with_callback(args: List[str], callback: Callable[[str], None], use_
                 l = l.decode('utf-8')
                 callback(l)
             except Exception as ex:
+                p.kill()
                 raise ex
         return p.poll()
+
+
+def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=None):
+    from media_management_scripts.support.formatting import duration_to_str
+    if ffmpeg() not in args:
+        raise Exception('Execute ffmpeg called without ffmpeg args')
+    from dialog import Dialog
+    d = Dialog(autowidgetsize=False)
+    d.gauge_start(title=title, text=text if text else "", percent=0 if duration else None)
+
+    def cb(ffmpeg_progress: FFMpegProgress):
+        if duration:
+            remaining_time = duration_to_str(ffmpeg_progress.remaining_time(duration))
+            d.gauge_update(percent=int(ffmpeg_progress.progress(duration) * 100),
+                           text='Remaining: {}'.format(remaining_time),
+                           update_text=True)
+
+    try:
+        callback = create_ffmpeg_callback(cb)
+        execute_with_callback(args, callback)
+    finally:
+        d.gauge_stop()

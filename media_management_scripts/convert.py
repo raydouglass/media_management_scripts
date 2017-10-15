@@ -92,7 +92,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     args.extend(['-c:v', 'libx264'])
     crf = config.crf
     bitrate = config.bitrate
-    if config.bitrate:
+    if config.bitrate is not None and config.bitrate != 'disabled':
         crf = 1
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
         if config.bitrate == 'auto':
@@ -134,7 +134,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     return execute(args, print_output)
 
 
-def remux(input_files: List[str], output_file: str, mappings: List, overwrite=False, print_output=True):
+def create_remux_args(input_files: List[str], output_file: str, mappings: List, overwrite=False, print_output=True):
     if not overwrite and check_exists(output_file):
         return -1
     args = [ffmpeg()]
@@ -149,7 +149,7 @@ def remux(input_files: List[str], output_file: str, mappings: List, overwrite=Fa
         else:
             args.extend(['-map', m])
     args.append(output_file)
-    return execute(args, print_output)
+    return args
 
 
 def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None, include_meta=True, print_output=True):
@@ -190,9 +190,9 @@ def cut(input, output, start=None, end=None):
     args.extend(['-c:s', 'copy'])
     args.extend(['-map', '0'])
     if start:
-        args.extend(['-ss', start])
+        args.extend(['-ss', str(start)])
     if end:
-        args.extend(['-to', end])
+        args.extend(['-to', str(end)])
     args.append(output)
     return execute(args)
 

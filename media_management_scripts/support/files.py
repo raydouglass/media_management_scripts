@@ -47,6 +47,15 @@ def list_files(input_dir: str,
                 yield path
 
 
+def get_files_in_directories(input_dirs, file_filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
+    for input_dir in input_dirs:
+        if os.path.isdir(input_dir):
+            for f in list_files(input_dir, file_filter=file_filter):
+                yield os.path.join(input_dir, f)
+        else:
+            yield input_dir
+
+
 def get_input_output(input_dir: str,
                      output_dir: str,
                      work_dir: str = None,

@@ -7,6 +7,16 @@ BASE_URL = 'https://api.thetvdb.com'
 DEFAULT_CONFIG_LOCATION = '~/.config/tvdb/tvdb.ini'
 
 
+def get_season_episode(tvdb_episode, use_dvd=False):
+    if use_dvd:
+        season = tvdb_episode['dvdSeason']
+        episode_num = tvdb_episode['dvdEpisodeNumber']
+    else:
+        season = tvdb_episode['airedSeason']
+        episode_num = tvdb_episode['airedEpisodeNumber']
+    return int(season), int(episode_num)
+
+
 class TVDB():
     def __init__(self, api_key, username, user_key, shelve_file='./tvdb.shelve'):
         self._api_key = api_key
@@ -38,20 +48,29 @@ class TVDB():
         headers = {'Authorization': 'Bearer ' + self._jwt}
         params = {'name': name}
         res = requests.get(BASE_URL + '/search/series', params=params, headers=headers)
+        if res.status_code == requests.codes.not_found:
+            return {'data': []}
         res.raise_for_status()
-        # if res.status_code == requests.codes.ok:
         return res.json()
+
+    def get_series_id(self, name: str) -> int:
+        series_id = self._db.get(name, None)
+        if series_id is None:
+            for series_id, series_name in self.search_series(name):
+                if series_name == name:
+                    self._db[name] = series_id
+                    return series_id
+            series_id = None
+        return series_id
 
     def search_series(self, name):
         series_id = self._db.get(name, None)
         if series_id is None:
             result = self._search_series(name)
             for s in result['data']:
-                if s['seriesName'] == name:
-                    series_id = int(s['id'])
-                    self._db[name] = series_id
-                    return series_id
-        return series_id
+                yield int(s['id']), s['seriesName']
+        else:
+            yield series_id, name
 
     def get_episodes(self, series_id):
         if self._jwt is None:
@@ -62,10 +81,17 @@ class TVDB():
         while page is not None:
             res = requests.get(BASE_URL + '/series/{}/episodes'.format(series_id), headers=headers,
                                params={'page': page})
+            res.raise_for_status()
             res = res.json()
             episodes.extend(res['data'])
             page = res['links']['next']
         return episodes
+
+    def get_episodes_by_series_name(self, series_name):
+        series_id = self.get_series_id(series_name)
+        if series_name is None:
+            raise Exception('No series named \'{}\' found'.format(series_name))
+        return self.get_episodes(series_id)
 
     @staticmethod
     def season_number(e):
@@ -78,7 +104,7 @@ class TVDB():
     def find_episode(self, series_name, episode=None, air_date=None):
         if episode is None and air_date is None:
             raise Exception('Both episode and air_date cannot be null')
-        series_id = self.search_series(series_name)
+        series_id = self.get_series_id(series_name)
         if series_id:
             if episode:
                 episodes = self.get_episodes(series_id)
@@ -103,7 +129,7 @@ class TVDB():
         if self._jwt is None:
             self.refresh()
         headers = {'Authorization': 'Bearer ' + self._jwt}
-        series_id = self.search_series(series_name)
+        series_id = self.get_series_id(series_name)
         params = {'firstAired': firstAired}
         res = requests.get(BASE_URL + '/series/{}/episodes/query'.format(series_id), headers=headers, params=params)
         return res.json()
@@ -141,7 +167,7 @@ def _run_command(cmd, ns):
 
     if cmd == 'episodes':
         series_name = ns['series']
-        series_id = tvdb.search_series(series_name)
+        series_id = tvdb.get_series_id(series_name)
         episodes = tvdb.get_episodes(series_id)
         episodes = sorted(episodes, key=TVDB.season_number)
         print(json.dumps(episodes))

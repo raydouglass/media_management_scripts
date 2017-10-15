@@ -12,13 +12,22 @@ import shutil
 import configparser
 import sqlite3
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Tuple, NamedTuple
 import shlex
 
 logger = logging.getLogger(__name__)
 
 TV_NAME_REGEX = re.compile('.+ - S\d{2,}E\d{2,}(-E\d{2,})?( - .+)?\.mkv')
 MOVIE_NAME_REGEX = re.compile('.+ \(\d{4}\)( - .+)?\.mkv')
+
+
+class ConvertDvdResults(NamedTuple):
+    movie_total_count: int
+    movie_processed_count: int
+    movie_error_count: int
+    tv_total_count: int
+    tv_processed_count: int
+    tv_error_count: int
 
 
 class ProcessStatus():
@@ -74,6 +83,35 @@ class ProcessedDatabase():
                 os.path.exists(status.input_file) and os.path.exists(status.output_file)]
 
 
+def _convert_config_from_config(config, section):
+    # Transcode
+    crf = config.get(section, 'crf', fallback=DEFAULT_CRF)
+    preset = config.get(section, 'preset', fallback=DEFAULT_PRESET)
+    bitrate = config.get(section, 'bitrate', fallback='disabled')
+    if bitrate == 'disabled':
+        bitrate = None
+    elif bitrate != 'auto':
+        try:
+            int(bitrate)
+        except ValueError:
+            raise Exception("Bitrate in [{}] must be 'auto', 'disabled' or an integer".format(section))
+    deinterlace = bool(config.get(section, 'deinterlace', fallback=False))
+    deinterlace_threshold = float(config.get(section, 'deinterlace_threshold', fallback='.5'))
+
+    auto_bitrate_240 = config.getint(section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
+    auto_bitrate_480 = config.getint(section, 'auto_bitrate_480',
+                                     fallback=Resolution.STANDARD_DEF.auto_bitrate)
+    auto_bitrate_720 = config.getint('movie.movie.transcode', 'auto_bitrate_720',
+                                     fallback=Resolution.MEDIUM_DEF.auto_bitrate)
+    auto_bitrate_1080 = config.getint('transcode', 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
+
+    return ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
+                         auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,
+                         auto_bitrate_720=auto_bitrate_720, auto_bitrate_1080=auto_bitrate_1080,
+                         deinterlace=deinterlace, deinterlace_threshold=deinterlace_threshold,
+                         include_meta=True)
+
+
 class ConvertDvds():
     def __init__(self, config_file):
         config = configparser.ConfigParser()
@@ -95,23 +133,11 @@ class ConvertDvds():
         self.max_size = int(config.get('backup', 'max.size')) * (1024 ** 3)
         self.split_size = config.get('backup', 'split.size')
 
-        # Transcode
-        crf = config.get('transcode', 'crf', fallback=DEFAULT_CRF)
-        preset = config.get('transcode', 'preset', fallback=DEFAULT_PRESET)
-        bitrate = config.get('transcode', 'bitrate', fallback=None)
-        deinterlace = bool(config.get('transcode', 'deinterlace', fallback=False))
-        deinterlace_threshold = float(config.get('transcode', 'deinterlace_threshold', fallback='.5'))
+        self.movie_convert_config = _convert_config_from_config(config, 'movie.transcode')
+        self.tv_convert_config = _convert_config_from_config(config, 'tv.transcode')
 
-        auto_bitrate_240 = config.getint('transcode', 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
-        auto_bitrate_480 = config.getint('transcode', 'auto_bitrate_480', fallback=Resolution.STANDARD_DEF.auto_bitrate)
-        auto_bitrate_720 = config.getint('transcode', 'auto_bitrate_720', fallback=Resolution.MEDIUM_DEF.auto_bitrate)
-        auto_bitrate_1080 = config.getint('transcode', 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
-
-        self.convert_config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
-                                            auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,
-                                            auto_bitrate_720=auto_bitrate_720, auto_bitrate_1080=auto_bitrate_1080,
-                                            deinterlace=deinterlace, deinterlace_threshold=deinterlace_threshold,
-                                            include_meta=True)
+        if config.has_section('transcode'):
+            raise Exception('Config file is out dated. Please update to use movie.transcode and tv.transcode')
 
         # Logging
         level = config.get('logging', 'level', fallback='INFO')
@@ -165,7 +191,11 @@ class ConvertDvds():
         else:
             return False
 
-    def process(self, root_dir, input_file, output_file, temp_file, status):
+    def process(self, root_dir, input_file, output_file, temp_file, status, convert_config):
+        if os.path.exists(output_file):
+            logger.info(
+                'Output exists, skipping: input={}, output={}'.format(input_file, output_file))
+            return False
         create_dirs(temp_file)
         create_dirs(output_file)
         # Start backup
@@ -179,21 +209,17 @@ class ConvertDvds():
         if not status.convert:
             # Start convert
             logger.debug('Not converted: {}'.format(input_file))
-            if os.path.exists(output_file):
-                logger.info(
-                    'Output exists, skipping: input={}, output={}'.format(input_file, output_file))
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            result = convert_with_config(input_file, temp_file, convert_config, print_output=False)
+            if result == 0:
+                logger.debug('Conversion successful for {}'.format(input_file))
+                shutil.move(temp_file, output_file)
+                status.convert = True
             else:
+                logger.error('Error converting: code={}, file={}'.format(result, input_file))
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
-                result = convert_with_config(input_file, temp_file, self.convert_config, print_output=False)
-                if result == 0:
-                    logger.debug('Conversion successful for {}'.format(input_file))
-                    shutil.move(temp_file, output_file)
-                    status.convert = True
-                else:
-                    logger.error('Error converting: code={}, file={}'.format(result, input_file))
-                    if os.path.exists(temp_file):
-                        os.remove(temp_file)
         if backup_popen:
             logger.debug('Waiting for backup...')
             ret_code = backup_popen.wait()
@@ -205,31 +231,43 @@ class ConvertDvds():
                     shutil.rmtree(cleanup_dir, ignore_errors=True)
             else:
                 logger.error('Error backing up: code={}, file={}'.format(ret_code, input_file))
+                return False
+        return True
+
+    def _run(self, in_dir, out_dir, convert_config):
+        total_files = 0
+        count = 0
+        error_count = 0
+        to_process = list(get_input_output(in_dir, out_dir, self.working_dir))
+        for input_file, output_file, temp_file in to_process:
+            total_files += 1
+            try:
+                status = self.db.get(input_file, output_file)
+                if status.should_process():
+                    m_time = datetime.fromtimestamp(os.path.getmtime(input_file))
+                    if not self.check_input_name(input_file):
+                        logger.warning('Invalid name, skipping: {}'.format(input_file))
+                    elif m_time > (datetime.now() - timedelta(minutes=5)):
+                        logger.debug('File too recently modified, skipping: {}'.format(input_file))
+                    else:
+                        logger.info('Starting {}'.format(input_file))
+                        if self.process(in_dir, input_file, output_file, temp_file, status, convert_config):
+                            count += 1
+                        self.db.save(status)
+                else:
+                    logger.debug('Not processing: {}'.format(input_file))
+            except:
+                logger.exception('Exception while processing {}'.format(input_file))
+                error_count += 1
+        return total_files, count, error_count
 
     def run(self):
         logger.info('Starting new run')
-        count = 0
-        for in_dir, out_dir in [(self.movie_in_dir, self.movie_out_dir), (self.tv_in_dir, self.tv_out_dir)]:
-            to_process = list(get_input_output(in_dir, out_dir, self.working_dir))
-            for input_file, output_file, temp_file in to_process:
-                try:
-                    status = self.db.get(input_file, output_file)
-                    if status.should_process():
-                        m_time = datetime.fromtimestamp(os.path.getmtime(input_file))
-                        if not self.check_input_name(input_file):
-                            logger.warning('Invalid name, skipping: {}'.format(input_file))
-                        elif m_time > (datetime.now() - timedelta(minutes=5)):
-                            logger.debug('File too recently modified, skipping: {}'.format(input_file))
-                        else:
-                            logger.info('Starting {}'.format(input_file))
-                            self.process(in_dir, input_file, output_file, temp_file, status)
-                            self.db.save(status)
-                            count += 1
-                    else:
-                        logger.debug('Not processing: {}'.format(input_file))
-                except:
-                    logger.exception('Exception while processing {}'.format(input_file))
-        logger.info('Processed {} files'.format(count))
+        movie_counts = self._run(self.movie_in_dir, self.movie_out_dir, self.movie_convert_config)
+        logger.info('Processed {} of {} movie files ({} errors)'.format(*movie_counts))
+        tv_counts = self._run(self.tv_in_dir, self.tv_out_dir, self.tv_convert_config)
+        logger.info('Processed {} of {} tv files'.format(*tv_counts))
+        return ConvertDvdResults(*movie_counts, *tv_counts)
 
 
 def main():

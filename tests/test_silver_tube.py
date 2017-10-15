@@ -127,7 +127,7 @@ class SilverTubeTestCase(unittest.TestCase):
             'airedEpisodeNumber': 4
         }]
         tvdb_mock.season_number = lambda e: (e['airedSeason'], e['airedEpisodeNumber'])
-        tvdb_mock.search_series.return_value = 54321
+        tvdb_mock.get_series_id.return_value = 54321
         meta = {
             'Title': 'TheSeries',
             'WM/SubTitle': 'Test Episode Name',
@@ -155,7 +155,7 @@ class SilverTubeTestCase(unittest.TestCase):
     def test_no_candidates(self, tvdb_mock):
         tvdb_mock.find_episode.return_value = []
         tvdb_mock.season_number = lambda e: (e['airedSeason'], e['airedEpisodeNumber'])
-        tvdb_mock.search_series.return_value = 54321
+        tvdb_mock.get_series_id.return_value = 54321
         meta = {
             'Title': 'TheSeries',
             'WM/SubTitle': 'Test Episode Name',

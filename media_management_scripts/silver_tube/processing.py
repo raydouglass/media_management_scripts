@@ -148,7 +148,7 @@ class Configuration():
             else:
                 logger.warning('Failure to convert {}'.format(wtv_file))
         else:
-            logger.warn(
+            logger.warning(
                 'Missing data for {}: series={}, episode_name={}, season={}, episode_num={}'.format(wtv_file, series,
                                                                                                     episode_name,
                                                                                                     season,

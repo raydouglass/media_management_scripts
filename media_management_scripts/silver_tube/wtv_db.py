@@ -119,7 +119,7 @@ class WtvDb():
     def store_candidates(self, tvdb, wtv_filename, meta, episodes):
         self._check_session()
         series_name = meta.tags.get('Title', None)
-        series_id = tvdb.search_series(series_name)
+        series_id = tvdb.get_series_id(series_name)
         if series_id:
             series = self.get_or_create_series(series_id, series_name)
             candidates = [self.from_tvdb(series, e) for e in episodes]

@@ -49,7 +49,7 @@ class Metadata():
         self.streams = [Stream(s) for s in ffprobe_output['streams']]
         format = ffprobe_output['format']
         self.size = float(format['size'])
-        self.bit_rate = float(format['bit_rate'])
+        self.bit_rate = float(format['bit_rate']) if 'bit_rate' in format else None
         self.format = format['format_name']
         self.format_long_name = format['format_long_name']
         self.tags = copy.copy(format.get('tags', {}))

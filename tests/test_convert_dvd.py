@@ -71,7 +71,7 @@ class ConvertDvdTestCase(unittest.TestCase):
         self.dirs = []
         self.config_file = NamedTemporaryFile(suffix='.ini', delete=False, mode='w')
         processed_shelve_file = NamedTemporaryFile(suffix='.shelve')
-        log_file = NamedTemporaryFile(suffix='.log')
+        self.log_file = NamedTemporaryFile(suffix='.log')
 
         config = configparser.ConfigParser()
         self.movie_in = TemporaryDirectory()
@@ -87,14 +87,14 @@ class ConvertDvdTestCase(unittest.TestCase):
             'tv.dir.out': self.tv_out.name
         }
         config['backup'] = {
-            'enabled': False,
+            'enabled': True,
             'rclone': 'does/not/exist',
             'split': '/usr/local/bin/gsplit',
             'max.size': 25,
             'split.size': '5G',
             'backup.path': '/not'
         }
-        config['transcode'] = {
+        config['movie.transcode'] = {
             'bitrate': 'auto',
             'crf': DEFAULT_CRF,
             'preset': DEFAULT_PRESET,
@@ -104,11 +104,11 @@ class ConvertDvdTestCase(unittest.TestCase):
         }
         config['logging'] = {
             'level': 'DEBUG',
-            'file': log_file.name,
+            'file': self.log_file.name,
             'db': processed_shelve_file.name
         }
 
-        self.files.extend([self.config_file, processed_shelve_file, log_file])
+        self.files.extend([self.config_file, processed_shelve_file, self.log_file])
         self.dirs.extend([self.movie_in, self.tv_in, self.working_dir, self.movie_out, self.tv_out])
         with self.config_file:
             config.write(self.config_file)
@@ -148,5 +148,97 @@ class ConvertDvdTestCase(unittest.TestCase):
         self.assertEqual('does/not/exist', parser.get('backup', 'rclone', fallback=None))
 
     def test_config_parsed(self):
-        self.assertEqual(Resolution.MEDIUM_DEF.auto_bitrate, self.convert_dvds.convert_config.auto_bitrate_720)
-        self.assertEqual(2000, self.convert_dvds.convert_config.auto_bitrate_480)
+        self.assertEqual(Resolution.MEDIUM_DEF.auto_bitrate, self.convert_dvds.movie_convert_config.auto_bitrate_720)
+        self.assertEqual(2000, self.convert_dvds.movie_convert_config.auto_bitrate_480)
+
+    def test_movie_run(self):
+        movie_name = 'Move Name (2000) - 1080p.mkv'
+        input_file = os.path.join(self.movie_in.name, movie_name)
+        create_test_video(length=10, output_file=input_file)
+        os.utime(input_file, (0, 0))
+        expected_output_file = os.path.join(self.movie_out.name, movie_name)
+
+        result = self.convert_dvds.run()
+
+        self.assertEqual(1, self.backup_count)
+        self.assertTrue(os.path.isfile(expected_output_file))
+        self.assertFalse(0, os.path.getsize(expected_output_file))
+        self.assertEquals(1, result.movie_processed_count)
+        self.assertEquals(1, result.movie_total_count)
+        self.assertEquals(0, result.movie_error_count)
+        self.assertEquals(0, result.tv_error_count)
+        self.assertEquals(0, result.tv_processed_count)
+        self.assertEquals(0, result.tv_total_count)
+
+    def test_tv_run(self):
+        tv_name = 'Show Name/Season 02/Show Name - S02E01 - Episode Title.mkv'
+        input_file = os.path.join(self.tv_in.name, tv_name)
+        os.makedirs(os.path.dirname(input_file), exist_ok=True)
+        create_test_video(length=10, output_file=input_file)
+        os.utime(input_file, (0, 0))
+        expected_output_file = os.path.join(self.tv_out.name, tv_name)
+
+        result = self.convert_dvds.run()
+        print(result)
+        self.assertEqual(1, self.backup_count)
+        self.assertTrue(os.path.isfile(expected_output_file))
+        self.assertFalse(0, os.path.getsize(expected_output_file))
+        self.assertEquals(0, result.movie_processed_count)
+        self.assertEquals(0, result.movie_total_count)
+        self.assertEquals(0, result.movie_error_count)
+        self.assertEquals(0, result.tv_error_count)
+        self.assertEquals(1, result.tv_processed_count)
+        self.assertEquals(1, result.tv_total_count)
+
+    def test_movie_exists(self):
+        movie_name = 'Move Name (2000) - 1080p.mkv'
+        input_file = os.path.join(self.movie_in.name, movie_name)
+        create_test_video(length=10, output_file=input_file)
+        os.utime(input_file, (0, 0))
+
+        output_file = os.path.join(self.movie_out.name, movie_name)
+        with open(output_file, 'w'):
+            pass
+
+        result = self.convert_dvds.run()
+
+        self.assertEqual(0, self.backup_count)
+        self.assertEquals(0, os.path.getsize(output_file))
+        self.assertEquals(0, result.movie_processed_count)
+        self.assertEquals(1, result.movie_total_count)
+        self.assertEquals(0, result.movie_error_count)
+        self.assertEquals(0, result.tv_error_count)
+        self.assertEquals(0, result.tv_processed_count)
+        self.assertEquals(0, result.tv_total_count)
+
+    def test_multiple(self):
+        movie_count = 3
+        tv_count = 3
+        expected_files = []
+        for i in range(movie_count):
+            movie_name = 'Move Name (200{}) - 1080p.mkv'.format(i)
+            input_file = os.path.join(self.movie_in.name, movie_name)
+            create_test_video(length=3, output_file=input_file)
+            os.utime(input_file, (0, 0))
+            expected_files.append(os.path.join(self.movie_out.name, movie_name))
+
+        for i in range(tv_count):
+            tv_name = 'Show Name/Season 02/Show Name - S02E0{} - Episode Title.mkv'.format(i)
+            input_file = os.path.join(self.tv_in.name, tv_name)
+            os.makedirs(os.path.dirname(input_file), exist_ok=True)
+            create_test_video(length=3, output_file=input_file)
+            os.utime(input_file, (0, 0))
+            expected_files.append(os.path.join(self.tv_out.name, tv_name))
+
+        result = self.convert_dvds.run()
+
+        self.assertEqual(movie_count + tv_count, self.backup_count)
+        for f in expected_files:
+            self.assertTrue(os.path.isfile(f))
+            self.assertFalse(0, os.path.getsize(f))
+        self.assertEquals(movie_count, result.movie_processed_count)
+        self.assertEquals(movie_count, result.movie_total_count)
+        self.assertEquals(0, result.movie_error_count)
+        self.assertEquals(0, result.tv_error_count)
+        self.assertEquals(tv_count, result.tv_processed_count)
+        self.assertEquals(tv_count, result.tv_total_count)

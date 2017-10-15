@@ -123,7 +123,7 @@ class ItunesCommand(SubCommand):
         if len(series_name) != 1:
             raise Exception('Input files have different shows: {}'.format(series_name))
         series_name = series_name.pop()
-        series_id = tvdb.search_series(series_name)
+        series_id = tvdb.get_series_id(series_name)
         tvdb_episodes = tvdb.get_episodes(series_id)
         matched = {}
         not_matched = []

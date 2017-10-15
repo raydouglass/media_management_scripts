@@ -1,69 +1,11 @@
 import sys
 import os
-from os import listdir
-from os.path import isfile, join, basename, dirname
 import re
 import shutil
 
 from tempita import Template
 
 season_pattern = re.compile('Season (\d+)')
-
-
-def pad(i):
-    if i < 10:
-        return '0' + str(i)
-    else:
-        return str(i)
-
-
-def rename(season, episode, show, files, dry_run, output):
-    for file in files:
-        ext = os.path.splitext(file)[1]
-        if show:
-            new_name = '{} - S{}S{}{}'.format(show, season, pad(episode), ext)
-        else:
-            new_name = 'S{}E{}{}'.format(season, pad(episode), ext)
-
-        if output:
-            new_name = join(output, 'Season {}'.format(season), new_name)
-        else:
-            dir = dirname(file)
-            new_name = join(dir, new_name)
-
-        print('{}->{}'.format(file, new_name))
-        if not dry_run:
-            os.makedirs(os.path.dirname(new_name), exist_ok=True)
-            shutil.move(file, new_name)
-        episode += 1
-
-
-def recursive_dir(dir):
-    files = []
-    dirs = []
-    for f in listdir(dir):
-        path = join(dir, f)
-        if isfile(path):
-            files.append(path)
-        else:
-            dirs.append(path)
-    m = season_pattern.search(basename(dir))
-    if m:
-        season = m.group(1)
-        rename(season, 1, files)
-    for d in dirs:
-        recursive_dir(d)
-
-
-def run(input_dirs, season=1, episode=1, show=None, dry_run=False, output=None):
-    files = []
-    for input_dir in input_dirs:
-        new_files = sorted(
-            [join(input_dir, f) for f in listdir(input_dir) if isfile(join(input_dir, f)) and not f.startswith('.')])
-        files.extend(new_files)
-    season = pad(season)
-    rename(season, episode, show, files, dry_run, output)
-
 
 class RegexResults(object):
     def __init__(self, values=[], ignore_missing=False):
