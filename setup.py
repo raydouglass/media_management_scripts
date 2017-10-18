@@ -24,6 +24,7 @@ setup(name='media_management_scripts',
       ],
       install_requires=[
           'requests',
+          'pyOpenSSL',
           'texttable',
           'tmdbsimple',
           'argcomplete',

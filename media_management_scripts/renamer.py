@@ -1,11 +1,10 @@
-import sys
 import os
 import re
-import shutil
 
 from tempita import Template
 
 season_pattern = re.compile('Season (\d+)')
+
 
 class RegexResults(object):
     def __init__(self, values=[], ignore_missing=False):
@@ -33,10 +32,8 @@ def lpad(s, length=2):
     return str(s).rjust(length, ' ')
 
 
-def ifempty(check, if_not_none, if_none=None):
-    if if_none is None:
-        return check if check is not None else if_not_none
-    elif check is None:
+def ifempty(check, if_none, if_not_none):
+    if check:
         return if_not_none
     else:
         return if_none
@@ -55,8 +52,10 @@ def rename_process(template, files, index_start=1, output_dir=None, regex=None, 
     if regex:
         regex = re.compile(regex)
 
-    t = Template(content=template, delimiters=('${', '}'), namespace=RENAMER_NAMESPACE)
+    def get_template(name, source):
+        return Template(content='${show}/Season ${season|zpad}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}', delimiters=('${', '}'), namespace=RENAMER_NAMESPACE)
 
+    t = Template(content=template, delimiters=('${', '}'), namespace=RENAMER_NAMESPACE, get_template=get_template)
     results = []
 
     index = index_start

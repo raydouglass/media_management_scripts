@@ -27,12 +27,12 @@ class RenameCommand(SubCommand):
     The following functions are available:
         * upper - Upper cases the input
         * lower - Lower cases the input
-        * ifempty(a, b) - If a is not null, then a, otherwise b
+        * ifempty(a, b, c) - If a is empty or null, then b, otherwise c
         * lpad(a, b:int) - Left pads a to length b (defaults to 2) with spaces
         * zpad(a, b:int) - Left pads a to length b (defaults to 2) with zeros
     
     Regular Expressions:
-    If a regex is included, the match groups (0=whole match, >0=match group) are avaiable in a list 're' or 'regex'.
+    If a regex is included, the match groups (0=whole match, >0=match group) are available in a list 're' or 'regex'.
     Each match group is converted to an int if possible, so a zero padded int will lose the zeros.
     
     Examples:
