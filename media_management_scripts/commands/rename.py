@@ -28,8 +28,10 @@ class RenameCommand(SubCommand):
         * upper - Upper cases the input
         * lower - Lower cases the input
         * ifempty(a, b, c) - If a is empty or null, then b, otherwise c
-        * lpad(a, b:int) - Left pads a to length b (defaults to 2) with spaces
-        * zpad(a, b:int) - Left pads a to length b (defaults to 2) with zeros
+        * lpad(a, b:int) - Left pads a to length b (defaults to 2+) with spaces
+        * zpad(a, b:int) - Left pads a to length b (defaults to 2+) with zeros
+    
+    lpad/zpad - By default pads to at least 2 characters. If there are 100+ files, then 3 characters, 1000+ files, then 4 characters, etc.
     
     Regular Expressions:
     If a regex is included, the match groups (0=whole match, >0=match group) are available in a list 're' or 'regex'.
@@ -48,7 +50,7 @@ class RenameCommand(SubCommand):
     
     Input: whatever.mp4
     Regex: S(\d+)E(\d)
-    Template: 'Season ${ifempty(re[1], 'unknown')} Episode ${re[2]}.{ext}'
+    Template: 'Season ${ifempty(re[1], 'unknown', re[1])} Episode ${re[2]}.{ext}'
     Result: 'Season unknown Episode .mp4'
 """)
 

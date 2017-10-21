@@ -55,7 +55,7 @@ class TvRenameCommand(SubCommand):
 
     def _remove_special_characters(self, s):
         # https://stackoverflow.com/a/31976060
-        return s.translate({ord(c): None for c in '/<>:"\\|?*'})
+        return s.translate({ord(c): None for c in '/<>:\'"\\|?*'})
 
     def run(self, input_dirs, season=1, episode=1, show=None, output=None, tvdb=None):
         from os import listdir, path
@@ -85,7 +85,6 @@ class TvRenameCommand(SubCommand):
             episode_map = {get_season_episode(ep): ep for ep in episodes}
         else:
             episode_map = {}
-        print(series_id, show)
         results = []
         for file in files:
             ext = path.splitext(file)[1]

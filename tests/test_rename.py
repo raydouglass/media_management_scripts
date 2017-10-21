@@ -32,6 +32,12 @@ class RenameTests(unittest.TestCase):
         results = new_names(rename_process(template, files))
         self.assertEqual(['01 ', '02 '], results)
 
+    def test_concat2(self):
+        template = '${zpad(i)+" "}'
+        files = ['test.mkv', 'test2.mkv']
+        results = new_names(rename_process(template, files))
+        self.assertEqual(['01 ', '02 '], results)
+
     def test_ifempty(self):
         template = '${ifempty(var, \'test\', \'\')}'
         files = ['test.mkv']
@@ -74,7 +80,7 @@ class RenameTests(unittest.TestCase):
         self.assertEqual(['2 ', 'Unknown'], results)
 
     def test_plex(self):
-        template = '${inherit "plex"}'
+        template = '{plex}'
         files = ['file.mkv']
         params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name'}
         results = new_names(rename_process(template, files, params=params))
@@ -84,7 +90,45 @@ class RenameTests(unittest.TestCase):
         results = new_names(rename_process(template, files, params=params))
         self.assertEqual(['TV Show/Season 01/TV Show - S01E02.mkv'], results)
 
-        template = '${inherit "plex"}/Some/Path/'
+        template = '/Some/Path/{plex}'
         params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name'}
         results = new_names(rename_process(template, files, params=params))
         self.assertEqual(['/Some/Path/TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv'], results)
+
+    def test_output_dir(self):
+        template = '${i}'
+        output_dir = '/Some/Path'
+        files = ['test.mkv', 'test2.mkv']
+        results = new_names(rename_process(template, files, output_dir=output_dir))
+        self.assertEqual(['/Some/Path/1', '/Some/Path/2'], results)
+
+    def test_output_dir2(self):
+        template = 'Path/${i}'
+        output_dir = '/Some/Path'
+        files = ['test.mkv', 'test2.mkv']
+        results = new_names(rename_process(template, files, output_dir=output_dir))
+        self.assertEqual(['/Some/Path/Path/1', '/Some/Path/Path/2'], results)
+
+    def test_output_dir_plex(self):
+        template = '{plex}'
+        output_dir = '/Some/Path'
+        files = ['file.mkv']
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name'}
+        results = new_names(rename_process(template, files, params=params, output_dir=output_dir))
+        self.assertEqual(['/Some/Path/TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv'], results)
+
+    def test_default_length(self):
+        template = '${i|zpad}'
+        files = [str(x) for x in range(5)]
+        results = new_names(rename_process(template, files))
+        self.assertEqual('01', results[0])
+
+        template = '${i|zpad}'
+        files = [str(x) for x in range(15)]
+        results = new_names(rename_process(template, files))
+        self.assertEqual('01', results[0])
+
+        template = '${i|zpad}'
+        files = [str(x) for x in range(100)]
+        results = new_names(rename_process(template, files))
+        self.assertEqual('001', results[0])

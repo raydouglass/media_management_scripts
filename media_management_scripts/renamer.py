@@ -4,6 +4,7 @@ import re
 from tempita import Template
 
 season_pattern = re.compile('Season (\d+)')
+PLEX_TEMPLATE = '${show}/Season ${season|zpad}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
 
 
 class RegexResults(object):
@@ -24,14 +25,6 @@ class RegexResults(object):
             return self.values[index]
 
 
-def zpad(s, length=2):
-    return str(s).rjust(length, '0')
-
-
-def lpad(s, length=2):
-    return str(s).rjust(length, ' ')
-
-
 def ifempty(check, if_none, if_not_none):
     if check:
         return if_not_none
@@ -40,22 +33,38 @@ def ifempty(check, if_none, if_not_none):
 
 
 RENAMER_NAMESPACE = {
-    'lpad': lpad,
-    'zpad': zpad,
     'ifempty': ifempty,
     'lower': lambda s: s.lower(),
     'upper': lambda s: s.upper(),
 }
 
 
-def rename_process(template, files, index_start=1, output_dir=None, regex=None, ignore_missing_regex=False, params={}):
+def _create_namespace(size: int):
+    length = max(2, len(str(size)))
+
+    def zpad(s, length=length):
+        return str(s).rjust(length, '0')
+
+    def lpad(s, length=length):
+        return str(s).rjust(length, ' ')
+
+    d = {
+        'lpad': lpad,
+        'zpad': zpad,
+    }
+    d.update(RENAMER_NAMESPACE)
+    return d
+
+
+def rename_process(template: str, files, index_start=1, output_dir=None, regex=None, ignore_missing_regex=False,
+                   params={}):
     if regex:
         regex = re.compile(regex)
 
-    def get_template(name, source):
-        return Template(content='${show}/Season ${season|zpad}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}', delimiters=('${', '}'), namespace=RENAMER_NAMESPACE)
+    if '{plex}' in template:
+        template = template.replace('{plex}', PLEX_TEMPLATE)
 
-    t = Template(content=template, delimiters=('${', '}'), namespace=RENAMER_NAMESPACE, get_template=get_template)
+    t = Template(content=template, delimiters=('${', '}'), namespace=_create_namespace(len(files)))
     results = []
 
     index = index_start
