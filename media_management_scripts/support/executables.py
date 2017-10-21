@@ -52,13 +52,9 @@ class FFMpegProgress(NamedTuple):
     Represents the periodic output of FFMPEG as a key-value store:
     frame=  128 fps= 85 q=28.0 size=      27kB time=00:00:05.66 bitrate=  39.1kbits/s speed=3.77x
     """
-    frame: int
-    fps: int
-    q: float
-    size: int
     time: str
     bitrate: str
-    speed: float
+    speed: str
 
     @property
     def time_as_seconds(self):
@@ -87,8 +83,8 @@ def create_ffmpeg_callback(cb: Callable[[FFMpegProgress], None]) -> Callable[[st
             key = m.group(1)
             value = m.group(2).lstrip()
             values[key] = value
-        if 'time' in values:
-            progress = FFMpegProgress(**values)
+        if 'time' in values and 'bitrate' in values and 'speed' in values:
+            progress = FFMpegProgress(values['time'], values['bitrate'], values['speed'])
             cb(progress)
 
     return wrapper
@@ -210,6 +206,6 @@ def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=No
 
     try:
         callback = create_ffmpeg_callback(cb)
-        execute_with_callback(args, callback)
+        return execute_with_callback(args, callback)
     finally:
         d.gauge_stop()

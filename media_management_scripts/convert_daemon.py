@@ -22,11 +22,11 @@ MOVIE_NAME_REGEX = re.compile('.+ \(\d{4}\)( - .+)?\.mkv')
 
 
 class ConvertDvdResults(NamedTuple):
-    movie_total_count: int
     movie_processed_count: int
+    movie_total_count: int
     movie_error_count: int
-    tv_total_count: int
     tv_processed_count: int
+    tv_total_count: int
     tv_error_count: int
 
 
@@ -200,6 +200,7 @@ class ConvertDvds():
         create_dirs(output_file)
         # Start backup
         backup_popen, cleanup_dir = None, None
+        error = False
         if not status.backup:
             if self.backup_enabled:
                 logger.debug('No backup for {}'.format(input_file))
@@ -214,12 +215,13 @@ class ConvertDvds():
             result = convert_with_config(input_file, temp_file, convert_config, print_output=False)
             if result == 0:
                 logger.debug('Conversion successful for {}'.format(input_file))
-                shutil.move(temp_file, output_file)
+                shutil.copyfile(temp_file, output_file)
                 status.convert = True
             else:
                 logger.error('Error converting: code={}, file={}'.format(result, input_file))
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
+                error = True
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
         if backup_popen:
             logger.debug('Waiting for backup...')
             ret_code = backup_popen.wait()
@@ -231,8 +233,8 @@ class ConvertDvds():
                     shutil.rmtree(cleanup_dir, ignore_errors=True)
             else:
                 logger.error('Error backing up: code={}, file={}'.format(ret_code, input_file))
-                return False
-        return True
+                error = True
+        return not error
 
     def _run(self, in_dir, out_dir, convert_config):
         total_files = 0
@@ -259,14 +261,14 @@ class ConvertDvds():
             except:
                 logger.exception('Exception while processing {}'.format(input_file))
                 error_count += 1
-        return total_files, count, error_count
+        return count, total_files, error_count
 
     def run(self):
         logger.info('Starting new run')
         movie_counts = self._run(self.movie_in_dir, self.movie_out_dir, self.movie_convert_config)
-        logger.info('Processed {} of {} movie files ({} errors)'.format(*movie_counts))
         tv_counts = self._run(self.tv_in_dir, self.tv_out_dir, self.tv_convert_config)
-        logger.info('Processed {} of {} tv files'.format(*tv_counts))
+        logger.info('Processed {} of {} movie files ({} errors)'.format(*movie_counts))
+        logger.info('Processed {} of {} tv files ({} errors)'.format(*tv_counts))
         return ConvertDvdResults(*movie_counts, *tv_counts)
 
 

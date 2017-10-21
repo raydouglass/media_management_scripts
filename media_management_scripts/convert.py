@@ -134,7 +134,16 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     return execute(args, print_output)
 
 
-def create_remux_args(input_files: List[str], output_file: str, mappings: List, overwrite=False, print_output=True):
+def create_remux_args(input_files: List[str], output_file: str, mappings: List, overwrite=False, metadata={}):
+    """
+
+    :param input_files:
+    :param output_file:
+    :param mappings:
+    :param overwrite:
+    :param metadata: {'s:0': {'language':'eng'}, '': {'title': 'A Great Movie'}}
+    :return:
+    """
     if not overwrite and check_exists(output_file):
         return -1
     args = [ffmpeg()]
@@ -148,6 +157,13 @@ def create_remux_args(input_files: List[str], output_file: str, mappings: List, 
             args.extend(['-map', '0:{}'.format(m)])
         else:
             args.extend(['-map', m])
+    for key, value in metadata.items():
+        if key:
+            key = ':s:' + key
+        for meta_key, meta_val in value.items():
+            args.append('-metadata{}'.format(key))
+            args.append('{}={}'.format(meta_key, meta_val))
+
     args.append(output_file)
     return args
 
