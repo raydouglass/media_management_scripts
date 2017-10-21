@@ -56,22 +56,24 @@ def audio_to_str(a: Stream) -> Tuple[str, str, bool]:
     return (tag, name, status)
 
 
-def sub_to_str(s: Stream) -> Tuple[str, str, bool]:
+def sub_to_str(s: Stream, lang_override: str = None) -> Tuple[str, str, bool]:
     tag = str(s.index)
+    language = lang_override if lang_override else s.language
     if s.title:
-        name = '{} ({}) - {}'.format(s.language, s.codec, s.title)
+        name = '{} ({}) - {}'.format(language, s.codec, s.title)
     else:
-        name = '{} ({})'.format(s.language, s.codec)
-    status = s.language == 'eng' or s.language == 'unknown'
+        name = '{} ({})'.format(language, s.codec)
+    status = (language == 'eng' or language == 'unknown') and s.codec.lower() != 'eia_608'
     return (tag, name, status)
 
 
-def _get_stream_indexes(metadata) -> List[int]:
+def _get_stream_indexes(metadata, lang_override=None) -> List[int]:
     d = Dialog(autowidgetsize=True)
+    title = os.path.basename(metadata.file)
 
     if len(metadata.video_streams) > 0:
         video_options = [video_to_str(v) for v in metadata.video_streams]
-        code, video_tags = d.checklist(text='Video Options', choices=video_options)
+        code, video_tags = d.checklist(title=title, text='Video Options', choices=video_options)
         if code != d.OK:
             return
     else:
@@ -81,38 +83,61 @@ def _get_stream_indexes(metadata) -> List[int]:
         audio_options = [audio_to_str(a) for a in
                          sorted(metadata.audio_streams, key=lambda s: s.channels, reverse=True)]
 
-        code, audio_tags = d.checklist(text='Audio Options', choices=audio_options)
+        code, audio_tags = d.checklist(title=title, text='Audio Options', choices=audio_options)
         if code != d.OK:
             return
     else:
         audio_tags = []
 
     if len(metadata.subtitle_streams) > 0:
-        sub_options = [sub_to_str(a) for a in metadata.subtitle_streams]
-        code, sub_tags = d.checklist(text='Subtitle Options', choices=sub_options)
+        sub_options = [sub_to_str(a, lang_override) for a in metadata.subtitle_streams]
+        code, sub_tags = d.checklist(title=title, text='Subtitle Options', choices=sub_options)
         if code != d.OK:
             return
     else:
         sub_tags = []
-
-    tags = video_tags + audio_tags + sub_tags
-    return tags
+    return video_tags, audio_tags, sub_tags
 
 
 def select_streams(files, output_file, overwrite=False, convert_config: ConvertConfig = None):
     from media_management_scripts.support.executables import execute_ffmpeg_with_dialog
-    if os.path.exists(output_file):
+    from media_management_scripts.support.combine_all import get_lang
+    if not overwrite and os.path.exists(output_file):
         print('Output file exists: {}'.format(output_file))
         return
+
+    if any(file.endswith('.srt') for file in files) and not output_file.endswith('.mkv'):
+        print('Cannot mix an SRT file into a non MKV output')
+        return
+
     final_indexes = []
     max_duration = 0
+    subtitle_index_tracker = 0
+    output_meta = {}
     for i, file in enumerate(files):
+        if file.endswith('.srt'):
+            is_srt = True
+            lang = get_lang(file)
+            if lang is None:
+                d = Dialog(autowidgetsize=True)
+                exit_code, lang = d.inputbox('Enter language', init='Unknown', title=os.path.basename(file))
+                if exit_code != d.OK:
+                    return
+        else:
+            is_srt = False
+            lang = None
+
         metadata = extract_metadata(file)
         if metadata.estimated_duration and metadata.estimated_duration > max_duration:
             max_duration = metadata.estimated_duration
-        indexes = _get_stream_indexes(metadata)
-        if indexes is not None:
+        all_tags = _get_stream_indexes(metadata, lang_override=lang)
+        if all_tags is not None:
+            video_tags, audio_tags, subtitle_tags = all_tags
+            indexes = video_tags + audio_tags + subtitle_tags
             final_indexes.extend(['{}:{}'.format(i, index) for index in indexes])
+            if is_srt and subtitle_tags:
+                output_meta['s:{}'.format(subtitle_index_tracker)] = {'language': lang}
+            subtitle_index_tracker += len(subtitle_tags)
         else:
             # User selected cancel
             return
@@ -123,11 +148,13 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
     if convert_config:
         raise Exception('Convert is not supported in select-streams currently')
     elif len(final_indexes) > 0:
-        args = create_remux_args(files, output_file, mappings=final_indexes, overwrite=overwrite, print_output=True)
+        args = create_remux_args(files, output_file, mappings=final_indexes, overwrite=overwrite, metadata=output_meta)
         if len(files) == 1:
             title = os.path.basename(files[0])
         else:
             title = 'Remuxing {} files'.format(len(files))
-        execute_ffmpeg_with_dialog(args, duration=max_duration, title=title)
+        ret = execute_ffmpeg_with_dialog(args, duration=max_duration, title=title)
+        if ret != 0:
+            print('Error executing: {}'.format(args))
     else:
-        print('No stream selected.')
+        print('No streams selected.')
