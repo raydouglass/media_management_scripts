@@ -12,13 +12,13 @@ class UtilsTestCase(unittest.TestCase):
         self.assertEqual(0, utils.compare_gt(0, 0))
         self.assertEqual(1, utils.compare_gt(0, -1))
         self.assertEqual(-1, utils.compare_gt(1, None))
-        self.assertEquals(1, utils.compare_gt(None, 1))
+        self.assertEqual(1, utils.compare_gt(None, 1))
 
     def test_compare_lt(self):
         self.assertEqual(0, utils.compare_lt(0, 0))
         self.assertEqual(-1, utils.compare_lt(0, -1))
         self.assertEqual(1, utils.compare_lt(1, None))
-        self.assertEquals(-1, utils.compare_lt(None, 1))
+        self.assertEqual(-1, utils.compare_lt(None, 1))
 
 
 class EpisodeFinderTestCase(unittest.TestCase):
@@ -29,15 +29,19 @@ class EpisodeFinderTestCase(unittest.TestCase):
                      'Series 1, Episode 14': ('1', '14', None),
                      'Series 12, Episode 14': ('12', '14', None),
                      'Series2, Episode 14': ('2', '14', None),
-                     'Pointless Series 7 Episode 69 Part 1.mp4': ('7', '69', '1')
+                     'Pointless Series 7 Episode 69 Part 1.mp4': ('7', '69', '1'),
+                     'Show 2x06': ('2', '06', None)
                      }
         for key in test_strs:
             result = extract(key)
-            self.assertEquals(test_strs[key], result)
+            self.assertEqual(test_strs[key], result)
+
+    def test_101(self):
+        self.assertEqual(extract('Test 101.mp4', use101=False), (None, None, None))
+        self.assertEqual(extract('Test 101.mp4', use101=True), ('1', '01', None))
 
 
 class TestFileTestCase(unittest.TestCase):
     def test(self):
         with create_test_video(length=5) as file:
             self.assertTrue(os.path.isfile(file.name))
-            print_metadata(file.name)

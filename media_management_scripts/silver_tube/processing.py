@@ -19,7 +19,7 @@ from typing import Tuple, List
 from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF
 
 from media_management_scripts.support.executables import execute_with_output, ffmpeg, execute_with_timeout
-from media_management_scripts.renamer import RENAMER_NAMESPACE
+from media_management_scripts.renamer import create_namespace
 from tempita import Template
 
 logger = logging.getLogger(__name__)
@@ -320,7 +320,7 @@ def durations_to_invert(durations):
 
 
 def create_filename(template, series, season, episode_num, episode_name, filename, extension):
-    t = Template(content=template, delimiters=('${', '}'), namespace=RENAMER_NAMESPACE)
+    t = Template(content=template, delimiters=('${', '}'), namespace=create_namespace())
     d = dict(
         series=series,
         season=season,

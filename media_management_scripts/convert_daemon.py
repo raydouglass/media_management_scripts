@@ -101,9 +101,9 @@ def _convert_config_from_config(config, section):
     auto_bitrate_240 = config.getint(section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
     auto_bitrate_480 = config.getint(section, 'auto_bitrate_480',
                                      fallback=Resolution.STANDARD_DEF.auto_bitrate)
-    auto_bitrate_720 = config.getint('movie.movie.transcode', 'auto_bitrate_720',
+    auto_bitrate_720 = config.getint(section, 'auto_bitrate_720',
                                      fallback=Resolution.MEDIUM_DEF.auto_bitrate)
-    auto_bitrate_1080 = config.getint('transcode', 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
+    auto_bitrate_1080 = config.getint(section, 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
 
     return ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
                          auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,

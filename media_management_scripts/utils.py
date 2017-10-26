@@ -1,4 +1,5 @@
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
+from typing import Iterable
 
 
 def compare_gt(this, other):
@@ -41,3 +42,17 @@ def season_episode_name(season, episode, ext=None):
         return 's{}e{:02d}{}'.format(season, int(episode), ext)
     else:
         return 's{}e{:02d}'.format(season, int(episode))
+
+
+def fuzzy_equals(a: str, b: str, ignore_chars: Iterable[str] = [], ratio: float = .85) -> bool:
+    from difflib import SequenceMatcher
+    ifignore = (lambda x: x in ignore_chars) if ignore_chars else None
+    return SequenceMatcher(ifignore, a, b).ratio() >= ratio
+
+
+def fuzzy_equals_word(a: str, b: str, ratio: float = .85):
+    from difflib import SequenceMatcher
+    import re
+    pattern = re.compile('\w+')
+    ifignore = lambda x: pattern.match(x) is None
+    return SequenceMatcher(ifignore, a, b).ratio() >= ratio

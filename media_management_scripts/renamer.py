@@ -32,14 +32,14 @@ def ifempty(check, if_none, if_not_none):
         return if_none
 
 
-RENAMER_NAMESPACE = {
+_RENAMER_NAMESPACE = {
     'ifempty': ifempty,
     'lower': lambda s: s.lower(),
     'upper': lambda s: s.upper(),
 }
 
 
-def _create_namespace(size: int):
+def create_namespace(size: int=2):
     length = max(2, len(str(size)))
 
     def zpad(s, length=length):
@@ -52,7 +52,7 @@ def _create_namespace(size: int):
         'lpad': lpad,
         'zpad': zpad,
     }
-    d.update(RENAMER_NAMESPACE)
+    d.update(_RENAMER_NAMESPACE)
     return d
 
 
@@ -64,7 +64,7 @@ def rename_process(template: str, files, index_start=1, output_dir=None, regex=N
     if '{plex}' in template:
         template = template.replace('{plex}', PLEX_TEMPLATE)
 
-    t = Template(content=template, delimiters=('${', '}'), namespace=_create_namespace(len(files)))
+    t = Template(content=template, delimiters=('${', '}'), namespace=create_namespace(len(files)))
     results = []
 
     index = index_start
