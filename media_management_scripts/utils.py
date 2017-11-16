@@ -1,5 +1,8 @@
+from media_management_scripts.convert import ConvertConfig
+from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
 from typing import Iterable
+from configparser import ConfigParser
 
 
 def compare_gt(this, other):
@@ -56,3 +59,56 @@ def fuzzy_equals_word(a: str, b: str, ratio: float = .85):
     pattern = re.compile('\w+')
     ifignore = lambda x: pattern.match(x) is None
     return SequenceMatcher(ifignore, a, b).ratio() >= ratio
+
+
+def convert_config_from_config_section(config: ConfigParser, section: str) -> ConvertConfig:
+    """
+    Creates a ConvertConfig from a configparser section.
+
+    All options are optional with sane defaults:
+      [section.name]
+      crf = 16
+      preset = fast
+      bitrate = disabled # (disabled|auto|int)
+      deinterlace = False
+      deinterlace_threshold = .5
+      auto_bitrate_240 = 500
+      auto_bitrate_480 = 1600
+      auto_bitrate_720 = 4500
+      auto_bitrate_1080 = 8000
+      include_subtitles = True
+      ripped = False
+
+    :param config:
+    :param section:
+    :return:
+    """
+    # Transcode
+    crf = config.get(section, 'crf', fallback=DEFAULT_CRF)
+    preset = config.get(section, 'preset', fallback=DEFAULT_PRESET)
+    bitrate = config.get(section, 'bitrate', fallback='disabled')
+    if bitrate == 'disabled':
+        bitrate = None
+    elif bitrate and bitrate != 'auto':
+        try:
+            int(bitrate)
+        except ValueError:
+            raise Exception("Bitrate in [{}] must be 'auto', 'disabled' or an integer".format(section))
+    deinterlace = bool(config.get(section, 'deinterlace', fallback=False))
+    deinterlace_threshold = float(config.get(section, 'deinterlace_threshold', fallback='.5'))
+
+    auto_bitrate_240 = config.getint(section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
+    auto_bitrate_480 = config.getint(section, 'auto_bitrate_480',
+                                     fallback=Resolution.STANDARD_DEF.auto_bitrate)
+    auto_bitrate_720 = config.getint(section, 'auto_bitrate_720',
+                                     fallback=Resolution.MEDIUM_DEF.auto_bitrate)
+    auto_bitrate_1080 = config.getint(section, 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
+
+    include_subtitles = config.getboolean(section, 'include_subtitles', fallback=True)
+    ripped = config.getboolean(section, 'ripped', fallback=False)
+
+    return ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
+                         auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,
+                         auto_bitrate_720=auto_bitrate_720, auto_bitrate_1080=auto_bitrate_1080,
+                         deinterlace=deinterlace, deinterlace_threshold=deinterlace_threshold,
+                         include_subtitles=include_subtitles, include_meta=ripped)

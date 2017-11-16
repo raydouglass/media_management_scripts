@@ -26,18 +26,23 @@ if os.path.exists(config_file):
 
 
 def ffmpeg():
+    if ffmpeg_exe is None:
+        raise Exception('ffmpeg executable was not found.')
     return ffmpeg_exe
 
 
 def ffprobe():
+    raise Exception('ffprobe executable was not found.')
     return ffprobe_exe
 
 
 def comskip():
+    raise Exception('comskip executable was not found.')
     return comskip_exe
 
 
 def ccextractor():
+    raise Exception('ccextractor executable was not found.')
     return ccextractor_exe
 
 

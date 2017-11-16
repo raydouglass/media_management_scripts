@@ -7,6 +7,11 @@ from tempfile import NamedTemporaryFile
 
 
 class MetadataTestCase(unittest.TestCase):
+    def test_metadata_print(self):
+        from media_management_scripts.commands.metadata import print_metadata
+        with create_test_video(length=2) as file:
+            print_metadata(file.name)
+
     def test_metadata_in_file(self):
         meta = {
             'TestKey': 'test_value'

@@ -31,12 +31,11 @@ import json
 from itertools import groupby
 
 from media_management_scripts.utils import create_metadata_extractor
-from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str
+from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
 
 
 def output(text, *args):
     return '   {}'.format(text).format(*args)
-
 
 
 def popup(text):
@@ -75,7 +74,7 @@ def print_metadata(input, show_popup=False, interlace='none'):
     if len(durations) > 0:
         o.append(output('Duration: {}', duration_to_str(max(durations))))
 
-    o.append(output('Bitrate: {:.2f} kb/s', float(meta.bit_rate) / 1024.0))
+    o.append(output('Bitrate: {}', bitrate_to_str(meta.bit_rate)))
     for video in meta.video_streams:
         o.append(output('Video: {} ({}x{})', video.codec, video.width, video.height))
 

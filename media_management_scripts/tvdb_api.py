@@ -93,6 +93,14 @@ class TVDB():
             raise Exception('No series named \'{}\' found'.format(series_name))
         return self.get_episodes(series_id)
 
+    def get_episode(self, episode_id):
+        if self._jwt is None:
+            self.refresh()
+        headers = {'Authorization': 'Bearer ' + self._jwt}
+        res = requests.get(BASE_URL+'/episodes/{}'.format(episode_id), headers=headers)
+        res.raise_for_status()
+        return res.json()['data']
+
     @staticmethod
     def season_number(e):
         return e['airedSeason'], e['airedEpisodeNumber']

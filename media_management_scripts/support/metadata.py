@@ -9,7 +9,7 @@ import operator
 from typing import List, Tuple
 from media_management_scripts.support.encoding import Resolution, resolution_name
 from media_management_scripts.support.interlace import find_interlace, InterlaceReport
-from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str
+from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
 import shelve
 
 DATE_PATTERN = re.compile('\d{4}_\d{2}_\d{2}')
@@ -115,10 +115,13 @@ class Metadata():
         return {
             'file': self.file,
             'title': self.title,
-            'duration': duration_to_str(self.estimated_duration) if self.estimated_duration else None,
-            'size': sizeof_fmt(self.size),
+            'duration': self.estimated_duration,
+            'duration_str': duration_to_str(self.estimated_duration) if self.estimated_duration else None,
+            'size': self.size,
+            'size_str': sizeof_fmt(self.size),
             'resolution': self.resolution._name_,
             'bit_rate': self.bit_rate,
+            'bit_rate_str': bitrate_to_str(self.bit_rate),
             'ripped': self.ripped,
             'format': self.format,
             'format_long_name': self.format_long_name,
@@ -193,10 +196,12 @@ class Stream():
     def to_dict(self):
         d = {
             'index': self.index,
+            'title': self.title,
             'type': self.type,
             'codec': self.codec,
             'codec_long_name': self.codec_long_name,
-            'duration': duration_to_str(self.duration) if self.duration else None
+            'duration': self.duration,
+            'duration_str': duration_to_str(self.duration) if self.duration else None
         }
         if self.is_audio():
             d['channels'] = self.channels

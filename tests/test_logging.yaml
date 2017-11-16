@@ -1,0 +1,20 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+    simple:
+        format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: DEBUG
+        formatter: simple
+        stream: ext://sys.stdout
+    graylog:
+        (): graypy.GELFHandler
+        host: 192.168.1.178
+        port: 12201
+
+
+root:
+    level: INFO
+    handlers: [console, graylog]

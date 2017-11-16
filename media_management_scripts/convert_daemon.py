@@ -1,19 +1,18 @@
-from media_management_scripts.convert import execute, convert_with_config, \
-    ConvertConfig
-from media_management_scripts.support.files import create_dirs, get_input_output
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
-import logging
-import os
-import shelve
-import re
-import subprocess
-import math
-import shutil
 import configparser
+import logging
+import logging.config
+import os
+import re
+import shlex
+import shutil
 import sqlite3
+import subprocess
 from datetime import datetime, timedelta
 from typing import Tuple, NamedTuple
-import shlex
+
+from media_management_scripts.convert import convert_with_config
+from media_management_scripts.support.files import create_dirs, get_input_output
+from media_management_scripts.utils import convert_config_from_config_section
 
 logger = logging.getLogger(__name__)
 
@@ -83,35 +82,6 @@ class ProcessedDatabase():
                 os.path.exists(status.input_file) and os.path.exists(status.output_file)]
 
 
-def _convert_config_from_config(config, section):
-    # Transcode
-    crf = config.get(section, 'crf', fallback=DEFAULT_CRF)
-    preset = config.get(section, 'preset', fallback=DEFAULT_PRESET)
-    bitrate = config.get(section, 'bitrate', fallback='disabled')
-    if bitrate == 'disabled':
-        bitrate = None
-    elif bitrate != 'auto':
-        try:
-            int(bitrate)
-        except ValueError:
-            raise Exception("Bitrate in [{}] must be 'auto', 'disabled' or an integer".format(section))
-    deinterlace = bool(config.get(section, 'deinterlace', fallback=False))
-    deinterlace_threshold = float(config.get(section, 'deinterlace_threshold', fallback='.5'))
-
-    auto_bitrate_240 = config.getint(section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
-    auto_bitrate_480 = config.getint(section, 'auto_bitrate_480',
-                                     fallback=Resolution.STANDARD_DEF.auto_bitrate)
-    auto_bitrate_720 = config.getint(section, 'auto_bitrate_720',
-                                     fallback=Resolution.MEDIUM_DEF.auto_bitrate)
-    auto_bitrate_1080 = config.getint(section, 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
-
-    return ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
-                         auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,
-                         auto_bitrate_720=auto_bitrate_720, auto_bitrate_1080=auto_bitrate_1080,
-                         deinterlace=deinterlace, deinterlace_threshold=deinterlace_threshold,
-                         include_meta=True)
-
-
 class ConvertDvds():
     def __init__(self, config_file):
         config = configparser.ConfigParser()
@@ -133,25 +103,21 @@ class ConvertDvds():
         self.max_size = int(config.get('backup', 'max.size')) * (1024 ** 3)
         self.split_size = config.get('backup', 'split.size')
 
-        self.movie_convert_config = _convert_config_from_config(config, 'movie.transcode')
-        self.tv_convert_config = _convert_config_from_config(config, 'tv.transcode')
+        self.movie_convert_config = convert_config_from_config_section(config, 'movie.transcode')
+        self.tv_convert_config = convert_config_from_config_section(config, 'tv.transcode')
 
         if config.has_section('transcode'):
             raise Exception('Config file is out dated. Please update to use movie.transcode and tv.transcode')
 
         # Logging
-        level = config.get('logging', 'level', fallback='INFO')
-        file = config.get('logging', 'file', fallback='convert.log')
-        self.init_logger(level, file)
+        file = config.get('logging', 'config', fallback=None)
+        if file:
+            import yaml
+            with open(file) as f:
+                log_config = yaml.load(f)
+                logging.config.dictConfig(log_config)
         db_file = config.get('logging', 'db', fallback='processed.shelve')
         self.db = ProcessedDatabase(db_file)
-
-    def init_logger(self, level, file):
-        level = logging.getLevelName(level)
-        logging.basicConfig(level=level,
-                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                            handlers=[logging.FileHandler(file)]
-                            )
 
     def backup_file(self, file, target_dir) -> subprocess.Popen:
         target_path = os.path.join(self.backup_path, target_dir)

@@ -5,7 +5,9 @@ from tempfile import NamedTemporaryFile, _TemporaryFileWrapper
 from media_management_scripts.convert import execute
 from typing import List, Tuple, NamedTuple, Dict
 from collections import namedtuple
+import os
 
+LOG_FILE=os.path.join(os.path.dirname(__file__), 'test_logging.yaml')
 
 class VideoDefinition(NamedTuple):
     resolution: Resolution = Resolution.LOW_DEF

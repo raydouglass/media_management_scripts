@@ -6,7 +6,7 @@ from media_management_scripts.support.executables import ccextractor, comskip
 import os
 from media_management_scripts.support.encoding import Resolution, VideoCodec, VideoFileContainer, AudioCodec, \
     AudioChannelName
-from tests import create_test_video, VideoDefinition
+from tests import create_test_video, VideoDefinition, LOG_FILE
 from unittest import mock
 
 from media_management_scripts.silver_tube.processing import Configuration
@@ -15,7 +15,6 @@ from media_management_scripts.tvdb_api import TVDB
 WTV_VIDEO_DEF = VideoDefinition(resolution=Resolution.STANDARD_DEF,
                                 codec=VideoCodec.MPEG2,
                                 container=VideoFileContainer.WTV)
-
 
 class SilverTubeTestCase(unittest.TestCase):
     def setUp(self):
@@ -27,7 +26,8 @@ class SilverTubeTestCase(unittest.TestCase):
         config = configparser.ConfigParser()
         config['main'] = {
             'debug': False,
-            'database.file': db_file.name
+            'database.file': db_file.name,
+            'log.config': LOG_FILE
         }
         self.tv_in = TemporaryDirectory()
         self.commercial_in = TemporaryDirectory()

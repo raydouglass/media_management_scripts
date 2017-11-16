@@ -1,14 +1,15 @@
 import xml.etree.ElementTree as ET
-from media_management_scripts.utils import create_metadata_extractor
+from media_management_scripts.utils import create_metadata_extractor, convert_config_from_config_section
 from media_management_scripts.silver_tube.wtv import extract_original_air_date
 from media_management_scripts import tvdb_api
 from media_management_scripts.silver_tube.wtv_db import WtvDb
-from media_management_scripts.convert import convert_with_config, ConvertConfig
+from media_management_scripts.convert import convert_with_config
 from media_management_scripts.support.episode_finder import extract as extract_season_ep
+from media_management_scripts.support.executables import ccextractor, comskip
 import os
-import sys
 import subprocess
 import logging
+import logging.config
 import pysrt
 from copy import copy
 import configparser
@@ -16,7 +17,6 @@ import datetime
 import glob
 from string import Template
 from typing import Tuple, List
-from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF
 
 from media_management_scripts.support.executables import execute_with_output, ffmpeg, execute_with_timeout
 from media_management_scripts.renamer import create_namespace
@@ -43,22 +43,24 @@ class Configuration():
         self.out_dir = config.get('directories', 'out.dir')
         self.delete_source = config.getboolean('directories', 'delete.source.files', fallback=True)
 
-        # h.264 preset (https://trac.ffmpeg.org/wiki/encode/h.264)
-        self.preset = config.get('ffmpeg', 'h264.preset', fallback=DEFAULT_PRESET)
-        # h.264 constant rate factor (https://trac.ffmpeg.org/wiki/encode/h.264#crf)
-        self.crf = config.get('ffmpeg', 'h264.crf', fallback=DEFAULT_CRF)
-        self.bitrate = config.get('ffmpeg', 'bitrate', fallback=None)
+        self.convert_config = convert_config_from_config_section('transcode')
+
+        if config.has_section('ffmpeg'):
+            raise Exception('You are using an outdated configuration')
 
         self.debug = config.getboolean('main', 'debug', fallback=False)
-        log_file = config.get('main', 'log', fallback='status.log')
-        logging.basicConfig(filename=log_file, level=logging.DEBUG,
-                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log_file = config.get('main', 'log.config', fallback=None)
+        if log_file:
+            import yaml
+            with open(log_file) as f:
+                log_config = yaml.load(f)
+                logging.config.dictConfig(log_config)
 
-        self.ccextractor_exe = config.get('ccextractor', 'executable', fallback=None)
+        self.ccextractor_exe = config.get('ccextractor', 'executable', fallback=ccextractor())
         self.ccextractor_run = config.getboolean('ccextractor', 'run.if.missing', fallback=False)
 
         self.comskip_exe = config.get('comskip', 'executable', fallback=None)
-        self.comskip_run = config.getboolean('comskip', 'run.if.missing', fallback=False)
+        self.comskip_run = config.getboolean('comskip', 'run.if.missing', fallback=comskip())
         self.comskip_ini = config.get('comskip', 'comskip.ini', fallback=None)
 
         db_file = config.get('main', 'database.file', fallback='db.sqlite')
@@ -66,8 +68,8 @@ class Configuration():
         self.wtvdb = WtvDb(db_file)
         self.tvdb = tvdb
 
-        self.convert_config = ConvertConfig(crf=self.crf, preset=self.preset, bitrate=self.bitrate, deinterlace=True,
-                                            deinterlace_threshold=.4, include_subtitles=False)
+        if self.convert_config.include_subtitles:
+            logger.warning('Include Subtitles is True. This usually does not work with TV captions.')
 
     def get_metadata(self, wtv_file: str) -> Tuple[str, str, int, int]:
         # Will detect deinterlace if we actually have to process this file
