@@ -60,7 +60,7 @@ class SearchCommand(SubCommand):
                                    help="The query to run. Recommended to enclose in single-quotes to avoid bash completions")
         search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.',
                                    action='store_const', const=True, default=False)
-        search_parser.add_arguemtn('-r', '--recursive', action='store_const', const=True, default=False,
+        search_parser.add_argument('-r', '--recursive', action='store_const', const=True, default=False,
                                   help='Recursively search input directory')
 
     def subexecute(self, ns):
