@@ -52,6 +52,9 @@ class CombineSubtitlesDirectoryCommand(SubCommand):
                                         help='Whether to convert video streams to H.264 and audio to AAC',
                                         action='store_const', const=True, default=False)
         combine_all_parser.add_argument('-l', '--language', help='Set the language to use')
+        combine_all_parser.add_argument('--lower-case', '--lc',
+                                        help='Whether to compare videos and subtitles files by lower case',
+                                        action='store_const', const=True, default=False, dest='lower-case')
 
     def subexecute(self, ns):
         from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET
@@ -62,7 +65,8 @@ class CombineSubtitlesDirectoryCommand(SubCommand):
         convert = ns.get('convert', False)
         output = ns['output']
         language = ns.get('language', None)
-        combine_all(input_to_cmd, output, convert, crf, preset, language)
+        lower_case = ns.get('lower-case', False)
+        combine_all(input_to_cmd, output, convert, crf, preset, language, lower_case=lower_case)
 
 
 SubCommand.register(CombineSubtitlesDirectoryCommand)

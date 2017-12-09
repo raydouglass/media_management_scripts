@@ -34,5 +34,6 @@ setup(name='media_management_scripts',
           'paramiko',
           'scp',
           'pythondialog',
-          'pyyaml'
+          'pyyaml',
+          'pyparsing'
       ])

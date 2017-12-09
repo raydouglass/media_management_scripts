@@ -1,7 +1,6 @@
-from media_management_scripts.convert import ConvertConfig
 from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
-from typing import Iterable
+from typing import Iterable, NamedTuple
 from configparser import ConfigParser
 
 
@@ -59,6 +58,22 @@ def fuzzy_equals_word(a: str, b: str, ratio: float = .85):
     pattern = re.compile('\w+')
     ifignore = lambda x: pattern.match(x) is None
     return SequenceMatcher(ifignore, a, b).ratio() >= ratio
+
+
+class ConvertConfig(NamedTuple):
+    crf: int = DEFAULT_CRF
+    preset: str = DEFAULT_PRESET
+    bitrate: str = None
+    include_meta: bool = False
+    deinterlace: bool = False
+    deinterlace_threshold: float = .5
+    include_subtitles: bool = True
+    start: float = None
+    end: float = None
+    auto_bitrate_240: int = Resolution.LOW_DEF.auto_bitrate
+    auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
+    auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
+    auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
 
 
 def convert_config_from_config_section(config: ConfigParser, section: str) -> ConvertConfig:

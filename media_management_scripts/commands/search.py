@@ -60,14 +60,17 @@ class SearchCommand(SubCommand):
                                    help="The query to run. Recommended to enclose in single-quotes to avoid bash completions")
         search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.',
                                    action='store_const', const=True, default=False)
+        search_parser.add_arguemtn('-r', '--recursive', action='store_const', const=True, default=False,
+                                  help='Recursively search input directory')
 
     def subexecute(self, ns):
         input_to_cmd = ns['input']
         null_byte = ns['0']
         query = ns['query']
         db_file = ns['db_file']
+        recursive=ns['recursive']
         l = []
-        for file, metadata in search(input_to_cmd, query, db_file):
+        for file, metadata in search(input_to_cmd, query, db_file, recursive):
             if not null_byte:
                 print(file)
             else:
@@ -125,14 +128,21 @@ class SearchParameters():
             return result
 
 
-def search(input_dir: str, query: str, db_file: str = None):
+def search(input_dir: str, query: str, db_file: str = None, recursive=False):
     from media_management_scripts.support.search_parser import parse
     from media_management_scripts.utils import create_metadata_extractor
     from media_management_scripts.support.files import list_files, movie_files_filter
     query = parse(query)
     with create_metadata_extractor(db_file) as extractor:
-        for file in list_files(input_dir, movie_files_filter):
+        if recursive:
+            files = list_files(input_dir, lambda x:True)
+        else:
+            files = os.listdir(input_dir)
+        for file in files:
             path = os.path.join(input_dir, file)
+            if os.path.samefile(db_file, path):
+                #Skip if db file is in the same directory
+                continue
             metadata = extractor.extract(path)
             context = {
                 'v': {

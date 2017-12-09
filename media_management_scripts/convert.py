@@ -1,32 +1,16 @@
 import logging
 import os
+from typing import List
 
 from texttable import Texttable
-from typing import NamedTuple, Tuple, List
 
 from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution
-from media_management_scripts.support.executables import execute_with_output, ffmpeg
+from media_management_scripts.support.executables import execute_with_output, ffmpeg, nice_exe
 from media_management_scripts.support.files import check_exists, create_dirs, get_input_output
 from media_management_scripts.support.formatting import sizeof_fmt
-from media_management_scripts.utils import create_metadata_extractor
+from media_management_scripts.utils import create_metadata_extractor, ConvertConfig
 
 logger = logging.getLogger(__name__)
-
-
-class ConvertConfig(NamedTuple):
-    crf: int = DEFAULT_CRF
-    preset: str = DEFAULT_PRESET
-    bitrate: str = None
-    include_meta: bool = False
-    deinterlace: bool = False
-    deinterlace_threshold: float = .5
-    include_subtitles: bool = True
-    start: float = None
-    end: float = None
-    auto_bitrate_240: int = Resolution.LOW_DEF.auto_bitrate
-    auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
-    auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
-    auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
 
 
 def convert_config_from_ns(ns):
@@ -56,7 +40,7 @@ def auto_bitrate_from_config(resolution, convert_config):
 
 
 def convert_with_config(input, output, config: ConvertConfig, print_output=True, overwrite=False, metadata=None,
-                        mappings=None):
+                        mappings=None, use_nice=True):
     """
 
     :param input:
@@ -84,7 +68,10 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         print('{}: Resolution not supported for conversion: {}'.format(input, metadata.resolution))
         # TODO Handle converting 4k content in H.265/HVEC
         return -2
-    args = [ffmpeg()]
+    if use_nice and nice_exe:
+        args = [nice_exe, ffmpeg()]
+    else:
+        args = [ffmpeg()]
     if overwrite:
         args.append('-y')
     args.extend(['-i', input])

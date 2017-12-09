@@ -30,8 +30,8 @@ class SelectStreamsCommand(SubCommand):
 SubCommand.register(SelectStreamsCommand)
 
 from media_management_scripts.support.metadata import Stream
-from media_management_scripts.utils import extract_metadata
-from media_management_scripts.convert import ConvertConfig, convert_with_config, create_remux_args
+from media_management_scripts.utils import extract_metadata, ConvertConfig
+from media_management_scripts.convert import convert_with_config, create_remux_args
 from dialog import Dialog
 from typing import Tuple, List
 

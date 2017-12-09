@@ -1,10 +1,10 @@
 import unittest
 
-from media_management_scripts.convert import ConvertConfig, convert_config_from_ns, convert_with_config, combine
+from media_management_scripts.convert import convert_config_from_ns, convert_with_config, combine
 from media_management_scripts.support.combine_all import combine_all
 from tests import create_test_video, VideoDefinition, AudioDefition, AudioCodec, AudioChannelName
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from media_management_scripts.utils import extract_metadata
+from media_management_scripts.utils import extract_metadata, ConvertConfig
 import os
 
 SRT_TEXT = """

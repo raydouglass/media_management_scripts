@@ -18,7 +18,7 @@ import glob
 from string import Template
 from typing import Tuple, List
 
-from media_management_scripts.support.executables import execute_with_output, ffmpeg, execute_with_timeout
+from media_management_scripts.support.executables import execute_with_output, ffmpeg, execute_with_timeout, nice_exe
 from media_management_scripts.renamer import create_namespace
 from tempita import Template
 
@@ -30,6 +30,12 @@ class Configuration():
     def __init__(self, config_file, tvdb):
         config = configparser.ConfigParser()
         config.read(config_file)
+        log_file = config.get('main', 'log.config', fallback=None)
+        if log_file:
+            import yaml
+            with open(log_file) as f:
+                log_config = yaml.load(f)
+                logging.config.dictConfig(log_config)
 
         template = config.get('directories', 'out.pattern',
                               fallback='${series}/Season ${season}/${series} - S${season|zpad}E${episode|zpad} - ${episode_name}.${ext}')
@@ -43,18 +49,13 @@ class Configuration():
         self.out_dir = config.get('directories', 'out.dir')
         self.delete_source = config.getboolean('directories', 'delete.source.files', fallback=True)
 
-        self.convert_config = convert_config_from_config_section('transcode')
+        self.convert_config = convert_config_from_config_section(config, 'transcode')
 
         if config.has_section('ffmpeg'):
+            logger.error('You are using an outdated configuration')
             raise Exception('You are using an outdated configuration')
 
         self.debug = config.getboolean('main', 'debug', fallback=False)
-        log_file = config.get('main', 'log.config', fallback=None)
-        if log_file:
-            import yaml
-            with open(log_file) as f:
-                log_config = yaml.load(f)
-                logging.config.dictConfig(log_config)
 
         self.ccextractor_exe = config.get('ccextractor', 'executable', fallback=ccextractor())
         self.ccextractor_run = config.getboolean('ccextractor', 'run.if.missing', fallback=False)

@@ -32,17 +32,20 @@ def ffmpeg():
 
 
 def ffprobe():
-    raise Exception('ffprobe executable was not found.')
+    if ffprobe_exe is None:
+        raise Exception('ffprobe executable was not found.')
     return ffprobe_exe
 
 
 def comskip():
-    raise Exception('comskip executable was not found.')
+    if comskip_exe is None:
+        raise Exception('comskip executable was not found.')
     return comskip_exe
 
 
 def ccextractor():
-    raise Exception('ccextractor executable was not found.')
+    if ccextractor_exe is None:
+        raise Exception('ccextractor executable was not found.')
     return ccextractor_exe
 
 

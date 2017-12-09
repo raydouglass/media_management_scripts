@@ -17,10 +17,13 @@ def get_lang(srt_file):
     return None
 
 
-def combine_all(input, output, convert=False, crf=15, preset='veryfast', forced_language=None):
+def combine_all(input, output, convert=False, crf=15, preset='veryfast', forced_language=None, lower_case=False):
+    os.makedirs(output, exist_ok=True)
     files = {}
     for f, o in get_input_output(input, output, filter=_filter):
         filename = os.path.basename(f)
+        if lower_case:
+            filename = filename.lower()
         no_ext, ext = os.path.splitext(filename)
         lang = forced_language
         if not lang and (ext == '.srt' or ext == '.idx'):
@@ -51,6 +54,8 @@ def combine_all(input, output, convert=False, crf=15, preset='veryfast', forced_
                 output_file = output_file.replace(ext, '.mkv')
         if not srt_file:
             print('No subtitles for {}'.format(video_file))
+        elif not output_file:
+            print('No video file for {}'.format(srt_file))
         else:
             combine(video_file, srt_file, output_file, crf=crf, preset=preset, convert=convert, lang=language)
         current += 1

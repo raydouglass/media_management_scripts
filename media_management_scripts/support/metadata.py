@@ -11,6 +11,7 @@ from media_management_scripts.support.encoding import Resolution, resolution_nam
 from media_management_scripts.support.interlace import find_interlace, InterlaceReport
 from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
 import shelve
+from media_management_scripts.support.executables import ffprobe
 
 DATE_PATTERN = re.compile('\d{4}_\d{2}_\d{2}')
 ONLY_DATE_PATTERN = re.compile('^\d{4}-\d{2}-\d{2}$')
@@ -119,7 +120,7 @@ class Metadata():
             'duration_str': duration_to_str(self.estimated_duration) if self.estimated_duration else None,
             'size': self.size,
             'size_str': sizeof_fmt(self.size),
-            'resolution': self.resolution._name_,
+            'resolution': self.resolution._name_ if self.resolution else None,
             'bit_rate': self.bit_rate,
             'bit_rate_str': bitrate_to_str(self.bit_rate),
             'ripped': self.ripped,
@@ -238,16 +239,16 @@ class MetadataExtractor():
             self.db.close()
 
     def _execute(self, file):
-        args = [self._ffprobe_exe, '-v', 'quiet', '-show_chapters', '-show_streams', '-show_format', '-print_format',
+        args = [ffprobe(), '-show_chapters', '-show_streams', '-show_format', '-print_format',
                 'json', file]
         p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        p.wait()
-        if stderr:
-            raise Exception(stderr)
+        ret = p.wait()
+        if ret != 0:
+            raise Exception('ffprobe error, return code={}, stderr={}'.format(ret, stderr))
         return json.loads(stdout.decode('UTF-8'))
 
-    def extract(self, file, detect_interlace=False) -> Metadata:
+    def extract(self, file: str, detect_interlace=False) -> Metadata:
         if self.db is not None and file in self.db:
             output = self.db[file]
         else:

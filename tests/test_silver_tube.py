@@ -42,9 +42,9 @@ class SilverTubeTestCase(unittest.TestCase):
             'out.dir': self.out_dir.name,
             'tv.pattern': '*.wtv'
         }
-        config['ffmpeg'] = {
-            'h264.preset': DEFAULT_PRESET,
-            'h264.crf': DEFAULT_CRF,
+        config['transcode'] = {
+            'preset': DEFAULT_PRESET,
+            'crf': DEFAULT_CRF,
             'bitrate': 'auto'
         }
         config['ccextractor'] = {

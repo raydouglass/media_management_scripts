@@ -1,6 +1,7 @@
 import unittest
 
-from media_management_scripts.convert import ConvertConfig, convert_config_from_ns, convert_with_config
+from media_management_scripts.convert import convert_config_from_ns, convert_with_config
+from media_management_scripts.utils import ConvertConfig
 from tests import create_test_video, VideoDefinition, AudioDefition, AudioCodec, AudioChannelName
 from tempfile import NamedTemporaryFile
 from media_management_scripts.support.encoding import VideoCodec
