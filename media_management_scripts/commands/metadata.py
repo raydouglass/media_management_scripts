@@ -76,7 +76,10 @@ def print_metadata(input, show_popup=False, interlace='none'):
 
     o.append(output('Bitrate: {}', bitrate_to_str(meta.bit_rate)))
     for video in meta.video_streams:
-        o.append(output('Video: {} ({}x{})', video.codec, video.width, video.height))
+        if video.bit_depth:
+            o.append(output('Video: {} {} bit ({}x{})', video.codec,video.bit_depth, video.width, video.height))
+        else:
+            o.append(output('Video: {} ({}x{})', video.codec, video.width, video.height))
 
     audio_streams = []
     for audio in meta.audio_streams:

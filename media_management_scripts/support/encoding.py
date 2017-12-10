@@ -29,6 +29,27 @@ class Resolution(Enum):
         return self.value[3]
 
 
+class BitDepth(Enum):
+    BIT_8 = (8, 'yuv420p')
+    BIT_10 = (10, 'yuv420p10le')
+    BIT_12 = (12, 'yuv420p12le')
+
+    @property
+    def bits(self):
+        return self.value[0]
+
+    @property
+    def pix_fmt(self):
+        return self.value[1]
+
+    @staticmethod
+    def get_from_pix_fmt(pix_fmt: str):
+        for i in BitDepth:
+            if i.pix_fmt == pix_fmt:
+                return i
+        return None
+
+
 def resolution_name(height):
     if height <= 240:
         return Resolution.LOW_DEF
@@ -91,7 +112,7 @@ class AudioChannelName(Enum):
 
     @staticmethod
     def from_name(name):
-        for ac in list(AudioChannelName):
+        for ac in AudioChannelName:
             for n in ac.names:
                 if n == name:
                     return ac
@@ -122,7 +143,7 @@ class H264Preset(Enum):
 
     @staticmethod
     def from_value(value):
-        for preset in list(H264Preset):
+        for preset in H264Preset:
             if preset.value == value:
                 return preset
         return None

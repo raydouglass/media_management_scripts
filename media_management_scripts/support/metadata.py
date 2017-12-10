@@ -7,7 +7,7 @@ import os
 import re
 import operator
 from typing import List, Tuple
-from media_management_scripts.support.encoding import Resolution, resolution_name
+from media_management_scripts.support.encoding import BitDepth, resolution_name
 from media_management_scripts.support.interlace import find_interlace, InterlaceReport
 from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
 import shelve
@@ -177,6 +177,12 @@ class Stream():
         if not self.duration and 'DURATION' in self.tags:
             parts = [float(s) for s in self.tags['DURATION'].split(':')]
             self.duration = parts[0] * 60 * 60 + parts[1] * 60 + parts[2]
+        if self.is_video():
+            self.bit_depth = None
+            if self.codec in ('h264', 'hevc'):
+                pix_fmt = stream.get('pix_fmt', None)
+                depth = BitDepth.get_from_pix_fmt(pix_fmt)
+                self.bit_depth = depth.bits if depth else None
 
     def is_audio(self):
         return self.codec_type == 'audio'
@@ -212,6 +218,7 @@ class Stream():
         if self.is_video():
             d['width'] = self.width
             d['height'] = self.height
+            d['bit_depth'] = self.bit_depth
         d['tags'] = self.tags
         return d
 

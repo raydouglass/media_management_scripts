@@ -58,7 +58,7 @@ class CombineSubtitlesDirectoryCommand(SubCommand):
 
     def subexecute(self, ns):
         from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET
-        from media_management_scripts.support.combine_all import combine_all
+        from media_management_scripts.support.combine_all import combine_all, get_combinable_files
         input_to_cmd = ns['input']
         crf = ns.get('crf', DEFAULT_CRF)
         preset = ns.get('preset', DEFAULT_PRESET)
@@ -66,7 +66,11 @@ class CombineSubtitlesDirectoryCommand(SubCommand):
         output = ns['output']
         language = ns.get('language', None)
         lower_case = ns.get('lower-case', False)
-        combine_all(input_to_cmd, output, convert, crf, preset, language, lower_case=lower_case)
+        files = get_combinable_files(input_to_cmd, output, language, lower_case)
+        if self.dry_run:
+            self._bulk_print(list(files), ['Video File', 'Subtitle File', 'Language', 'Output'])
+        else:
+            combine_all(files, convert, crf, preset)
 
 
 SubCommand.register(CombineSubtitlesDirectoryCommand)
