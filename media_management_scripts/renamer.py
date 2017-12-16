@@ -2,9 +2,17 @@ import os
 import re
 
 from tempita import Template
+from typing import NamedTuple, Tuple
 
 season_pattern = re.compile('Season (\d+)')
 PLEX_TEMPLATE = '${show}/Season ${season|zpad}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
+
+
+class PlexTemplateParams(NamedTuple):
+    show: str = None
+    season: int = None
+    episode_num: int = None
+    episode_name: str = None
 
 
 class RegexResults(object):
@@ -39,7 +47,7 @@ _RENAMER_NAMESPACE = {
 }
 
 
-def create_namespace(size: int=2):
+def create_namespace(size: int = 2):
     length = max(2, len(str(size)))
 
     def zpad(s, length=length):
@@ -56,8 +64,14 @@ def create_namespace(size: int=2):
     return d
 
 
+def rename_plex(file: str, plex_params: PlexTemplateParams = None, output_dir=None) -> str:
+    return rename_process('{plex}', [file], output_dir=output_dir, params=plex_params)[0][1]
+
+
 def rename_process(template: str, files, index_start=1, output_dir=None, regex=None, ignore_missing_regex=False,
                    params={}):
+    if isinstance(params, PlexTemplateParams):
+        params = params._asdict()
     if regex:
         regex = re.compile(regex)
 

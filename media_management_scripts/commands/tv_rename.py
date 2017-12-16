@@ -71,7 +71,7 @@ class TvRenameCommand(SubCommand):
             if len(shows) == 0:
                 print('Not search results for show \'{}\' found.'.format(show))
                 return
-            if len(shows) > 0:
+            if len(shows) > 1:
                 from dialog import Dialog
                 d = Dialog(autowidgetsize=True)
                 code, tag = d.menu('Choices:', choices=shows, title='Pick a show')
@@ -89,8 +89,8 @@ class TvRenameCommand(SubCommand):
         for file in files:
             ext = path.splitext(file)[1]
             ep = episode_map.get((season, episode), None)
-            if show is not None and ep is not None and ep.get('episodeName', None) is not None:
-                ep_name = ep.get('episodeName')
+            ep_name = ep.get('episodeName', None)
+            if show is not None and ep is not None and ep_name is not None:
                 new_name = '{} - S{}E{} - {}{}'.format(show, pad(season), pad(episode), ep_name, ext)
             elif show is not None:
                 new_name = '{} - S{}E{}{}'.format(show, pad(season), pad(episode), ext)

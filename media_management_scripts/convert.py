@@ -9,6 +9,7 @@ from media_management_scripts.support.executables import execute_with_output, ff
 from media_management_scripts.support.files import check_exists, create_dirs, get_input_output
 from media_management_scripts.support.formatting import sizeof_fmt
 from media_management_scripts.utils import create_metadata_extractor, ConvertConfig
+from media_management_scripts.support.ttml2srt import convert_to_srt
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +164,14 @@ def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None,
 def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=DEFAULT_CRF, preset=DEFAULT_PRESET):
     if not overwrite and check_exists(output):
         return -1
+
+    if srt.endswith('.ttml'):
+        logger.info('Converting ttml to srt')
+        name, _ = os.path.splitext(srt)
+        srt_out = name + '.srt'
+        convert_to_srt(srt, srt_out)
+        srt = srt_out
+
     create_dirs(output)
     args = [ffmpeg(), '-i', video]
     if overwrite:

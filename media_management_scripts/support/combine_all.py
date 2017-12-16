@@ -3,11 +3,12 @@ import re
 from media_management_scripts.support.files import get_input_output, mp4_mkv_filter
 from media_management_scripts.convert import combine
 
-LANG_PATTERN = re.compile('\.(\w+)\.srt')
+LANG_PATTERN = re.compile('\.(\w+)\.(srt|idx|ttml)')
 
+subtitle_exts=('.srt', '.idx', '.ttml')
 
 def _filter(f: str):
-    return mp4_mkv_filter(f) or f.endswith('.srt') or f.endswith('.idx')
+    return mp4_mkv_filter(f) or f.endswith('.srt') or f.endswith('.idx') or f.endswith('.ttml')
 
 
 def get_lang(srt_file):
@@ -23,9 +24,9 @@ def get_combinable_files(input_dir, output_dir, forced_language=None, lower_case
         filename = os.path.basename(f)
         if lower_case:
             filename = filename.lower()
-        no_ext, ext = os.path.splitext(filename)
+        no_ext, ext = os.path.splitext(f)
         lang = forced_language
-        if not lang and (ext == '.srt' or ext == '.idx'):
+        if not lang and ext in subtitle_exts:
             #  subtitle
             m = LANG_PATTERN.search(filename)
             if m:
@@ -41,7 +42,7 @@ def get_combinable_files(input_dir, output_dir, forced_language=None, lower_case
         srt_file = None
         language = None
         for file, ext, lang, o in l:
-            if ext == '.srt' or ext == '.idx':
+            if ext in subtitle_exts:
                 srt_file = file
                 language = lang
             else:
