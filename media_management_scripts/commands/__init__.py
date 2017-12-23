@@ -7,6 +7,7 @@ from media_management_scripts.support.files import check_exists, create_dirs
 class SubCommand(metaclass=ABCMeta):
     def __init__(self):
         self.dry_run = False
+        self.ns = None
 
     @property
     @abstractmethod
@@ -23,6 +24,7 @@ class SubCommand(metaclass=ABCMeta):
 
     def execute(self, ns):
         self.dry_run = ns['dry_run']
+        self.ns = ns
         self.subexecute(ns)
 
     def _move(self, src, dst, overwrite=False):
@@ -109,4 +111,5 @@ __all__ = ['SubCommand',
            'search',
            'select_streams',
            'split',
+           'subtitles',
            'tv_rename']

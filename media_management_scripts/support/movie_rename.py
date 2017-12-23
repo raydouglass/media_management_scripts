@@ -98,6 +98,10 @@ def movie_rename(input_to_cmd, ns):
                         _transfer(result, new_file, username, pkey_file, host, output_path)
                         if move_source:
                             new_loc = os.path.join(move_source, os.path.basename(new_file))
+                            dir = os.path.dirname(new_file)
                             move(new_file, new_loc)
+                            if len(os.listdir(dir)) == 0:
+                                os.rmdir(dir)
+
                 else:
                     print(new_file)

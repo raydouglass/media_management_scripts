@@ -135,12 +135,12 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
     query = parse(query)
     with create_metadata_extractor(db_file) as extractor:
         if recursive:
-            files = list_files(input_dir, lambda x:True)
+            files = list_files(input_dir, movie_files_filter)
         else:
-            files = os.listdir(input_dir)
+            files = [x for x in os.listdir(input_dir) if movie_files_filter(x)]
         for file in files:
             path = os.path.join(input_dir, file)
-            if os.path.samefile(db_file, path):
+            if db_file and os.path.samefile(db_file, path):
                 #Skip if db file is in the same directory
                 continue
             metadata = extractor.extract(path)

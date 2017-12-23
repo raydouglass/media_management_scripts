@@ -35,7 +35,7 @@ def format_timestamp(timestamp: timedelta):
 
 
 # parse correct start and end times
-def parse_time_expression(expression, default_offset=timedelta(0)):
+def parse_time_expression(expression, default_offset=timedelta(0), frame_rate: int = None):
     offset_time = re.match(r'^([0-9]+(\.[0-9]+)?)(h|m|s|ms|f|t)$', expression)
     if offset_time:
         time_value, fraction, metric = offset_time.groups()
@@ -59,26 +59,32 @@ def parse_time_expression(expression, default_offset=timedelta(0)):
         return timedelta(hours=int(hours), minutes=int(minutes), seconds=float(seconds))
 
     clock_time_frames = re.match(r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression)
-    if clock_time_frames:
-        raise NotImplementedError('Parsing time expressions by frame is not supported!')
+    if clock_time_frames and not frame_rate:
+        raise NotImplementedError('Parsing time expressions by frame is not supported! No frame_rate provided.')
+    elif clock_time_frames:
+        hours, minutes, seconds, fraction, _ = clock_time_frames.groups()
+        seconds = float(seconds) + int(fraction) / frame_rate
+        return timedelta(hours=int(hours), minutes=int(minutes), seconds=seconds)
 
     raise ValueError('unknown time expression: %s' % expression)
 
 
-def parse_times(elem, default_begin=timedelta(0)):
+def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
     if 'begin' in elem.attrib:
-        begin = parse_time_expression(elem.attrib['begin'], default_offset=default_begin)
+        begin = parse_time_expression(elem.attrib['begin'], default_offset=default_begin,
+                                      frame_rate=frame_rate)
     else:
         begin = default_begin
     elem.attrib['{abs}begin'] = begin
 
     end = None
     if 'end' in elem.attrib:
-        end = parse_time_expression(elem.attrib['end'], default_offset=default_begin)
+        end = parse_time_expression(elem.attrib['end'], default_offset=default_begin,
+                                    frame_rate=frame_rate)
 
     dur = None
     if 'dur' in elem.attrib:
-        dur = parse_time_expression(elem.attrib['dur'])
+        dur = parse_time_expression(elem.attrib['dur'], frame_rate=frame_rate)
 
     if dur is not None:
         if end is None:
@@ -89,7 +95,7 @@ def parse_times(elem, default_begin=timedelta(0)):
     elem.attrib['{abs}end'] = end
 
     for child in elem:
-        parse_times(child, default_begin=begin)
+        parse_times(child, default_begin=begin, frame_rate=frame_rate)
 
 
 # render subtitles on each timestamp
@@ -156,7 +162,11 @@ def convert_to_srt(srt_file: str, output_file: str = None):
 
     body = root.find('./body')
 
-    parse_times(body)
+    frame_rate = root.attrib.get('frameRate', None)
+    if frame_rate:
+        frame_rate = int(frame_rate)
+
+    parse_times(body, frame_rate=frame_rate)
 
     timestamps = set()
     for elem in body.findall('.//*[@{abs}begin]'):

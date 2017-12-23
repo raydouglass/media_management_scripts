@@ -29,9 +29,12 @@ class MetadataCompareCommand(SubCommand):
             rows.append('')
         rows.append('Subtitles')
         file_columns = [rows]
+        first_size = os.path.getsize(metadatas[0].file)
         for m in metadatas:
             data = []
-            data.append(sizeof_fmt(os.path.getsize(m.file)))
+            size = os.path.getsize(m.file);
+            size_ratio = '{:.1f}%'.format(size/first_size*100)
+            data.append('{} ({})'.format(sizeof_fmt(size), size_ratio))
             data.append(duration_to_str(m.estimated_duration) if m.estimated_duration else '')
             data.append('{:.2f}'.format(m.bit_rate / 1024.0))
             video = m.video_streams[0]
