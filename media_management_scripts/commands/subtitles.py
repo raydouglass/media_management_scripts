@@ -20,13 +20,13 @@ class SubtitlesCommand(SubCommand):
                                      default=False)
 
     def _filter(self, file: str):
-        if not self.ns['no-ttml']:
+        if not self.ns['no_ttml']:
             if file.endswith('.ttml'):
                 return True
-        if not self.ns['no-xml']:
+        if not self.ns['no_xml']:
             if file.endswith('.xml'):
                 return True
-        if not self.ns['no-vtt']:
+        if not self.ns['no_vtt']:
             if file.endswith('.vtt'):
                 return True
         return False
@@ -65,7 +65,7 @@ class SubtitlesCommand(SubCommand):
                 dir = os.path.dirname(input_to_cmd)
                 output_dir = os.path.join(dir, noext + '.srt')
 
-            self._bulk((input_to_cmd, output_dir), op=self._convert, column_descriptions=['Input', 'Output'])
+            self._bulk([(input_to_cmd, output_dir)], op=self._convert, column_descriptions=['Input', 'Output'])
         else:
             if not output_dir:
                 output_dir = input_to_cmd
