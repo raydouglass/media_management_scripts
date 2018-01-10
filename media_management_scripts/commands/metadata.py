@@ -41,9 +41,9 @@ def output(text, *args):
 def popup(text):
     applescript = """
     display dialog "{}"
-    """.format(text)
+    """.format(text).replace('"', '\\"')
 
-    os.system("osascript -e '{}'".format(applescript))
+    os.system('osascript -e "{}"'.format(applescript))
 
 
 class Encoder(json.JSONEncoder):

@@ -9,7 +9,7 @@ class MetadataCompareCommand(SubCommand):
         return 'compare'
 
     def build_argparse(self, subparser):
-        metadata_parser = subparser.add_parser(self.name, help='Show metadata for a file',
+        metadata_parser = subparser.add_parser(self.name, help='Compare metadata between files',
                                                parents=[parent_parser])
         metadata_parser.add_argument('--interlace', help='Try to detect interlacing',
                                      choices=['none', 'summary', 'report'], default='none')
@@ -33,7 +33,7 @@ class MetadataCompareCommand(SubCommand):
         for m in metadatas:
             data = []
             size = os.path.getsize(m.file);
-            size_ratio = '{:.1f}%'.format(size/first_size*100)
+            size_ratio = '{:.1f}%'.format(size / first_size * 100)
             data.append('{} ({})'.format(sizeof_fmt(size), size_ratio))
             data.append(duration_to_str(m.estimated_duration) if m.estimated_duration else '')
             data.append('{:.2f}'.format(m.bit_rate / 1024.0))
@@ -51,3 +51,57 @@ class MetadataCompareCommand(SubCommand):
 
 
 SubCommand.register(MetadataCompareCommand)
+
+
+class CompareDirectoryCommand(SubCommand):
+    @property
+    def name(self):
+        return 'compare-directory'
+
+    def build_argparse(self, subparser):
+        parser = subparser.add_parser(self.name, help='Show metadata for a file', parents=[parent_parser])
+        parser.add_argument('source')
+        parser.add_argument('destination')
+        parser.add_argument('--db', help='Metadata temp DB')
+
+    def subexecute(self, ns):
+        from media_management_scripts.utils import create_metadata_extractor
+        from media_management_scripts.support.files import get_input_output, list_files
+        from media_management_scripts.support.formatting import bitrate_to_str
+
+        src_dir = ns['source']
+        dst_dir = ns['destination']
+        dst_files = list(list_files(dst_dir))
+        meta_db = ns.get('db', None)
+
+        table = []
+        extractor = create_metadata_extractor(meta_db)
+        for src_file, dst_file in get_input_output(src_dir, dst_dir):
+            row = []
+            src_meta = extractor.extract(src_file)
+            src_video = src_meta.video_streams[0]
+
+            row.append(os.path.basename(src_file))
+            row.append(src_video.codec)
+            row.append('{}x{}'.format(src_video.width, src_video.height))
+            row.append(bitrate_to_str(src_meta.bit_rate))
+            #row.append(dst_file)
+
+            if os.path.exists(dst_file):
+                dst_meta = extractor.extract(dst_file)
+                dst_video = dst_meta.video_streams[0]
+                row.append(dst_video.codec)
+                row.append('{}x{}'.format(dst_video.width, dst_video.height))
+                row.append(bitrate_to_str(dst_meta.bit_rate))
+            else:
+                row.append('')
+                row.append('')
+                row.append('')
+            table.append(tuple(row))
+
+        columns = ['Source', 'Src Codec', 'Src Resolution', 'Src Bitrate', #'Destination',
+                   'Dest Codec', 'Dest Resolution', 'Dest Bitrate']
+        self._bulk_print(table, columns)
+
+
+SubCommand.register(CompareDirectoryCommand)

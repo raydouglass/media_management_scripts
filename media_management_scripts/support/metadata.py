@@ -15,6 +15,7 @@ from media_management_scripts.support.executables import ffprobe
 
 DATE_PATTERN = re.compile('\d{4}_\d{2}_\d{2}')
 ONLY_DATE_PATTERN = re.compile('^\d{4}-\d{2}-\d{2}$')
+DURATION_PATTERN = re.compile('\d+:\d+:\d+(.\d+)?')
 
 ATTRIBUTE_KEY_TITLE = 'title'
 ATTRIBUTE_KEY_SUBTITLE = 'subtitle'
@@ -60,7 +61,7 @@ class Metadata():
         self.audio_streams = [s for s in self.streams if s.is_audio()]
         self.video_streams = [s for s in self.streams if s.is_video()]
         self.subtitle_streams = [s for s in self.streams if s.is_subtitle()]
-        self.other_stream = [s for s in self.streams if not s.is_other()]
+        self.other_streams = [s for s in self.streams if s.is_other()]
 
         durs = [s.duration for s in self.streams if s.duration]
         self.estimated_duration = max(durs) if durs else None
@@ -127,7 +128,11 @@ class Metadata():
             'format': self.format,
             'format_long_name': self.format_long_name,
             'tags': self.tags,
-            'streams': [s.to_dict() for s in self.streams],
+            # 'streams': [s.to_dict() for s in self.streams],
+            'video_streams': [s.to_dict() for s in self.video_streams],
+            'audio_streams': [s.to_dict() for s in self.audio_streams],
+            'subtitle_streams': [s.to_dict() for s in self.subtitle_streams],
+            'other_streams': [s.to_dict() for s in self.other_streams],
             'chapters': [c.to_dict() for c in self.chapters] if self.chapters else [],
             'interlace': self.interlace_report.to_dict() if self.interlace_report else None
         }
@@ -174,13 +179,17 @@ class Stream():
         if self.is_audio():
             self.channels = int(stream['channels']) if 'channels' in stream else None
             self.channel_layout = stream.get('channel_layout', None)
-        if not self.duration and 'DURATION' in self.tags:
-            parts = [float(s) for s in self.tags['DURATION'].split(':')]
-            self.duration = parts[0] * 60 * 60 + parts[1] * 60 + parts[2]
+        if not self.duration:
+            for tag in self.tags:
+                if tag.startswith('DURATION') and DURATION_PATTERN.match(self.tags[tag]):
+                    # 01:31:21.856000000
+                    parts = [float(s) for s in self.tags[tag].split(':')]
+                    self.duration = parts[0] * 60 * 60 + parts[1] * 60 + parts[2]
         if self.is_video():
             self.bit_depth = None
             if self.codec in ('h264', 'hevc'):
                 pix_fmt = stream.get('pix_fmt', None)
+                # TODO: This is not really accurate
                 depth = BitDepth.get_from_pix_fmt(pix_fmt)
                 self.bit_depth = depth.bits if depth else None
 
