@@ -158,10 +158,9 @@ class ConvertDvds():
             return False
 
     def process(self, root_dir, input_file, output_file, temp_file, status, convert_config):
-        if os.path.exists(output_file):
+        if not status.convert and os.path.exists(output_file):
             logger.info(
-                'Output exists, skipping: input={}, output={}'.format(input_file, output_file))
-            return False
+                'Output exists, will not convert: input={}, output={}'.format(input_file, output_file))
         create_dirs(temp_file)
         create_dirs(output_file)
         # Start backup
@@ -173,7 +172,7 @@ class ConvertDvds():
                 backup_popen, cleanup_dir = self.backup(root_dir, input_file)
             else:
                 logger.debug('No backup for {}, but backups are disabled'.format(input_file))
-        if not status.convert:
+        if not status.convert and not os.path.exists(output_file):
             # Start convert
             logger.debug('Not converted: {}'.format(input_file))
             if os.path.exists(temp_file):
