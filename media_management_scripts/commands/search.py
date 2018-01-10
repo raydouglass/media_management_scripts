@@ -10,7 +10,7 @@ class SearchCommand(SubCommand):
         return 'search'
 
     def build_argparse(self, subparser):
-        search_parser = subparser.add_parser('search', parents=[parent_parser, input_parser],
+        search_parser = subparser.add_parser('search', parents=[parent_parser],
                                              formatter_class=argparse.RawTextHelpFormatter,
                                              description="""
     Searches a directory for video files matching parameters.
@@ -56,27 +56,30 @@ class SearchCommand(SubCommand):
             all(a.codec) = aac
 """)
         search_parser.add_argument('--db', default=None, dest='db_file')
+        search_parser.add_argument('input', nargs='+', help='Input directories')
         search_parser.add_argument('query',
                                    help="The query to run. Recommended to enclose in single-quotes to avoid bash completions")
         search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.',
                                    action='store_const', const=True, default=False)
         search_parser.add_argument('-r', '--recursive', action='store_const', const=True, default=False,
-                                  help='Recursively search input directory')
+                                   help='Recursively search input directory')
 
     def subexecute(self, ns):
         input_to_cmd = ns['input']
         null_byte = ns['0']
         query = ns['query']
         db_file = ns['db_file']
-        recursive=ns['recursive']
+        recursive = ns['recursive']
         l = []
-        for file, metadata in search(input_to_cmd, query, db_file, recursive):
-            if not null_byte:
-                print(file)
-            else:
-                l.append(file)
-        if null_byte:
-            print('\0'.join(l))
+        for input_dir in input_to_cmd:
+            for file, metadata in search(input_dir, query, db_file, recursive):
+                if not null_byte:
+                    print(file)
+                else:
+                    #l.append(file)
+                    print(file, end='\0')
+        # if null_byte:
+        #     print('\0'.join(l))
 
 
 SubCommand.register(SearchCommand)
@@ -141,7 +144,7 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
         for file in files:
             path = os.path.join(input_dir, file)
             if db_file and os.path.samefile(db_file, path):
-                #Skip if db file is in the same directory
+                # Skip if db file is in the same directory
                 continue
             metadata = extractor.extract(path)
             context = {
