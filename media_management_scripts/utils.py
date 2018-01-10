@@ -2,6 +2,7 @@ from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESE
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
 from typing import Iterable, NamedTuple
 from configparser import ConfigParser
+from media_management_scripts.support.executables import ffprobe
 
 
 def compare_gt(this, other):
@@ -30,7 +31,7 @@ def compare_lt(this, other):
 
 
 def create_metadata_extractor(db_file=None) -> MetadataExtractor:
-    return MetadataExtractor({'ffprobe_exe': '/usr/local/bin/ffprobe'}, db_file=db_file)
+    return MetadataExtractor({'ffprobe_exe': ffprobe()}, db_file=db_file)
 
 
 def extract_metadata(input: str, detect_interlace=False, db_file=None) -> Metadata:
