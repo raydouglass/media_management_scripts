@@ -1,3 +1,4 @@
+from media_management_scripts.convert import convert_subtitles_to_srt
 from . import SubCommand
 from .common import *
 import os
@@ -38,20 +39,6 @@ class SubtitlesCommand(SubCommand):
             o = noext + '.srt'
             yield i, o
 
-    def _convert(self, i: str, o: str):
-        if i.endswith('.ttml') or i.endswith('.xml'):
-            # TTML
-            from media_management_scripts.support.ttml2srt import convert_to_srt
-            convert_to_srt(i, o)
-        elif i.endswith('.vtt'):
-            # VTT
-            from media_management_scripts.support.executables import ffmpeg
-            from media_management_scripts.support.executables import execute_with_output
-            args = [ffmpeg(), '-loglevel', 'fatal', '-i', i, '-c:s', 'srt', o]
-            execute_with_output(args)
-        else:
-            raise Exception('Unknown subtitle file: {}'.format(i))
-
     def subexecute(self, ns):
         input_to_cmd = ns['input']
         output_dir = ns.get('output', None)
@@ -65,12 +52,12 @@ class SubtitlesCommand(SubCommand):
                 dir = os.path.dirname(input_to_cmd)
                 output_dir = os.path.join(dir, noext + '.srt')
 
-            self._bulk([(input_to_cmd, output_dir)], op=self._convert, column_descriptions=['Input', 'Output'])
+            self._bulk([(input_to_cmd, output_dir)], op=convert_subtitles_to_srt, column_descriptions=['Input', 'Output'])
         else:
             if not output_dir:
                 output_dir = input_to_cmd
             results = list(self._get_io(input_to_cmd, output_dir))
-            self._bulk(results, op=self._convert, column_descriptions=['Input', 'Output'])
+            self._bulk(results, op=convert_subtitles_to_srt, column_descriptions=['Input', 'Output'])
 
 
 SubCommand.register(SubtitlesCommand)

@@ -147,7 +147,7 @@ class Chapter():
         self.id = chapter['id']
         self.start_time = float(chapter['start_time'])
         self.end_time = float(chapter['end_time'])
-        self.title = chapter['tags'].get('title', None)
+        self.title = chapter.get('tags', {}).get('title', None)
 
     def to_dict(self):
         return {

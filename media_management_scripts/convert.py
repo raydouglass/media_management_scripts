@@ -165,8 +165,8 @@ def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=D
     if not overwrite and check_exists(output):
         return -1
 
-    if srt.endswith('.ttml'):
-        logger.info('Converting ttml to srt')
+    if srt.endswith('.ttml') or srt.endswith('.xml'):
+        logger.debug('Converting ttml/xml to srt')
         name, _ = os.path.splitext(srt)
         srt_out = name + '.srt'
         convert_to_srt(srt, srt_out)
@@ -177,7 +177,7 @@ def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=D
     if overwrite:
         args.append('-y')
     args.extend(['-i', srt])
-    args.extend(['-map', '0', '-map', '1:0'])
+    args.extend(['-map', '0:v', '-map', '0:a', '-map', '0:s?', '-map', '1:0'])
     if convert:
         args.extend(['-c:v', 'libx264', '-crf', str(crf), '-preset', preset])
         args.extend(['-c:a', 'aac'])
@@ -284,3 +284,21 @@ def do_compare(input, output):
         print('Not Converted:')
         for i in not_converted:
             print('  {}'.format(i))
+
+
+def convert_subtitles_to_srt(i: str, o: str):
+    if i.endswith('.ttml') or i.endswith('.xml'):
+        # TTML
+        from media_management_scripts.support.ttml2srt import convert_to_srt
+        convert_to_srt(i, o)
+    elif i.endswith('.vtt'):
+        # VTT
+        from media_management_scripts.support.executables import ffmpeg
+        from media_management_scripts.support.executables import execute_with_output
+        args = [ffmpeg(), '-loglevel', 'fatal', '-i', i, '-c:s', 'srt', o]
+        execute_with_output(args)
+    elif i.endswith('.srt'):
+        import shutil
+        shutil.copy(i, o)
+    else:
+        raise Exception('Unknown subtitle file: {}'.format(i))
