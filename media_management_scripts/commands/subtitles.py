@@ -15,6 +15,8 @@ class SubtitlesCommand(SubCommand):
         subtitle_parser.add_argument('--output', '-o', help='Output file or directory')
         subtitle_parser.add_argument('--no-ttml', help='Do not convert TTML', action='store_const', const=True,
                                      default=False)
+        subtitle_parser.add_argument('--no-dfxp', help='Do not convert DFXP (Old TTML)', action='store_const', const=True,
+                                     default=False)
         subtitle_parser.add_argument('--no-xml', help='Do not convert XML (treated as TTML)', action='store_const',
                                      const=True, default=False)
         subtitle_parser.add_argument('--no-vtt', help='Do not convert VTT', action='store_const', const=True,
@@ -23,6 +25,9 @@ class SubtitlesCommand(SubCommand):
     def _filter(self, file: str):
         if not self.ns['no_ttml']:
             if file.endswith('.ttml'):
+                return True
+        if not self.ns['no_dfxp']:
+            if file.endswith('.dfxp'):
                 return True
         if not self.ns['no_xml']:
             if file.endswith('.xml'):

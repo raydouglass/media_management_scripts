@@ -287,7 +287,7 @@ def do_compare(input, output):
 
 
 def convert_subtitles_to_srt(i: str, o: str):
-    if i.endswith('.ttml') or i.endswith('.xml'):
+    if i.endswith('.ttml') or i.endswith('.xml') or i.endswith('.dfxp'):
         # TTML
         from media_management_scripts.support.ttml2srt import convert_to_srt
         convert_to_srt(i, o)

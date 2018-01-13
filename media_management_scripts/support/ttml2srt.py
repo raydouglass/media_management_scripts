@@ -200,6 +200,7 @@ def convert_to_srt(srt_file: str, output_file: str = None):
         for i, (timestamp, content) in enumerate(rendered_grouped[:-1]):
             if content == '':
                 continue
+            content=content.strip()
             print(str(srt_i), file=f)
             print(format_timestamp(timestamp) + ' --> ' + format_timestamp(rendered_grouped[i + 1][0]), file=f)
             print(content, file=f)
