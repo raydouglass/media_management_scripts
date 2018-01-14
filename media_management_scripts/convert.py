@@ -287,18 +287,17 @@ def do_compare(input, output):
 
 
 def convert_subtitles_to_srt(i: str, o: str):
-    if i.endswith('.ttml') or i.endswith('.xml') or i.endswith('.dfxp'):
+    if i.endswith('.srt'):
+        import shutil
+        shutil.copy(i, o)
+    elif i.endswith('.ttml') or i.endswith('.xml') or i.endswith('.dfxp'):
         # TTML
         from media_management_scripts.support.ttml2srt import convert_to_srt
         convert_to_srt(i, o)
-    elif i.endswith('.vtt'):
-        # VTT
+    else:
+        # VTT, SCC, etc
+        # Attempt to use FFMPEG
         from media_management_scripts.support.executables import ffmpeg
         from media_management_scripts.support.executables import execute_with_output
-        args = [ffmpeg(), '-loglevel', 'fatal', '-i', i, '-c:s', 'srt', o]
+        args = [ffmpeg(), '-loglevel', 'fatal', '-y', '-i', i, '-c:s', 'srt', o]
         execute_with_output(args)
-    elif i.endswith('.srt'):
-        import shutil
-        shutil.copy(i, o)
-    else:
-        raise Exception('Unknown subtitle file: {}'.format(i))
