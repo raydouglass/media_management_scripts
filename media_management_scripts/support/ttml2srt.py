@@ -97,7 +97,6 @@ def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
     for child in elem:
         parse_times(child, default_begin=begin, frame_rate=frame_rate)
 
-
 # render subtitles on each timestamp
 def render_subtitles(elem, timestamp, styles, parent_style={}):
     if timestamp < elem.attrib['{abs}begin']:
@@ -109,13 +108,15 @@ def render_subtitles(elem, timestamp, styles, parent_style={}):
 
     style = parent_style.copy()
     if 'style' in elem.attrib:
-        style.update(styles[elem.attrib['style']])
+        style.update(styles.get(elem.attrib['style'], {}))
 
     if 'color' in style:
         result += '<font color="%s">' % style['color']
 
-    if style.get('fontstyle') == 'italic':
-        result += '<i>'
+    is_italic = False
+    if style.get('fontstyle') == 'italic' or elem.attrib.get('fontStyle', None) == 'italic':
+        result += ' <i>'
+        is_italic=True
 
     if elem.text:
         result += elem.text.strip()
@@ -125,11 +126,12 @@ def render_subtitles(elem, timestamp, styles, parent_style={}):
             if child.tail:
                 result += child.tail.strip()
 
+    result = result.rstrip()
+    if is_italic:
+        result += '</i> '
+
     if 'color' in style:
         result += '</font>'
-
-    if style.get('fontstyle') == 'italic':
-        result += '</i>'
 
     if elem.tag in ('div', 'p', 'br'):
         result += '\n'
@@ -193,7 +195,7 @@ def convert_to_srt(srt_file: str, output_file: str = None):
         last_text = content
 
     # output srt
-    rendered_grouped.append((rendered_grouped[-1][0] + timedelta(hours=24), ''))
+    #rendered_grouped.append((rendered_grouped[-1][0] + timedelta(hours=24), ''))
 
     with open(output_file, 'w') if output_file else sys.stdout as f:
         srt_i = 1
@@ -206,8 +208,3 @@ def convert_to_srt(srt_file: str, output_file: str = None):
             print(content, file=f)
             srt_i += 1
             print('', file=f)
-
-
-if __name__ == '__main__':
-    filename = sys.argv[1]
-    convert_to_srt(filename)

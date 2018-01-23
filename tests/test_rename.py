@@ -117,6 +117,14 @@ class RenameTests(unittest.TestCase):
         results = new_names(rename_process(template, files, params=params, output_dir=output_dir))
         self.assertEqual(['/Some/Path/TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv'], results)
 
+    def test_plex_specials(self):
+        template = '{plex}'
+        output_dir = '/Some/Path'
+        files = ['file.mkv']
+        params = {'show': 'TV Show', 'season': 0, 'episode_num': 2, 'episode_name': 'Episode Name'}
+        results = new_names(rename_process(template, files, params=params, output_dir=output_dir))
+        self.assertEqual(['/Some/Path/TV Show/Specials/TV Show - S00E02 - Episode Name.mkv'], results)
+
     def test_default_length(self):
         template = '${i|zpad}'
         files = [str(x) for x in range(5)]

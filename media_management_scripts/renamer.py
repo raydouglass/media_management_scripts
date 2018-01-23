@@ -5,7 +5,7 @@ from tempita import Template
 from typing import NamedTuple, Tuple
 
 season_pattern = re.compile('Season (\d+)')
-PLEX_TEMPLATE = '${show}/Season ${season|zpad}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
+PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
 
 
 class PlexTemplateParams(NamedTuple):
@@ -56,9 +56,16 @@ def create_namespace(size: int = 2):
     def lpad(s, length=length):
         return str(s).rjust(length, ' ')
 
+    def plex_season_specials(s, length=length):
+        if s:
+            return 'Season '+zpad(s, length)
+        else:
+            return 'Specials'
+
     d = {
         'lpad': lpad,
         'zpad': zpad,
+        'plex_season_specials': plex_season_specials
     }
     d.update(_RENAMER_NAMESPACE)
     return d
