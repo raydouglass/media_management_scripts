@@ -5,7 +5,7 @@ from tempita import Template
 from typing import NamedTuple, Tuple
 
 season_pattern = re.compile('Season (\d+)')
-PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad}E${episode_num|zpad}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
+PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad}${plex_episode(episode_num, episode_num_final)}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
 
 
 class PlexTemplateParams(NamedTuple):
@@ -13,6 +13,7 @@ class PlexTemplateParams(NamedTuple):
     season: int = None
     episode_num: int = None
     episode_name: str = None
+    episode_num_final: int = None
 
 
 class RegexResults(object):
@@ -58,13 +59,20 @@ def create_namespace(size: int = 2):
 
     def plex_season_specials(s, length=length):
         if s:
-            return 'Season '+zpad(s, length)
+            return 'Season ' + zpad(s, length)
         else:
             return 'Specials'
+
+    def plex_episode(episode_num, episode_num_final, length=length):
+        if episode_num_final:
+            return 'E{}-E{}'.format(zpad(episode_num, length), zpad(episode_num_final, length))
+        else:
+            return 'E{}'.format(zpad(episode_num))
 
     d = {
         'lpad': lpad,
         'zpad': zpad,
+        'plex_episode': plex_episode,
         'plex_season_specials': plex_season_specials
     }
     d.update(_RENAMER_NAMESPACE)
@@ -77,15 +85,20 @@ def rename_plex(file: str, plex_params: PlexTemplateParams = None, output_dir=No
 
 def rename_process(template: str, files, index_start=1, output_dir=None, regex=None, ignore_missing_regex=False,
                    params={}):
-    if isinstance(params, PlexTemplateParams):
-        params = params._asdict()
     if regex:
         regex = re.compile(regex)
 
     if '{plex}' in template:
         template = template.replace('{plex}', PLEX_TEMPLATE)
 
-    t = Template(content=template, delimiters=('${', '}'), namespace=create_namespace(len(files)))
+    if isinstance(params, PlexTemplateParams):
+        params = params._asdict()
+
+    length = len(files)
+    if 'length' not in params:
+        params['length'] = length
+
+    t = Template(content=template, delimiters=('${', '}'), namespace=create_namespace(length))
     results = []
 
     index = index_start

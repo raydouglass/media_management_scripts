@@ -1,6 +1,6 @@
 import unittest
 
-from media_management_scripts.renamer import rename_process
+from media_management_scripts.renamer import rename_process, rename_plex, PlexTemplateParams
 
 
 def new_names(results):
@@ -82,18 +82,40 @@ class RenameTests(unittest.TestCase):
     def test_plex(self):
         template = '{plex}'
         files = ['file.mkv']
-        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name'}
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name',
+                  'episode_num_final': None}
         results = new_names(rename_process(template, files, params=params))
         self.assertEqual(['TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv'], results)
 
-        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': None}
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': None, 'episode_num_final': None}
         results = new_names(rename_process(template, files, params=params))
         self.assertEqual(['TV Show/Season 01/TV Show - S01E02.mkv'], results)
 
         template = '/Some/Path/{plex}'
-        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name'}
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name',
+                  'episode_num_final': None}
         results = new_names(rename_process(template, files, params=params))
         self.assertEqual(['/Some/Path/TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv'], results)
+
+    def test_plex_multiepisode(self):
+        template = '{plex}'
+        files = ['file.mkv']
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name',
+                  'episode_num_final': 3}
+        results = new_names(rename_process(template, files, params=params))
+        self.assertEqual(['TV Show/Season 01/TV Show - S01E02-E03 - Episode Name.mkv'], results)
+
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name',
+                  'episode_num_final': 10}
+        results = new_names(rename_process(template, files, params=params))
+        self.assertEqual(['TV Show/Season 01/TV Show - S01E02-E10 - Episode Name.mkv'], results)
+
+    def test_plex_params(self):
+        params = PlexTemplateParams('TV Show', 1, 2, 'Episode Name')
+        self.assertEqual('TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv',rename_plex('file.mkv', params))
+
+        params = PlexTemplateParams('TV Show', 1, 2, 'Episode Name', 3)
+        self.assertEqual('TV Show/Season 01/TV Show - S01E02-E03 - Episode Name.mkv', rename_plex('file.mkv', params))
 
     def test_output_dir(self):
         template = '${i}'
@@ -113,7 +135,7 @@ class RenameTests(unittest.TestCase):
         template = '{plex}'
         output_dir = '/Some/Path'
         files = ['file.mkv']
-        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name'}
+        params = {'show': 'TV Show', 'season': 1, 'episode_num': 2, 'episode_name': 'Episode Name', 'episode_num_final': None}
         results = new_names(rename_process(template, files, params=params, output_dir=output_dir))
         self.assertEqual(['/Some/Path/TV Show/Season 01/TV Show - S01E02 - Episode Name.mkv'], results)
 
@@ -121,7 +143,7 @@ class RenameTests(unittest.TestCase):
         template = '{plex}'
         output_dir = '/Some/Path'
         files = ['file.mkv']
-        params = {'show': 'TV Show', 'season': 0, 'episode_num': 2, 'episode_name': 'Episode Name'}
+        params = {'show': 'TV Show', 'season': 0, 'episode_num': 2, 'episode_name': 'Episode Name', 'episode_num_final': None}
         results = new_names(rename_process(template, files, params=params, output_dir=output_dir))
         self.assertEqual(['/Some/Path/TV Show/Specials/TV Show - S00E02 - Episode Name.mkv'], results)
 
