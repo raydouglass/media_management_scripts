@@ -1,5 +1,7 @@
 import argparse
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET
+from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
+
+
 
 parent_parser = argparse.ArgumentParser(add_help=False)
 parent_parser.add_argument('--print-args', action='store_const', const=True, default=False)
@@ -29,5 +31,6 @@ convert_parent_parser.add_argument('--deinterlace-threshold', type=float, defaul
 convert_parent_parser.add_argument('--add-ripped-metadata', action='store_const', const=True, default=False,
                                    help='Adds a metadata item to the output indicating this is a ripped video',
                                    dest='include_meta')
+convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], default=None, help='Set the maximum height scale')
 
 __all__ = ['parent_parser', 'input_parser', 'output_parser', 'convert_parent_parser']

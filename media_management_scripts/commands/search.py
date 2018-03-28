@@ -65,6 +65,7 @@ class SearchCommand(SubCommand):
                                    help='Recursively search input directory')
 
     def subexecute(self, ns):
+        import sys
         input_to_cmd = ns['input']
         null_byte = ns['0']
         query = ns['query']
@@ -72,12 +73,15 @@ class SearchCommand(SubCommand):
         recursive = ns['recursive']
         l = []
         for input_dir in input_to_cmd:
-            for file, metadata in search(input_dir, query, db_file, recursive):
-                if not null_byte:
-                    print(file)
+            for file, metadata, status in search(input_dir, query, db_file, recursive):
+                if status:
+                    if not null_byte:
+                        print(file)
+                    else:
+                        # l.append(file)
+                        print(file, end='\0')
                 else:
-                    #l.append(file)
-                    print(file, end='\0')
+                    print('Error: {}'.format(file), file=sys.stderr)
         # if null_byte:
         #     print('\0'.join(l))
 
@@ -131,42 +135,51 @@ class SearchParameters():
             return result
 
 
+def _filter(file: str):
+    from media_management_scripts.support.files import movie_files_filter
+    return not os.path.basename(file).startswith('.') and movie_files_filter(file)
+
+
 def search(input_dir: str, query: str, db_file: str = None, recursive=False):
     from media_management_scripts.support.search_parser import parse
     from media_management_scripts.utils import create_metadata_extractor
-    from media_management_scripts.support.files import list_files, movie_files_filter
+    from media_management_scripts.support.files import list_files
     query = parse(query)
+    db_exists = os.path.exists(db_file)
     with create_metadata_extractor(db_file) as extractor:
         if recursive:
-            files = list_files(input_dir, movie_files_filter)
+            files = list_files(input_dir, _filter)
         else:
-            files = [x for x in os.listdir(input_dir) if movie_files_filter(x)]
+            files = [x for x in os.listdir(input_dir) if _filter(x)]
         for file in files:
             path = os.path.join(input_dir, file)
-            if db_file and os.path.samefile(db_file, path):
+            if db_exists and os.path.samefile(db_file, path):
                 # Skip if db file is in the same directory
                 continue
-            metadata = extractor.extract(path)
-            context = {
-                'v': {
-                    'codec': [v.codec for v in metadata.video_streams],
-                    'width': [v.width for v in metadata.video_streams],
-                    'height': [v.height for v in metadata.video_streams]
-                },
-                'a': {
-                    'codec': [a.codec for a in metadata.audio_streams],
-                    'channels': [a.channels for a in metadata.audio_streams],
-                    'lang': [a.language for a in metadata.audio_streams],
-                },
-                's': {
-                    'codec': [s.codec for s in metadata.subtitle_streams],
-                    'lang': [s.language for s in metadata.subtitle_streams]
-                },
-                'ripped': metadata.ripped,
-                'bit_rate': metadata.bit_rate,
-                'resolution': metadata.resolution._name_,
-                'meta': metadata.to_dict()
+            try:
+                metadata = extractor.extract(path)
+                context = {
+                    'v': {
+                        'codec': [v.codec for v in metadata.video_streams],
+                        'width': [v.width for v in metadata.video_streams],
+                        'height': [v.height for v in metadata.video_streams]
+                    },
+                    'a': {
+                        'codec': [a.codec for a in metadata.audio_streams],
+                        'channels': [a.channels for a in metadata.audio_streams],
+                        'lang': [a.language for a in metadata.audio_streams],
+                    },
+                    's': {
+                        'codec': [s.codec for s in metadata.subtitle_streams],
+                        'lang': [s.language for s in metadata.subtitle_streams]
+                    },
+                    'ripped': metadata.ripped,
+                    'bit_rate': metadata.bit_rate,
+                    'resolution': metadata.resolution._name_,
+                    'meta': metadata.to_dict()
 
-            }
-            if query.exec(context) is True:
-                yield (file, metadata)
+                }
+                if query.exec(context) is True:
+                    yield file, metadata, True
+            except Exception:
+                yield file, None, False

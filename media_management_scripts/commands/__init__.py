@@ -100,6 +100,7 @@ class SubCommand(metaclass=ABCMeta):
 
 __all__ = ['SubCommand',
            'combine_subtitles',
+           'compare_directories',
            'concat_mp4',
            'convert',
            'find_episodes',

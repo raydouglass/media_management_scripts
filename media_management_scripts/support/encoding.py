@@ -28,7 +28,6 @@ class Resolution(Enum):
     def auto_bitrate_name(self):
         return self.value[3]
 
-
 class BitDepth(Enum):
     BIT_8 = (8, 'yuv420p')
     BIT_10 = (10, 'yuv420p10le')

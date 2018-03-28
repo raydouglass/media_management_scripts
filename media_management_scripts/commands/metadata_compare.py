@@ -3,6 +3,38 @@ from .common import *
 import os
 
 
+def create_table_object(input_to_cmd, interlace='none'):
+    from media_management_scripts.utils import create_metadata_extractor
+    from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str
+    extractor = create_metadata_extractor()
+    metadatas = [extractor.extract(i, interlace != 'none') for i in input_to_cmd]
+    header = [''] + [os.path.basename(f.file) for f in metadatas]
+    num_audio = max([len(m.audio_streams) for m in metadatas])
+    rows = ['Size', 'Duration', 'Bitrate (kb/s)', 'Video Codec', 'Resolution', 'Audio']
+    for i in range(1, num_audio):
+        rows.append('')
+    rows.append('Subtitles')
+    file_columns = [rows]
+    first_size = os.path.getsize(metadatas[0].file)
+    for m in metadatas:
+        data = []
+        size = os.path.getsize(m.file);
+        size_ratio = '{:.1f}%'.format(size / first_size * 100)
+        data.append('{} ({})'.format(sizeof_fmt(size), size_ratio))
+        data.append(duration_to_str(m.estimated_duration) if m.estimated_duration else '')
+        data.append('{:.2f}'.format(m.bit_rate / 1024.0))
+        video = m.video_streams[0]
+        data.append(video.codec)
+        data.append('{}x{}'.format(video.width, video.height))
+        for a in m.audio_streams:
+            data.append('{} ({}, {})'.format(a.codec, a.language, a.channel_layout))
+        for i in range(len(m.audio_streams), num_audio):
+            data.append('')
+        data.append(','.join([s.language for s in m.subtitle_streams]))
+        file_columns.append(data)
+    table = list(map(list, zip(*file_columns)))
+    return header, table
+
 class MetadataCompareCommand(SubCommand):
     @property
     def name(self):
@@ -16,37 +48,9 @@ class MetadataCompareCommand(SubCommand):
         metadata_parser.add_argument('input', nargs='+')
 
     def subexecute(self, ns):
-        from media_management_scripts.utils import create_metadata_extractor
-        from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str
         input_to_cmd = ns['input']
         interlace = ns['interlace']
-        extractor = create_metadata_extractor()
-        metadatas = [extractor.extract(i, interlace != 'none') for i in input_to_cmd]
-        header = [''] + [os.path.basename(f.file) for f in metadatas]
-        num_audio = max([len(m.audio_streams) for m in metadatas])
-        rows = ['Size', 'Duration', 'Bitrate (kb/s)', 'Video Codec', 'Resolution', 'Audio']
-        for i in range(1, num_audio):
-            rows.append('')
-        rows.append('Subtitles')
-        file_columns = [rows]
-        first_size = os.path.getsize(metadatas[0].file)
-        for m in metadatas:
-            data = []
-            size = os.path.getsize(m.file);
-            size_ratio = '{:.1f}%'.format(size / first_size * 100)
-            data.append('{} ({})'.format(sizeof_fmt(size), size_ratio))
-            data.append(duration_to_str(m.estimated_duration) if m.estimated_duration else '')
-            data.append('{:.2f}'.format(m.bit_rate / 1024.0))
-            video = m.video_streams[0]
-            data.append(video.codec)
-            data.append('{}x{}'.format(video.width, video.height))
-            for a in m.audio_streams:
-                data.append('{} ({}, {})'.format(a.codec, a.language, a.channel_layout))
-            for i in range(len(m.audio_streams), num_audio):
-                data.append('')
-            data.append(','.join([s.language for s in m.subtitle_streams]))
-            file_columns.append(data)
-        table = list(map(list, zip(*file_columns)))
+        header, table = create_table_object(input_to_cmd, interlace)
         self._bulk_print(table, header)
 
 

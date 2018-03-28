@@ -4,7 +4,6 @@ from typing import Iterable, NamedTuple
 from configparser import ConfigParser
 from media_management_scripts.support.executables import ffprobe
 
-
 def compare_gt(this, other):
     if this is not None and other is not None:
         return int(this > other)
@@ -75,6 +74,7 @@ class ConvertConfig(NamedTuple):
     auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
     auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
     auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
+    scale: int = None
 
 
 def convert_config_from_config_section(config: ConfigParser, section: str) -> ConvertConfig:

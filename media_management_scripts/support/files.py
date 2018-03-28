@@ -16,7 +16,7 @@ def all_files_filter(f: str) -> bool:
 
 
 def movie_files_filter(file):
-    return file.endswith('.mkv') or file.endswith('.mp4') or file.endswith('.avi') or file.endswith('.m4v')
+    return file.endswith('.mkv') or file.endswith('.mp4') or file.endswith('.avi') or file.endswith('.m4v') or file.endswith('.webm')
 
 
 def check_exists(output: str, log=True):

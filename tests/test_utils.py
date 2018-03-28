@@ -29,8 +29,14 @@ class EpisodeFinderTestCase(unittest.TestCase):
                      'Series 1, Episode 14': ('1', '14', None),
                      'Series 12, Episode 14': ('12', '14', None),
                      'Series2, Episode 14': ('2', '14', None),
-                     'Pointless Series 7 Episode 69 Part 1.mp4': ('7', '69', '1'),
-                     'Show 2x06': ('2', '06', None)
+                     'Pointless Series 7 Episode 69 Part 1': ('7', '69', '1'),
+                     'Show 2x06': ('2', '06', None),
+                     'XFM The Ricky Gervais Show Series 1 Episode 23 - Karl\'s Room 101-liag2szq7Eg': ('1', '23', None),
+                     'Room 101 S01E01 - Bob Monkhouse-5Xw-KJojVeA': ('01', '01', None),
+                     'TEFL commute season 4 episode 4 - room 101-_ASgSRU_w-Y': ('4', '4', None),
+                     '_ Season 3, “Episode” 6': ('3', '6', None),
+                     'Journeys [S03E20]  -': ('03', '20', None),
+                     'Journeys S3E19 - Los': ('3', '19', None)
                      }
         for key in test_strs:
             result = extract(key)

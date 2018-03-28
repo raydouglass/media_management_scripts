@@ -1,6 +1,6 @@
 import os
 import re
-from media_management_scripts.support.files import get_input_output, mp4_mkv_filter
+from media_management_scripts.support.files import get_input_output, movie_files_filter
 from media_management_scripts.convert import combine
 
 LANG_PATTERN = re.compile('\.(\w+)\.(srt|idx|ttml)')
@@ -8,7 +8,7 @@ LANG_PATTERN = re.compile('\.(\w+)\.(srt|idx|ttml)')
 subtitle_exts=('.srt', '.idx', '.ttml')
 
 def _filter(f: str):
-    return mp4_mkv_filter(f) or f.endswith('.srt') or f.endswith('.idx') or f.endswith('.ttml')
+    return movie_files_filter(f) or f.endswith('.srt') or f.endswith('.idx') or f.endswith('.ttml')
 
 
 def get_lang(srt_file):

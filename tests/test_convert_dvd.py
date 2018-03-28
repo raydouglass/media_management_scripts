@@ -202,9 +202,9 @@ class ConvertDvdTestCase(unittest.TestCase):
 
         result = self.convert_dvds.run()
 
-        self.assertEqual(0, self.backup_count)
+        self.assertEqual(1, self.backup_count)
         self.assertEquals(0, os.path.getsize(output_file))
-        self.assertEquals(0, result.movie_processed_count)
+        self.assertEquals(1, result.movie_processed_count)
         self.assertEquals(1, result.movie_total_count)
         self.assertEquals(0, result.movie_error_count)
         self.assertEquals(0, result.tv_error_count)

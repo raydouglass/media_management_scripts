@@ -8,10 +8,11 @@ import functools
 
 from media_management_scripts.utils import compare
 
-patterns = [re.compile('[Ss](\d?\d)\s*[Ee](\d?\d)'),
-            re.compile('(\d?\d)x(\d?\d)'),
-            re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'),
-            re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)')]
+patterns = [(re.compile('[Ss](\d?\d),?\s*[Ee](\d?\d)'), 1, 2),
+            (re.compile('(\d?\d)x(\d?\d)'), 1, 2),
+            (re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
+            (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
+            (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)'), 1, 2)]
 pattern_101 = re.compile('(\d)(\d\d)')
 
 part_patterns = [re.compile('[Pp]art\s*(\d+)'), re.compile('pt\s*(\d+)')]
@@ -75,11 +76,11 @@ def extract(name, use101=False) -> Tuple[int, int, int]:
     season = None
     ep = None
     part = None
-    for pattern in patterns:
+    for pattern, season_group, episode_group in patterns:
         m = pattern.search(name)
         if m:
-            season = m.group(1)
-            ep = m.group(2)
+            season = m.group(season_group)
+            ep = m.group(episode_group)
             break
     if season is None and ep is None and use101:
         m = pattern_101.search(name)
@@ -107,6 +108,7 @@ def find_episodes(dir, strip_youtubedl, use101=False):
                     pass
             season, ep, part = extract(name, use101)
             yield EpisodePart(name, path, season, ep, part)
+
 
 if __name__ == '__main__':
     left = EpisodePart('left', 'left', 1, 2, None)
