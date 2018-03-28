@@ -4,11 +4,11 @@ from typing import List
 
 from texttable import Texttable
 
-from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution
+from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution, resolution_name
 from media_management_scripts.support.executables import execute_with_output, ffmpeg, nice_exe
 from media_management_scripts.support.files import check_exists, create_dirs, get_input_output
 from media_management_scripts.support.formatting import sizeof_fmt
-from media_management_scripts.utils import create_metadata_extractor, ConvertConfig
+from media_management_scripts.utils import create_metadata_extractor, ConvertConfig, extract_metadata
 from media_management_scripts.support.ttml2srt import convert_to_srt
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,8 @@ def execute(args, print_output=True):
 
 
 def auto_bitrate_from_config(resolution, convert_config):
+    if convert_config.scale:
+        resolution = resolution_name(convert_config.scale)
     if resolution == Resolution.LOW_DEF:
         return convert_config.auto_bitrate_240
     elif resolution == Resolution.STANDARD_DEF:
@@ -65,7 +67,8 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         raise Exception('Metadata provided without interlace report, but convert requires deinterlace checks')
 
     if metadata.resolution not in (
-            Resolution.LOW_DEF, Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF, Resolution.HIGH_DEF):
+            Resolution.LOW_DEF, Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF,
+            Resolution.HIGH_DEF) and not config.scale:
         print('{}: Resolution not supported for conversion: {}'.format(input, metadata.resolution))
         # TODO Handle converting 4k content in H.265/HVEC
         return -2
@@ -76,6 +79,9 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     if overwrite:
         args.append('-y')
     args.extend(['-i', input])
+
+    if config.scale:
+        args.extend(['-vf', 'scale=-1:{}'.format(config.scale)])
 
     args.extend(['-c:v', 'libx264'])
     crf = config.crf
@@ -161,7 +167,8 @@ def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None,
     return convert_with_config(input, output, config, print_output)
 
 
-def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=DEFAULT_CRF, preset=DEFAULT_PRESET):
+def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=DEFAULT_CRF, preset=DEFAULT_PRESET,
+            skip_eia_608=True):
     if not overwrite and check_exists(output):
         return -1
 
@@ -171,13 +178,19 @@ def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=D
         srt_out = name + '.srt'
         convert_to_srt(srt, srt_out)
         srt = srt_out
-
     create_dirs(output)
     args = [ffmpeg(), '-i', video]
     if overwrite:
         args.append('-y')
     args.extend(['-i', srt])
-    args.extend(['-map', '0:v', '-map', '0:a', '-map', '0:s?', '-map', '1:0'])
+    args.extend(['-map', '0:v', '-map', '0:a'])
+    if skip_eia_608:
+        metadata = extract_metadata(video)
+        for i in (s.index for s in metadata.subtitle_streams if s.codec != 'eia_608'):
+            args.extend(['-map', '0:{}'.format(i)])
+    else:
+        args.extend(['-map', '0:s?'])
+    args.extend(['-map', '1:0'])
     if convert:
         args.extend(['-c:v', 'libx264', '-crf', str(crf), '-preset', preset])
         args.extend(['-c:a', 'aac'])
@@ -286,21 +299,35 @@ def do_compare(input, output):
             print('  {}'.format(i))
 
 
+def _read_file(f):
+    with open(f) as file:
+        return file.read()
+
+
 def convert_subtitles_to_srt(i: str, o: str):
     ext = os.path.splitext(i)[1]
-    if ext=='.srt':
+    if ext == '.srt':
         import shutil
         shutil.copy(i, o)
-    elif ext in ('.ttml','.xml','.dfxp', '.tt'):
+    elif ext in ('.ttml', '.xml', '.dfxp', '.tt'):
         # TTML
         from media_management_scripts.support.ttml2srt import convert_to_srt
         convert_to_srt(i, o)
     else:
         # VTT, SCC, etc
-        # Attempt to use FFMPEG
-        from media_management_scripts.support.executables import ffmpeg
-        from media_management_scripts.support.executables import execute_with_output
-        args = [ffmpeg(), '-loglevel', 'fatal', '-y', '-i', i, '-c:s', 'srt', o]
-        ret, output = execute_with_output(args)
-        if ret != 0:
-            raise Exception('Exception during subtitle conversion: {}'.format(output))
+
+        from pycaption import detect_format, SRTWriter
+        subtitle_str = _read_file(i)
+        reader = detect_format(subtitle_str)
+        if reader:
+            subtitle_str = SRTWriter().write(reader().read(subtitle_str))
+            with open(o, 'w') as file:
+                file.write(subtitle_str)
+        else:
+            # Attempt to use FFMPEG
+            from media_management_scripts.support.executables import ffmpeg
+            from media_management_scripts.support.executables import execute_with_output
+            args = [ffmpeg(), '-loglevel', 'fatal', '-y', '-i', i, '-c:s', 'srt', o]
+            ret, output = execute_with_output(args)
+            if ret != 0:
+                raise Exception('Exception during subtitle conversion: {}'.format(output))

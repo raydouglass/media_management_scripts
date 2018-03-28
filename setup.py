@@ -35,5 +35,6 @@ setup(name='media_management_scripts',
           'scp',
           'pythondialog',
           'pyyaml',
-          'pyparsing'
+          'pyparsing',
+          'pycaption'
       ])
