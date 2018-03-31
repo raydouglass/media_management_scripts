@@ -4,7 +4,8 @@ from typing import List
 
 from texttable import Texttable
 
-from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution, resolution_name
+from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution, resolution_name, \
+    VideoCodec, AudioCodec
 from media_management_scripts.support.executables import execute_with_output, ffmpeg, nice_exe
 from media_management_scripts.support.files import check_exists, create_dirs, get_input_output
 from media_management_scripts.support.formatting import sizeof_fmt
@@ -83,16 +84,19 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     if config.scale:
         args.extend(['-vf', 'scale=-1:{}'.format(config.scale)])
 
-    args.extend(['-c:v', config.codec])
+    args.extend(['-c:v', config.video_codec])
     crf = config.crf
     bitrate = config.bitrate
-    if config.bitrate is not None and config.bitrate != 'disabled':
+    if VideoCodec.H264.equals(config.video_codec) and config.bitrate is not None and config.bitrate != 'disabled':
         crf = 1
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
         if config.bitrate == 'auto':
             bitrate = auto_bitrate_from_config(metadata.resolution, config)
         params = 'vbv-maxrate={}:vbv-bufsize={}:crf-max=25:qpmax=34'.format(str(bitrate), str(bitrate * 2))
         args.extend(['-x264-params', params])
+    elif VideoCodec.H265.equals(config.video_codec) and config.bitrate is not None and config.bitrate != 'disabled':
+        raise Exception('Avg Bitrate not supported for H265')
+
     args.extend(['-crf', str(crf), '-preset', config.preset])
     if config.deinterlace:
         is_interlaced = metadata.interlace_report.is_interlaced(config.deinterlace_threshold)
@@ -101,13 +105,16 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         if is_interlaced:
             # Video is interlaced, so add the deinterlace filter
             args.extend(['-vf', 'yadif'])
-    args.extend(['-c:a', 'aac'])
+
+    args.extend(['-c:a', config.audio_codec])
+
     index = 0
     for audio in metadata.audio_streams:
         if audio.channels == 7:
             # 6.1 sound, so mix it up to 7.1
             args.extend(['-ac:a:{}'.format(index), '8'])
         index += 1
+
     if config.include_subtitles:
         args.extend(['-c:s', 'copy'])
 

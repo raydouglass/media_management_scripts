@@ -1,6 +1,6 @@
 import argparse
 import itertools
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution, VideoCodec
+from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution, VideoCodec, AudioCodec
 
 parent_parser = argparse.ArgumentParser(add_help=False)
 parent_parser.add_argument('--print-args', action='store_const', const=True, default=False)
@@ -34,19 +34,26 @@ convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolut
                                    help='Set the maximum height scale')
 
 
-class CodecAction(argparse.Action):
+class VideoCodecAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
-        super(CodecAction, self).__init__(option_strings, dest, **kwargs)
+        super(VideoCodecAction, self).__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
         codec = VideoCodec.from_code_name(values)
         setattr(namespace, self.dest, codec.ffmpeg_encoder_name)
 
 
-convert_parent_parser.add_argument('--codec', action=CodecAction,
+convert_parent_parser.add_argument('--video-codec', '--vc', action=VideoCodecAction,
+                                   dest='video_codec',
                                    default=VideoCodec.H264.ffmpeg_encoder_name,
-                                   choices=list(itertools.chain.from_iterable((v.codec_names for v in VideoCodec))))
+                                   choices=list(itertools.chain(['copy'], itertools.chain.from_iterable(
+                                       v.codec_names for v in VideoCodec))))
+
+convert_parent_parser.add_argument('--audio-codec', '--ac', dest='audio_codec',
+                                   default=AudioCodec.AAC.ffmpeg_codec_name,
+                                   choices=list(
+                                       itertools.chain(['copy'], [ac.ffmpeg_codec_name for ac in AudioCodec])))
 
 __all__ = ['parent_parser', 'input_parser', 'output_parser', 'convert_parent_parser']

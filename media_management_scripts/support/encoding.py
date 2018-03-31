@@ -87,6 +87,14 @@ class VideoCodec(Enum):
                     return vc
         return None
 
+    def equals(self, to_comp: str) -> bool:
+        """
+        Compares all of the possible names to the value
+        :param to_comp:
+        :return:
+        """
+        return to_comp == self.ffmpeg_encoder_name or to_comp in self.codec_names
+
 
 class AudioCodec(Enum):
     AAC = 'aac'
@@ -100,6 +108,10 @@ class AudioCodec(Enum):
     @property
     def ffmpeg_codec_name(self):
         return self.value
+
+    @property
+    def ffmpeg_encoder_name(self):
+        return self.ffmpeg_codec_name
 
 
 class AudioChannelName(Enum):
