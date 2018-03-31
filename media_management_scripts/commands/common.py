@@ -1,7 +1,6 @@
 import argparse
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
-
-
+import itertools
+from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution, VideoCodec
 
 parent_parser = argparse.ArgumentParser(add_help=False)
 parent_parser.add_argument('--print-args', action='store_const', const=True, default=False)
@@ -31,6 +30,23 @@ convert_parent_parser.add_argument('--deinterlace-threshold', type=float, defaul
 convert_parent_parser.add_argument('--add-ripped-metadata', action='store_const', const=True, default=False,
                                    help='Adds a metadata item to the output indicating this is a ripped video',
                                    dest='include_meta')
-convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], default=None, help='Set the maximum height scale')
+convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], default=None,
+                                   help='Set the maximum height scale')
+
+
+class CodecAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(CodecAction, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        codec = VideoCodec.from_code_name(values)
+        setattr(namespace, self.dest, codec.ffmpeg_encoder_name)
+
+
+convert_parent_parser.add_argument('--codec', action=CodecAction,
+                                   default=VideoCodec.H264.ffmpeg_encoder_name,
+                                   choices=list(itertools.chain.from_iterable((v.codec_names for v in VideoCodec))))
 
 __all__ = ['parent_parser', 'input_parser', 'output_parser', 'convert_parent_parser']

@@ -1,4 +1,4 @@
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution
+from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution, VideoCodec
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
 from typing import Iterable, NamedTuple
 from configparser import ConfigParser
@@ -75,6 +75,7 @@ class ConvertConfig(NamedTuple):
     auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
     auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
     scale: int = None
+    codec: str = VideoCodec.H264.ffmpeg_encoder_name
 
 
 def convert_config_from_config_section(config: ConfigParser, section: str) -> ConvertConfig:

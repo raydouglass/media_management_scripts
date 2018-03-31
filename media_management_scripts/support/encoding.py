@@ -63,9 +63,9 @@ def resolution_name(height):
 
 
 class VideoCodec(Enum):
-    H264 = ('libx264', 'h264')
-    H265 = ('libx265', 'hevc')
-    MPEG2 = ('mpeg2video', 'mpeg2video')
+    H264 = ('libx264', ['h264'])
+    H265 = ('libx265', ['hevc', 'h265'])
+    MPEG2 = ('mpeg2video', ['mpeg2video','mpeg2'])
 
     @property
     def ffmpeg_encoder_name(self):
@@ -73,7 +73,19 @@ class VideoCodec(Enum):
 
     @property
     def ffmpeg_codec_name(self):
+        return self.value[1][0]
+
+    @property
+    def codec_names(self):
         return self.value[1]
+
+    @staticmethod
+    def from_code_name(name):
+        for vc in VideoCodec:
+            for n in vc.codec_names:
+                if name == n:
+                    return vc
+        return None
 
 
 class AudioCodec(Enum):

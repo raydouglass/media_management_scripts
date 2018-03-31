@@ -50,8 +50,22 @@ class ConvertTestCase(unittest.TestCase):
 
     def test_scale_convert(self):
         config = ConvertConfig(scale=480)
-        with create_test_video(length=10, video_def=VideoDefinition(resolution=Resolution.HIGH_DEF)) as file, \
+        with create_test_video(length=4, video_def=VideoDefinition(resolution=Resolution.HIGH_DEF)) as file, \
                 NamedTemporaryFile(suffix='.mkv') as output:
             convert_with_config(file.name, output.name, config, overwrite=True)
             metadata = extract_metadata(output.name)
             self.assertEqual(metadata.resolution, Resolution.STANDARD_DEF)
+
+    def test_hevc_convert(self):
+        config = convert_config_from_ns({'codec': VideoCodec.H265.ffmpeg_encoder_name})
+        with create_test_video(length=3) as file, NamedTemporaryFile(suffix='.mkv') as output:
+            convert_with_config(file.name, output.name, config, overwrite=True)
+            metadata = extract_metadata(output.name)
+            self.assertEqual(metadata.video_streams[0].codec.lower(), VideoCodec.H265.ffmpeg_codec_name)
+
+    def test_mpeg2_convert(self):
+        config = convert_config_from_ns({'codec': VideoCodec.MPEG2.ffmpeg_encoder_name})
+        with create_test_video(length=3) as file, NamedTemporaryFile(suffix='.mkv') as output:
+            convert_with_config(file.name, output.name, config, overwrite=True)
+            metadata = extract_metadata(output.name)
+            self.assertEqual(metadata.video_streams[0].codec.lower(), VideoCodec.MPEG2.ffmpeg_codec_name)

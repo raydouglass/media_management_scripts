@@ -83,7 +83,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     if config.scale:
         args.extend(['-vf', 'scale=-1:{}'.format(config.scale)])
 
-    args.extend(['-c:v', 'libx264'])
+    args.extend(['-c:v', config.codec])
     crf = config.crf
     bitrate = config.bitrate
     if config.bitrate is not None and config.bitrate != 'disabled':
