@@ -36,5 +36,6 @@ setup(name='media_management_scripts',
           'pythondialog',
           'pyyaml',
           'pyparsing',
-          'pycaption'
+          'pycaption',
+          'python-magic'
       ])

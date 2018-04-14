@@ -12,6 +12,7 @@ from media_management_scripts.support.interlace import find_interlace, Interlace
 from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
 import shelve
 from media_management_scripts.support.executables import ffprobe
+from media_management_scripts.support.files import get_mime, movie_files_filter
 
 DATE_PATTERN = re.compile('\d{4}_\d{2}_\d{2}')
 ONLY_DATE_PATTERN = re.compile('^\d{4}-\d{2}-\d{2}$')
@@ -45,6 +46,7 @@ class Metadata():
     def __init__(self, file, ffprobe_output, interlace_report: InterlaceReport = None):
         self.file = file
         self._ffprobe_output = ffprobe_output
+        self.mime_type=get_mime(file)
         self.interlace_report = interlace_report
         if 'streams' not in ffprobe_output:
             raise Exception('Invalid ffprobe output ({}): {}'.format(file, ffprobe_output))
@@ -127,6 +129,7 @@ class Metadata():
             'ripped': self.ripped,
             'format': self.format,
             'format_long_name': self.format_long_name,
+            'mime_type': self.mime_type,
             'tags': self.tags,
             # 'streams': [s.to_dict() for s in self.streams],
             'video_streams': [s.to_dict() for s in self.video_streams],
@@ -275,12 +278,12 @@ class MetadataExtractor():
                 self.db[file] = output
 
         metadata = Metadata(file, output)
-        if detect_interlace:
+        if detect_interlace and movie_files_filter(file):
             interlace_report = find_interlace(file, metadata=metadata)
         else:
             interlace_report = None
-
         metadata.interlace_report = interlace_report
+
         return metadata
 
     def add_interlace_report(self, metadata: Metadata):
