@@ -150,7 +150,7 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
         if recursive:
             files = list_files(input_dir, _filter)
         else:
-            files = [x for x in os.listdir(input_dir) if _filter(x)]
+            files = [x for x in os.listdir(input_dir) if _filter(os.path.join(input_dir, x))]
         for file in files:
             path = os.path.join(input_dir, file)
             if db_exists and os.path.samefile(db_file, path):

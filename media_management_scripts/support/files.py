@@ -46,7 +46,7 @@ def list_files(input_dir: str,
     """
     for root, subdirs, files in os.walk(input_dir):
         for file in files:
-            if not file.startswith('.') and file_filter(file):
+            if not file.startswith('.') and file_filter(os.path.join(root, file)):
                 path = os.path.join(root.replace(input_dir, ''), file)
                 if path.startswith('/'):
                     path = path[1::]
