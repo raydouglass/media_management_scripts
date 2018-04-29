@@ -113,6 +113,14 @@ class AudioCodec(Enum):
     def ffmpeg_encoder_name(self):
         return self.ffmpeg_codec_name
 
+    def equals(self, to_comp: str) -> bool:
+        """
+        Compares all of the possible names to the value
+        :param to_comp:
+        :return:
+        """
+        return to_comp == self.ffmpeg_encoder_name
+
 
 class AudioChannelName(Enum):
     MONO = (1, ['mono'])

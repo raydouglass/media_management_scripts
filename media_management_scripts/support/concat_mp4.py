@@ -2,6 +2,8 @@ import os
 import subprocess
 import tempfile
 from media_management_scripts.support.executables import ffmpeg, execute_with_output
+from media_management_scripts.utils import extract_metadata
+from media_management_scripts.support.encoding import VideoCodec, AudioCodec
 
 
 def _temp_convert(input, output, print_output=False):
@@ -42,6 +44,17 @@ def _concat(files, output, print_output=False):
         raise Exception('Error during ffmpeg: {}'.format(r))
 
 
+def _validate_file(file):
+    metadata = extract_metadata(file)
+    if len(metadata.video_streams) != 1:
+        raise Exception('Not exactly 1 video stream in {}'.format(file))
+    if not VideoCodec.H264.equals(metadata.video_streams[0].codec):
+        raise Exception('File not H264: {}'.format(file))
+    non_aac_audio = [a for a in metadata.audio_streams if not AudioCodec.AAC.equals(a.codec)]
+    if non_aac_audio:
+        raise Exception('Not all audio streams are AAC: {}'.format(file))
+
+
 def concat_mp4(output, files, overwrite=False, print_output=False):
     if not overwrite and os.path.exists(output):
         print('Cowardly refusing to overwrite existing file: {}'.format(output))
@@ -50,6 +63,7 @@ def concat_mp4(output, files, overwrite=False, print_output=False):
     try:
         for f in files:
             file = os.path.abspath(f)
+            _validate_file(file)
             tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.ts').name
             temp_files.append(tmp)
             _temp_convert(file, tmp, print_output)
