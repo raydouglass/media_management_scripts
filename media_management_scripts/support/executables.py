@@ -13,6 +13,8 @@ ffprobe_exe = shutil.which('ffprobe')
 comskip_exe = shutil.which('comskip')
 ccextractor_exe = shutil.which('ccextractor')
 nice_exe = shutil.which('nice')
+java_exe = shutil.which('java')
+filebot_jar = None
 
 config_file = os.path.expanduser('~/.config/mms/executables.ini')
 if os.path.exists(config_file):
@@ -23,6 +25,8 @@ if os.path.exists(config_file):
     comskip_exe = config.get('main', 'comskip', fallback=comskip_exe)
     ccextractor_exe = config.get('main', 'ccextractor', fallback=ccextractor_exe)
     nice_exe = config.get('main', 'nice', fallback=nice_exe)
+    java_exe = config.get('main', 'java', fallback=java_exe)
+    filebot_jar = config.get('main', 'filebot', fallback=filebot_jar)
 
 
 def ffmpeg():
@@ -47,6 +51,17 @@ def ccextractor():
     if ccextractor_exe is None:
         raise Exception('ccextractor executable was not found.')
     return ccextractor_exe
+
+
+def java():
+    if java_exe is None:
+        raise Exception('java executable was not found.')
+    return java_exe
+
+def filebot_jar():
+    if filebot_jar is None:
+        raise Exception('filebot jar was not found.')
+    return filebot_jar
 
 
 exe_logger = logging.getLogger('executable-logger')
