@@ -16,8 +16,13 @@ def all_files_filter(f: str) -> bool:
 
 
 def movie_files_filter(file):
-    return file.endswith('.mkv') or file.endswith('.mp4') or file.endswith('.avi') or file.endswith('.m4v') \
-           or file.endswith('.webm') or get_mime(file).startswith('video/')
+    return os.path.isfile(file) and \
+           (file.endswith('.mkv') or \
+            file.endswith('.mp4') or \
+            file.endswith('.avi') or \
+            file.endswith('.m4v') or \
+            file.endswith('.webm') or \
+            get_mime(file).startswith('video/'))
 
 
 def get_mime(file):

@@ -63,6 +63,8 @@ class SearchCommand(SubCommand):
                                    action='store_const', const=True, default=False)
         search_parser.add_argument('-r', '--recursive', action='store_const', const=True, default=False,
                                    help='Recursively search input directory')
+        search_parser.add_argument('-e', '--print-errors', dest='print_errors', action='store_const', const=True, default=False,
+                                   help='Print the files that have an error')
 
     def subexecute(self, ns):
         import sys
@@ -71,6 +73,7 @@ class SearchCommand(SubCommand):
         query = ns['query']
         db_file = ns['db_file']
         recursive = ns['recursive']
+        print_errors = ns['print_errors']
         l = []
         for input_dir in input_to_cmd:
             for file, metadata, status in search(input_dir, query, db_file, recursive):
@@ -80,7 +83,7 @@ class SearchCommand(SubCommand):
                     else:
                         # l.append(file)
                         print(file, end='\0')
-                else:
+                elif print_errors:
                     print('Error: {}'.format(file), file=sys.stderr)
         # if null_byte:
         #     print('\0'.join(l))
@@ -145,7 +148,7 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
     from media_management_scripts.utils import create_metadata_extractor
     from media_management_scripts.support.files import list_files
     query = parse(query)
-    db_exists = os.path.exists(db_file)
+    db_exists = os.path.exists(db_file) if db_file else False
     with create_metadata_extractor(db_file) as extractor:
         if recursive:
             files = list_files(input_dir, _filter)

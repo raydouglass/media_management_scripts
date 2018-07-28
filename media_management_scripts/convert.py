@@ -307,7 +307,7 @@ def do_compare(input, output):
 
 
 def _read_file(f):
-    with open(f) as file:
+    with open(f, encoding="utf8", errors='ignore') as file:
         return file.read()
 
 

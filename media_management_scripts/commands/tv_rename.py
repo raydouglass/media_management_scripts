@@ -89,7 +89,7 @@ class TvRenameCommand(SubCommand):
         for file in files:
             ext = path.splitext(file)[1]
             ep = episode_map.get((season, episode), None)
-            ep_name = ep.get('episodeName', None)
+            ep_name = ep.get('episodeName', None) if ep else None
             if show is not None and ep is not None and ep_name is not None:
                 new_name = '{} - S{}E{} - {}{}'.format(show, pad(season), pad(episode), ep_name, ext)
             elif show is not None:
