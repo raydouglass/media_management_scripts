@@ -31,7 +31,7 @@ class ConvertCommand(SubCommand):
 
 
         convert_parser = subparser.add_parser('convert', help='Convert a file',
-                                              parents=[parent_parser, input_parser, convert_parent_parser],
+                                              parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
                                               formatter_class=argparse.RawTextHelpFormatter,
                                               description=desc)
         convert_parser.add_argument('--bulk', help='Enables bulk conversion mode', action='store_const', const=True,

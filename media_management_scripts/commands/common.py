@@ -14,7 +14,7 @@ output_parser.add_argument('output', help='Output target')
 output_parser.add_argument('-y', '--overwrite', help='Overwrite output target if it exists', action='store_const',
                            default=False, const=True)
 
-convert_parent_parser = argparse.ArgumentParser(add_help=False, parents=[output_parser])
+convert_parent_parser = argparse.ArgumentParser(add_help=False, parents=[])
 convert_parent_parser.add_argument('--crf', default=DEFAULT_CRF, type=int,
                                    help='The CRF value for H.264 transcoding. Default={}'.format(DEFAULT_CRF))
 convert_parent_parser.add_argument('--preset', default=DEFAULT_PRESET,
