@@ -39,7 +39,8 @@ class ItunesCommand(SubCommand):
         return 'itunes'
 
     def build_argparse(self, subparser):
-        itunes_parser = subparser.add_parser('itunes', parents=[parent_parser])
+        itunes_parser = subparser.add_parser('itunes', parents=[parent_parser],
+                                             help='Attempts to rename iTunes episodes to the standard Plex format.')
         itunes_parser.add_argument('-o', '--output', type=str, default='./', help='Directory to output to')
         itunes_parser.add_argument('--meta-shelve', type=str, default=None, dest='meta_shelve',
                                    help='A file to hold metadata information for faster subsequent runs on the same files')
@@ -52,7 +53,7 @@ class ItunesCommand(SubCommand):
         from media_management_scripts.tvdb_api import from_config
         import os
         input_to_cmd = ns['input']
-        tvdb = from_config(os.path.expanduser('~/.config/tvdb/tvdb.ini'))
+        tvdb = from_config()
         output = ns['output']
         dvd = ns['dvd']
         fuzzy = ns['fuzzy']
@@ -104,7 +105,7 @@ class ItunesCommand(SubCommand):
         table = []
         for file, params in matched.items():
             new_name = rename_process(
-                '${show}/Season ${season|zpad}/${show} - S${season|zpad}E${ep_num|zpad} - ${name}.${ext}', files=[file],
+                '{plex}', files=[file],
                 output_dir=output_dir,
                 params=params)[0][1]
             table.append((file, new_name))

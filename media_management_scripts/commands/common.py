@@ -30,7 +30,7 @@ convert_parent_parser.add_argument('--deinterlace-threshold', type=float, defaul
 convert_parent_parser.add_argument('--add-ripped-metadata', action='store_const', const=True, default=False,
                                    help='Adds a metadata item to the output indicating this is a ripped video',
                                    dest='include_meta')
-convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], default=None,
+convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], type=int, default=None,
                                    help='Set the maximum height scale')
 
 

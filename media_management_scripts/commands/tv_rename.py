@@ -19,7 +19,8 @@ class TvRenameCommand(SubCommand):
         return 'tv-rename'
 
     def build_argparse(self, subparser):
-        tv_rename_parser = subparser.add_parser('tv-rename', help='Renames files in a directory to sXXeYY',
+        tv_rename_parser = subparser.add_parser('tv-rename',
+                                                help='Renames files in a directory to sXXeYY. Can also use TVDB to name files (<show> - SxxeYY - <episode_name>)',
                                                 parents=[parent_parser])
         tv_rename_parser.add_argument('-s', '--season', default=1, help='The season to use', type=int)
         tv_rename_parser.add_argument('-e', '--episode', default=1, help='The episode to start with', type=int)

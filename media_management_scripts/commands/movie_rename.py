@@ -13,10 +13,11 @@ class MovieRenameCommand(SubCommand):
         movie_rename_parser.add_argument('--confirm',
                                          help='Ask for confirmation before renaming, exiting with non-zero if no',
                                          action='store_const', const=True, default=False)
+        movie_rename_parser.add_argument('--ssh')
         movie_rename_parser.add_argument('--username')
         movie_rename_parser.add_argument('--host')
         movie_rename_parser.add_argument('--pkey')
-        movie_rename_parser.add_argument('--output-path')
+        movie_rename_parser.add_argument('--output-path', '-o')
         movie_rename_parser.add_argument('--move-source-path', default=None)
         movie_rename_parser.add_argument('input', nargs='+', help='Input Files')
 

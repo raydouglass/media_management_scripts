@@ -11,7 +11,8 @@ class MetadataCommand(SubCommand):
         metadata_parser = subparser.add_parser(self.name, help='Show metadata for a file',
                                                parents=[parent_parser, input_parser])
         metadata_group = metadata_parser.add_mutually_exclusive_group()
-        metadata_group.add_argument('--popup', action='store_const', const=True, default=False)
+        metadata_group.add_argument('--popup', action='store_const', const=True, default=False,
+                                    help='Show the metadata in a popup (MacOS only)')
         metadata_group.add_argument('--json', '-j', action='store_const', const=True, default=False)
         metadata_parser.add_argument('--interlace', help='Try to detect interlacing',
                                      choices=['none', 'summary', 'report'], default='none')

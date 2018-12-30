@@ -14,7 +14,8 @@ class SelectStreamsCommand(SubCommand):
         input_parser.add_argument('input', nargs='+', help='Input directory')
 
         stream_select_parser = subparser.add_parser('select-streams',
-                                                    parents=[parent_parser, input_parser, convert_parent_parser, output_parser])
+                                                    parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
+                                                    help='Extract specific streams in a video file to a new file')
         stream_select_parser.add_argument('-c', '--convert', action='store_const', default=False, const=True,
                                           help='Whether to convert the file or just remux it')
 

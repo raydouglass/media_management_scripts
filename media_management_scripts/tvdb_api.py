@@ -18,6 +18,9 @@ def get_season_episode(tvdb_episode, use_dvd=False):
 
 
 class TVDB():
+    """
+    Class to interact with thetvdb.com
+    """
     def __init__(self, api_key, username, user_key, shelve_file='./tvdb.shelve'):
         self._api_key = api_key
         self._username = username
