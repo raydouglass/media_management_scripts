@@ -24,7 +24,7 @@ class ConvertCommand(SubCommand):
     Convert to HEVC with AC3 audio:
         convert --video-codec hevc --audio-codec ac3 <input> <output>
     Convert to HEVC, but don't convert audio:
-        convert --video-codec --audio-codec copy <input> <output>
+        convert --video-codec hevc --audio-codec copy <input> <output>
     Scale to 480p
         convert --scale 480
         """
