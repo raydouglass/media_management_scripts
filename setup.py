@@ -2,13 +2,18 @@ from setuptools import setup
 
 from media_management_scripts import version
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(name='media_management_scripts',
       version=version,
       description='Scripts for managing media',
-      url='https://raydouglass.com',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
+      url='https://github.com/raydouglass/media_management_scripts',
       author='Ray Douglass',
       author_email='ray@raydouglass.com',
-      license='MIT',
+      license='Apache',
       packages=[
           'media_management_scripts',
           'media_management_scripts.commands',
