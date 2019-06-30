@@ -276,3 +276,17 @@ Result
         - Battlestar Galatica (2003) - S01E06 - Litmus.mkv
         - Battlestar Galatica (2003) - S01E07 - Six Degrees of Separation.mkv
         - Battlestar Galatica (2003) - S01E08 - Flesh and Bone.mkv
+        
+        
+## Configuration
+
+You can configuration where to find various executables by creating a file `~/.config/mms/config.ini`. By default, commands will use the executables found in your path.
+
+You can see which tools are being used with `manage-media `
+
+Config File Example
+```ini
+[main]
+ffmpeg = /path/to/ffmpeg
+
+```

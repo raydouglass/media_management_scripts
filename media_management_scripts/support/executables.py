@@ -14,7 +14,7 @@ comskip_exe = shutil.which('comskip')
 ccextractor_exe = shutil.which('ccextractor')
 nice_exe = shutil.which('nice')
 java_exe = shutil.which('java')
-filebot_jar = None
+filebot_jar_loc = None
 
 config_file = os.path.expanduser('~/.config/mms/executables.ini')
 if os.path.exists(config_file):
@@ -26,42 +26,48 @@ if os.path.exists(config_file):
     ccextractor_exe = config.get('main', 'ccextractor', fallback=ccextractor_exe)
     nice_exe = config.get('main', 'nice', fallback=nice_exe)
     java_exe = config.get('main', 'java', fallback=java_exe)
-    filebot_jar = config.get('main', 'filebot', fallback=filebot_jar)
+    filebot_jar_loc = config.get('main', 'filebot_jar', fallback=filebot_jar_loc)
 
+
+
+class ExecutableNotFoundException(Exception):
+    pass
 
 def ffmpeg():
     if ffmpeg_exe is None:
-        raise Exception('ffmpeg executable was not found.')
+        raise ExecutableNotFoundException('ffmpeg executable was not found.')
     return ffmpeg_exe
 
 
 def ffprobe():
     if ffprobe_exe is None:
-        raise Exception('ffprobe executable was not found.')
+        raise ExecutableNotFoundException('ffprobe executable was not found.')
     return ffprobe_exe
 
 
 def comskip():
     if comskip_exe is None:
-        raise Exception('comskip executable was not found.')
+        raise ExecutableNotFoundException('comskip executable was not found.')
     return comskip_exe
 
 
 def ccextractor():
     if ccextractor_exe is None:
-        raise Exception('ccextractor executable was not found.')
+        raise ExecutableNotFoundException('ccextractor executable was not found.')
     return ccextractor_exe
 
 
 def java():
     if java_exe is None:
-        raise Exception('java executable was not found.')
+        raise ExecutableNotFoundException('java executable was not found.')
     return java_exe
 
 def filebot_jar():
-    if filebot_jar is None:
-        raise Exception('filebot jar was not found.')
-    return filebot_jar
+    if filebot_jar_loc is None:
+        raise ExecutableNotFoundException('filebot jar was not found.')
+    return filebot_jar_loc
+
+EXECUTABLES = [ffmpeg, ffprobe, comskip, ccextractor, java, filebot_jar]
 
 
 exe_logger = logging.getLogger('executable-logger')
