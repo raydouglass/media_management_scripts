@@ -4,7 +4,7 @@ python:
   - "3.7"
 before_install:
   - sudo apt-get update
-  - sudo apt-get -y install ffmpeg dialog
+  - sudo apt-get -y install ffmpeg dialog haveged
 install:
   - pip install -e .
 script:
