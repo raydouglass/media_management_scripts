@@ -80,7 +80,11 @@ optional arguments:
 
 ## convert
 
-Convert a video file to different video or audio codecs
+`manage-media convert <input> <output>`
+
+Convert a video file to different video or audio codecs. By default if no codecs are given, the file will be converted to H.264 with AAC audio.
+
+The source file is left intact.
 
 #### Examples:
 - Convert to H.264
@@ -152,6 +156,8 @@ Battlestar Galatica (2003) - s00e01 - Battlestar Galactica The Miniseries (1).mk
 
 ## rename
 
+`manage-media rename <template> <input file>` or `manage-media rename --recursive <template> <input directory>` 
+
 A flexible tool to rename files
 
 Rename files based on a template.
@@ -178,7 +184,7 @@ Regular Expressions:
 If a regex is included, the match groups (0=whole match, >0=match group) are available in a list 're' or 'regex'.
 Each match group is converted to an int if possible, so a zero padded int will lose the zeros.
 
-Examples:
+Example Templates:
 ```
 Input: S02E04.mp4
 Regex: S(\d+)E(\d+)
@@ -197,6 +203,8 @@ Result: 'Season unknown Episode .mp4'
 ```
 
 ## search
+
+`manage-media search <input directory> <query>`
 
 Searches a directory for video files matching parameters. Note: this can take a LONG time as it has to read the metadata for each file.
 You can speed up multiple searches in the same directory with `--db <file` which caches the metadata.
@@ -231,7 +239,7 @@ Functions:
 - `isNull(xyz)` - Returns true if the value is null
 - `all(xyz)` - Instead of one stream matching, check all of them
 
-Examples:
+Example Queries:
 - Find all videos that are H264
     - `v.codec = h264`
 - Find all videos that are H264 with stereo AAC

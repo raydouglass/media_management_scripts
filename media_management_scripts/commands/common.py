@@ -1,6 +1,15 @@
 import argparse
 import itertools
 from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution, VideoCodec, AudioCodec
+from media_management_scripts.support.formatting import duration_from_str, DURATION_PATTERN
+
+class DurationType:
+
+    def __call__(self, value):
+        if not DURATION_PATTERN.match(value):
+            raise argparse.ArgumentTypeError("'{}' is not a valid duration".format(value))
+        return duration_from_str(value)
+
 
 parent_parser = argparse.ArgumentParser(add_help=False)
 parent_parser.add_argument('--print-args', action='store_const', const=True, default=False)
@@ -33,6 +42,10 @@ convert_parent_parser.add_argument('--add-ripped-metadata', action='store_const'
 convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], type=int, default=None,
                                    help='Set the maximum height scale')
 
+start_end_parser = argparse.ArgumentParser(add_help=False)
+start_end_parser.add_argument('--start', '-s', type=DurationType(), help='Start time of the input in 00h00m00.00s format')
+start_end_parser.add_argument('--end', '-e', type=DurationType(), help='End time of the input in 00h00m00.00s format')
+
 
 class VideoCodecAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
@@ -56,4 +69,4 @@ convert_parent_parser.add_argument('--audio-codec', '--ac', dest='audio_codec',
                                    choices=list(
                                        itertools.chain(['copy'], [ac.ffmpeg_codec_name for ac in AudioCodec])))
 
-__all__ = ['parent_parser', 'input_parser', 'output_parser', 'convert_parent_parser']
+__all__ = ['parent_parser', 'input_parser', 'output_parser', 'convert_parent_parser', 'start_end_parser']
