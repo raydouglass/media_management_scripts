@@ -114,4 +114,5 @@ __all__ = ['SubCommand',
            'select_streams',
            #'split',
            'subtitles',
+           'thumbnail',
            'tv_rename']

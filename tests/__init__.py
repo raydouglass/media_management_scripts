@@ -7,6 +7,8 @@ from typing import List, Tuple, NamedTuple, Dict
 from collections import namedtuple
 import os
 
+random_source = '/dev/random' if bool(os.environ.get('TRAVIS', False)) else '/dev/urandom'
+
 LOG_FILE=os.path.join(os.path.dirname(__file__), 'test_logging.yaml')
 
 class VideoDefinition(NamedTuple):
@@ -44,7 +46,7 @@ def create_test_video(length: int = 30,
     if len(audio_defs) > 0:
         with NamedTemporaryFile(suffix='.wav') as raw_audio_file:
             # Create raw audio
-            args = [ffmpeg(), '-y', '-ar', '48000', '-f', 's16le', '-i', '/dev/urandom', '-t', str(length),
+            args = [ffmpeg(), '-y', '-ar', '48000', '-f', 's16le', '-i', random_source, '-t', str(length),
                     raw_audio_file.name]
             _execute(args)
             for audio_def in audio_defs:

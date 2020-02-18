@@ -1,3 +1,6 @@
+import re
+DURATION_PATTERN = re.compile(r'(((\d+(\.\d+)?)h)?(\d+(\.\d+)?)m)?(\d+(\.\d+)?)s')
+
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
@@ -13,6 +16,24 @@ def duration_to_str(seconds):
         return '%dh%02dm%02ds' % (h, m, s)
     else:
         return '%02dm%02ds' % (m, s)
+
+
+def duration_from_str(dur_str):
+    """
+    Converts a string in 00h00m00.00s to seconds
+    :param dur_str:
+    :return:
+    """
+    m = DURATION_PATTERN.match(dur_str)
+    if m:
+        hours = m.group(3)
+        minutes = m.group(5)
+        seconds = m.group(7)
+        hours = float(hours) * 60 * 60 if hours else 0
+        minutes = float(minutes) * 60 if minutes else 0
+        return hours + minutes + float(seconds)
+    else:
+        raise Exception('Invalid duration format: ' + dur_str)
 
 
 def bitrate_to_str(bitrate: float):

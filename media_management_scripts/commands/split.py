@@ -8,13 +8,11 @@ class SplitCommand(SubCommand):
         return 'split'
 
     def build_argparse(self, subparser):
-        split_parser = subparser.add_parser('split', help='Split a file', parents=[parent_parser])
+        split_parser = subparser.add_parser('split', help='Split a file', parents=[parent_parser, start_end_parser])
         split_parser.add_argument('-c', '--by-chapters',
                                   help='Split file by chapters, specifying number of chapters per file',
                                   type=int)
 
-        split_parser.add_argument('--start', type=str)
-        split_parser.add_argument('--end', type=str)
         split_parser.add_argument('input', nargs='+', help='Input directory')
         split_parser.add_argument('--output', '-o', default='./', dest='output')
 

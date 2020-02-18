@@ -16,6 +16,14 @@ WTV_VIDEO_DEF = VideoDefinition(resolution=Resolution.STANDARD_DEF,
                                 codec=VideoCodec.MPEG2,
                                 container=VideoFileContainer.WTV)
 
+try:
+    comskip()
+    comskip_installed = True
+except:
+    comskip_installed = False
+
+
+@unittest.skipUnless(comskip_installed, reason='Need comskip to run these tests')
 class SilverTubeTestCase(unittest.TestCase):
     def setUp(self):
         self.files = []
