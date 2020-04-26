@@ -73,14 +73,6 @@ class ProcessedDatabase():
                           (status.input_file, status.output_file, status.backup, status.convert))
         self.conn.commit()
 
-    def get_all_success(self):
-        for row in self.conn.execute('SELECT input, output, backup, convert FROM processed WHERE backup AND convert;'):
-            yield ProcessStatus(row[0], row[1], row[2], row[3])
-
-    def get_all_existing_success(self):
-        return [status for status in self.get_all_success() if
-                os.path.exists(status.input_file) and os.path.exists(status.output_file)]
-
 
 class ConvertDvds():
     def __init__(self, config_file):
@@ -114,7 +106,7 @@ class ConvertDvds():
         if file:
             import yaml
             with open(file) as f:
-                log_config = yaml.load(f)
+                log_config = yaml.safe_load(f)
                 logging.config.dictConfig(log_config)
         db_file = config.get('logging', 'db', fallback='processed.shelve')
         self.db = ProcessedDatabase(db_file)
@@ -236,6 +228,18 @@ class ConvertDvds():
         logger.info('Processed {} of {} tv files ({} errors)'.format(*tv_counts))
         return ConvertDvdResults(*movie_counts, *tv_counts)
 
+    def get_existing_success(self, in_dir, out_dir):
+        for input_file, output_file in get_input_output(in_dir, out_dir):
+            if os.path.exists(output_file):
+                status = self.db.get(input_file, output_file)
+                if status.backup and status.convert:
+                    yield input_file
+
+    def get_all_existing_success(self):
+        from itertools import chain
+        return chain(self.get_existing_success(self.movie_in_dir, self.movie_out_dir),
+                     self.get_existing_success(self.tv_in_dir, self.tv_out_dir))
+
 
 def main():
     import argparse, argcomplete
@@ -258,7 +262,7 @@ def main():
     if cmd == 'run':
         convert_dvds.run()
     elif cmd == 'list':
-        results = [status.input_file for status in convert_dvds.db.get_all_existing_success()]
+        results = convert_dvds.get_all_existing_success()
         for r in results:
             if ns['0']:
                 print(r, end='\0')
