@@ -79,6 +79,11 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         args = [ffmpeg()]
     if overwrite:
         args.append('-y')
+    if config.start:
+        args.extend(['-ss', str(config.start)])
+    if config.end:
+        args.extend(['-to', str(config.end)])
+
     args.extend(['-i', input])
 
     if config.scale:

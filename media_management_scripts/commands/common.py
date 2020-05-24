@@ -41,6 +41,8 @@ convert_parent_parser.add_argument('--add-ripped-metadata', action='store_const'
                                    dest='include_meta')
 convert_parent_parser.add_argument('--scale', choices=[r.height for r in Resolution], type=int, default=None,
                                    help='Set the maximum height scale')
+convert_parent_parser.add_argument('--start', '-s', type=DurationType(), help='Start time of the input in 00h00m00.00s format')
+convert_parent_parser.add_argument('--end', '-e', type=DurationType(), help='End time of the input in 00h00m00.00s format')
 
 start_end_parser = argparse.ArgumentParser(add_help=False)
 start_end_parser.add_argument('--start', '-s', type=DurationType(), help='Start time of the input in 00h00m00.00s format')

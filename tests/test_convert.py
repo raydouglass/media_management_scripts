@@ -135,3 +135,11 @@ class ConvertTestCase(unittest.TestCase):
             metadata = extract_metadata(output.name)
             self.assertEqual(1, len(metadata.audio_streams))
             self.assertEqual(metadata.audio_streams[0].codec, AudioCodec.AC3.ffmpeg_codec_name)
+
+    def test_cut_convert(self):
+        config = convert_config_from_ns({'start':3.0, 'end': 6.0})
+        with create_test_video(length=10) as file, \
+                NamedTemporaryFile(suffix='.mkv') as output:
+            convert_with_config(file.name, output.name, config, overwrite=True)
+            metadata = extract_metadata(output.name)
+            self.assertAlmostEqual(3.0, metadata.estimated_duration, delta=.03)

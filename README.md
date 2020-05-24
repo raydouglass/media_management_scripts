@@ -96,11 +96,13 @@ The source file is left intact.
 - Convert to HEVC, but don't convert audio:
     - `manage-media convert --vc hevc --ac copy <input> <output>`
 - Scale to 480p
-    - `manage-media convert --scale 480`
+    - `manage-media convert --scale 480  <input> <output>`
 - Convert to H.264 and remove interlacing (such as on mpeg2 DVDs)
-    - `manage-media convert --vc h264 --deinterlace`
+    - `manage-media convert --vc h264 --deinterlace  <input> <output>`
 - Convert a whole directory of files
     - `manage-media convert --vc h264 --bulk <input dir> <output dir>`
+- Extract a portion of the video
+    - `manage-media convert --vc copy --ac copy --start 3m45s --end 10m00s <input> <output>`
 
 ## metadata
 
