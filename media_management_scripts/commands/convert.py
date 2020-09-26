@@ -1,12 +1,14 @@
 from . import SubCommand
 from .common import *
 import argparse
+import os
 from media_management_scripts.support.files import get_input_output
 from media_management_scripts.convert import convert_with_config
 
 
 def _bulk_convert(i, o, config):
     print('Starting {}'.format(i))
+    os.makedirs(os.path.dirname(o), exist_ok=True)
     convert_with_config(i, o, config, print_output=False)
 
 
