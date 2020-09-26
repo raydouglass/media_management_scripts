@@ -66,6 +66,7 @@ class VideoCodec(Enum):
     H264 = ('libx264', ['h264'])
     H265 = ('libx265', ['hevc', 'h265'])
     MPEG2 = ('mpeg2video', ['mpeg2video','mpeg2'])
+    COPY = ('copy', ['copy'])
 
     @property
     def ffmpeg_encoder_name(self):
@@ -100,6 +101,7 @@ class AudioCodec(Enum):
     AAC = 'aac'
     AC3 = 'ac3'
     DTS = 'dts'
+    COPY = 'copy'
 
     @property
     def extension(self):
