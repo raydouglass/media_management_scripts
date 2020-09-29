@@ -82,7 +82,11 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     if config.start:
         args.extend(['-ss', str(config.start)])
     if config.end:
-        args.extend(['-to', str(config.end)])
+        if config.end > 0:
+            args.extend(['-to', str(config.end)])
+        else:
+            new_end = metadata.estimated_duration+config.end
+            args.extend(['-to', str(new_end)])
 
     args.extend(['-i', input])
 

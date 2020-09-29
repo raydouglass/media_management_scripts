@@ -1,5 +1,5 @@
 import re
-DURATION_PATTERN = re.compile(r'(((\d+(\.\d+)?)h)?(\d+(\.\d+)?)m)?(\d+(\.\d+)?)s')
+DURATION_PATTERN = re.compile(r'-?(((\d+(\.\d+)?)h)?(\d+(\.\d+)?)m)?(\d+(\.\d+)?)s')
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
@@ -31,7 +31,10 @@ def duration_from_str(dur_str):
         seconds = m.group(7)
         hours = float(hours) * 60 * 60 if hours else 0
         minutes = float(minutes) * 60 if minutes else 0
-        return hours + minutes + float(seconds)
+        total = hours + minutes + float(seconds)
+        if dur_str.startswith('-'):
+            total*=-1
+        return total
     else:
         raise Exception('Invalid duration format: ' + dur_str)
 
