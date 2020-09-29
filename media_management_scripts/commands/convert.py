@@ -6,10 +6,10 @@ from media_management_scripts.support.files import get_input_output
 from media_management_scripts.convert import convert_with_config
 
 
-def _bulk_convert(i, o, config):
+def _bulk_convert(i, o, config, overwrite):
     print('Starting {}'.format(i))
     os.makedirs(os.path.dirname(o), exist_ok=True)
-    convert_with_config(i, o, config, print_output=False)
+    convert_with_config(i, o, config, print_output=False, overwrite=overwrite)
 
 
 class ConvertCommand(SubCommand):
@@ -44,6 +44,7 @@ class ConvertCommand(SubCommand):
         from media_management_scripts.convert import convert_config_from_ns
         input_to_cmd = ns['input']
         output = ns['output']
+        overwrite = ns['overwrite']
         bulk = ns['bulk']
         config = convert_config_from_ns(ns)
 
@@ -51,13 +52,13 @@ class ConvertCommand(SubCommand):
             if bulk:
                 os.makedirs(output, exist_ok=True)
                 files = list(get_input_output(input_to_cmd, output))
-                self._bulk(files, lambda i, o: _bulk_convert(i, o, config), ['Input', 'Output'])
+                self._bulk(files, lambda i, o: _bulk_convert(i, o, config, overwrite), ['Input', 'Output'])
             else:
                 print('Cowardly refusing to convert a direction without --bulk flag')
-        elif os.path.exists(output):
+        elif not overwrite and os.path.exists(output):
             print('Cowardly refusing to overwrite existing file: {}'.format(output))
         else:
-            convert_with_config(input_to_cmd, output, config, print_output=True)
+            convert_with_config(input_to_cmd, output, config, print_output=True, overwrite=overwrite)
 
 
 SubCommand.register(ConvertCommand)
