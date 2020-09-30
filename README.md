@@ -20,7 +20,7 @@ You also need to install other programs:
 
 ### TVDB
 
-If you want to use TVDB for some commands, create an account on <https://www.thetvdb.com> and create API keys [here](https://www.thetvdb.com/member/api)
+If you want to use TVDB for some commands, create an account on <https://www.thetvdb.com> and create a legacy API key [here](https://www.thetvdb.com/dashboard/account/apikey)
 
 Create a file `~/.config/tvdb/tvdb.ini` with contents:
 
