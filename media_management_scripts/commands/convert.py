@@ -38,6 +38,7 @@ class ConvertCommand(SubCommand):
                                               description=desc)
         convert_parser.add_argument('--bulk', help='Enables bulk conversion mode', action='store_const', const=True,
                                     default=False)
+        convert_parser.add_argument('--bulk-ext', help='Use a difference extension for the output files', default=None)
 
     def subexecute(self, ns):
         import os
@@ -46,12 +47,15 @@ class ConvertCommand(SubCommand):
         output = ns['output']
         overwrite = ns['overwrite']
         bulk = ns['bulk']
+        bulk_ext = ns['bulk_ext']
         config = convert_config_from_ns(ns)
 
         if os.path.isdir(input_to_cmd):
             if bulk:
                 os.makedirs(output, exist_ok=True)
                 files = list(get_input_output(input_to_cmd, output, filter=movie_files_filter))
+                if bulk_ext:
+                    files = list(map(lambda i: (i[0], os.path.splitext(i[1])[0]+'.'+bulk_ext), files))
                 self._bulk(files, lambda i, o: _bulk_convert(i, o, config, overwrite), ['Input', 'Output'])
             else:
                 print('Cowardly refusing to convert a direction without --bulk flag')
