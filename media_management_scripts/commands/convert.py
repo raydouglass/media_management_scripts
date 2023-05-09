@@ -2,14 +2,14 @@ from . import SubCommand
 from .common import *
 import argparse
 import os
-from media_management_scripts.support.files import get_input_output
+from media_management_scripts.support.files import get_input_output, movie_files_filter
 from media_management_scripts.convert import convert_with_config
 
 
 def _bulk_convert(i, o, config, overwrite):
     print('Starting {}'.format(i))
     os.makedirs(os.path.dirname(o), exist_ok=True)
-    convert_with_config(i, o, config, print_output=False, overwrite=overwrite)
+    convert_with_config(i, o, config, print_output=True, overwrite=overwrite)
 
 
 class ConvertCommand(SubCommand):
@@ -51,7 +51,7 @@ class ConvertCommand(SubCommand):
         if os.path.isdir(input_to_cmd):
             if bulk:
                 os.makedirs(output, exist_ok=True)
-                files = list(get_input_output(input_to_cmd, output))
+                files = list(get_input_output(input_to_cmd, output, filter=movie_files_filter))
                 self._bulk(files, lambda i, o: _bulk_convert(i, o, config, overwrite), ['Input', 'Output'])
             else:
                 print('Cowardly refusing to convert a direction without --bulk flag')
