@@ -183,6 +183,6 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
 
                 }
                 if query.exec(context) is True:
-                    yield file, metadata, True
+                    yield path, metadata, True
             except Exception:
-                yield file, None, False
+                yield path, None, False

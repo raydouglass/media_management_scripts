@@ -1,5 +1,6 @@
 from . import SubCommand
 from .common import *
+from media_management_scripts.support.files import list_files_absolute
 
 
 class RenameCommand(SubCommand):
@@ -62,7 +63,7 @@ class RenameCommand(SubCommand):
         rename_parser.add_argument('-r', '--recursive', action='store_const', default=False, const=True)
         rename_parser.add_argument('--filter-by-ext', type=str, default=None)
         rename_parser.add_argument('template')
-        rename_parser.add_argument('input', nargs='+', help='Input files')
+        rename_parser.add_argument('input', nargs='+', help='Input files or directories')
 
     def subexecute(self, ns):
         from texttable import Texttable
@@ -85,7 +86,7 @@ class RenameCommand(SubCommand):
             files = []
             for f in input_to_cmd:
                 if os.path.isdir(f):
-                    files.extend(list_files(f, file_filter=file_filter))
+                    files.extend(list_files_absolute(f, file_filter=file_filter))
                 elif file_filter(f):
                     files.append(f)
         else:

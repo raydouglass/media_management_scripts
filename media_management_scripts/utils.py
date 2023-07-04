@@ -4,6 +4,14 @@ from typing import Iterable, NamedTuple
 from configparser import ConfigParser
 from media_management_scripts.support.executables import ffprobe
 
+def to_int(maybe_int) -> int:
+    if maybe_int is None:
+        return None
+    try:
+        return int(maybe_int)
+    except ValueError:
+        return None
+
 def compare_gt(this, other):
     if this is not None and other is not None:
         return int(this > other)
@@ -37,13 +45,19 @@ def extract_metadata(input: str, detect_interlace=False, db_file=None) -> Metada
     return create_metadata_extractor(db_file=db_file).extract(input, detect_interlace)
 
 
-def season_episode_name(season, episode, ext=None):
+def season_episode_name(season, episode, episode_name=None, ext=None):
     if ext:
         if not ext.startswith('.'):
             ext = '.' + ext
-        return 's{}e{:02d}{}'.format(season, int(episode), ext)
+        if episode_name:
+            return 'S{:02d}E{:02d} - {}{}'.format(int(season), int(episode), episode_name, ext)
+        else:
+            return 'S{:02d}E{:02d}{}'.format(int(season), int(episode), ext)
     else:
-        return 's{}e{:02d}'.format(season, int(episode))
+        if episode_name:
+            return 'S{:02d}E{:02d} - {}'.format(int(season), int(episode), episode_name)
+        else:
+            return 'S{:02d}E{:02d}'.format(int(season), int(episode))
 
 
 def fuzzy_equals(a: str, b: str, ignore_chars: Iterable[str] = [], ratio: float = .85) -> bool:
