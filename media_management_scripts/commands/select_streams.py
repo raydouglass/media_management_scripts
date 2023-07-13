@@ -73,44 +73,28 @@ def sub_to_str(s: Stream, lang: str, lang_override: str = None) -> Tuple[str, st
     return (tag, name, status)
 
 
-def _get_stream_indexes(metadata, lang, lang_override=None, auto=False) -> List[int]:
+
+def _get_stream_indexes(streams, title, text, converter, auto):
     d = Dialog(autowidgetsize=True)
+    if len(streams) > 0:
+        options = [converter(i) for i in streams]
+        if auto:
+            tags = [i[0] for i in options if i[2]]
+        else:
+            code, tags = d.checklist(title=title, text=text, choices=options)
+            if code != d.OK:
+                return
+    else:
+        tags = []
+    return tags
+
+
+def _get_all_stream_indexes(metadata, lang, lang_override=None, auto=False) -> List[int]:
     title = os.path.basename(metadata.file)
+    video_tags = _get_stream_indexes(metadata.video_streams, title, 'Video Options', video_to_str, auto)
+    audio_tags = _get_stream_indexes(metadata.audio_streams, title, 'Audio Options', lambda a: audio_to_str(a, lang), auto)
+    sub_tags = _get_stream_indexes(metadata.subtitle_streams, title, 'Subtitle Options', lambda s: sub_to_str(s, lang, lang_override), auto)
 
-    if len(metadata.video_streams) > 0:
-        video_options = [video_to_str(v) for v in metadata.video_streams]
-        if auto:
-            video_tags = [v[0] for v in video_options if v[2]]
-        else:
-            code, video_tags = d.checklist(title=title, text='Video Options', choices=video_options)
-            if code != d.OK:
-                return
-    else:
-        video_tags = []
-
-    if len(metadata.audio_streams) > 0:
-        audio_options = [audio_to_str(a, lang) for a in
-                         sorted(metadata.audio_streams, key=lambda s: s.channels, reverse=True)]
-
-        if auto:
-            audio_tags = [a[0] for a in audio_options if a[2]]
-        else:
-            code, audio_tags = d.checklist(title=title, text='Audio Options', choices=audio_options)
-            if code != d.OK:
-                return
-    else:
-        audio_tags = []
-
-    if len(metadata.subtitle_streams) > 0:
-        sub_options = [sub_to_str(a, lang, lang_override) for a in metadata.subtitle_streams]
-        if auto:
-            sub_tags = [s[0] for s in sub_options if s[2]]
-        else:
-            code, sub_tags = d.checklist(title=title, text='Subtitle Options', choices=sub_options)
-            if code != d.OK:
-                return
-    else:
-        sub_tags = []
     return video_tags, audio_tags, sub_tags
 
 
@@ -148,7 +132,7 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
         metadata = extract_metadata(file)
         if metadata.estimated_duration and metadata.estimated_duration > max_duration:
             max_duration = metadata.estimated_duration
-        all_tags = _get_stream_indexes(metadata, language, lang_override=lang, auto=auto)
+        all_tags = _get_all_stream_indexes(metadata, language, lang_override=lang, auto=auto)
         if all_tags is not None:
             video_tags, audio_tags, subtitle_tags = all_tags
             indexes = video_tags + audio_tags + subtitle_tags
