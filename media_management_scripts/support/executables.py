@@ -87,15 +87,21 @@ class FFMpegProgress(NamedTuple):
 
     @property
     def time_as_seconds(self):
-        v = self.time.split(':')
-        return float(v[0]) * 60 * 60 + float(v[1]) * 60 + float(v[2])
+        try:
+            v = self.time.split(':')
+            return float(v[0]) * 60 * 60 + float(v[1]) * 60 + float(v[2])
+        except ValueError:
+            return None
 
     def progress(self, duration: float):
-        return self.time_as_seconds / duration
+        return self.time_as_seconds / duration if self.time_as_seconds else None
 
     def remaining_time(self, duration: float):
-        speed = float(self.speed[:-1])
-        return (duration - self.time_as_seconds) / speed
+        try:
+            speed = float(self.speed[:-1])
+            return (duration - self.time_as_seconds) / speed
+        except ValueError:
+            return None
 
 
 def create_ffmpeg_callback(cb: Callable[[FFMpegProgress], None]) -> Callable[[str], None]:
@@ -228,10 +234,12 @@ def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=No
 
     def cb(ffmpeg_progress: FFMpegProgress):
         if duration:
-            remaining_time = duration_to_str(ffmpeg_progress.remaining_time(duration))
-            d.gauge_update(percent=int(ffmpeg_progress.progress(duration) * 100),
-                           text='Remaining: {}'.format(remaining_time),
-                           update_text=True)
+            remaining = ffmpeg_progress.remaining_time(duration)
+            if remaining:
+                remaining_time = duration_to_str(remaining)
+                d.gauge_update(percent=int(ffmpeg_progress.progress(duration) * 100),
+                            text='Remaining: {}'.format(remaining_time),
+                            update_text=True)
 
     try:
         callback = create_ffmpeg_callback(cb)
