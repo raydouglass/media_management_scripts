@@ -18,6 +18,9 @@ class SelectStreamsCommand(SubCommand):
                                                     help='Extract specific streams in a video file to a new file')
         stream_select_parser.add_argument('-c', '--convert', action='store_const', default=False, const=True,
                                           help='Whether to convert the file or just remux it')
+        stream_select_parser.add_argument('-l', '--language', default='eng', help='Default language to select for audio and subtitle streams. Default is "eng"')
+        stream_select_parser.add_argument('-a', '--auto', action='store_const', default=False, const=True,
+                                          help='Whether to automatically select streams without prompting')
 
     def subexecute(self, ns):
         from media_management_scripts.convert import convert_config_from_ns
@@ -25,7 +28,9 @@ class SelectStreamsCommand(SubCommand):
         convert_config = convert_config_from_ns(ns) if ns['convert'] else None
         output_file = ns['output']
         overwrite = ns['overwrite']
-        select_streams(input_to_cmd, output_file, overwrite=overwrite, convert_config=convert_config)
+        language = ns['language']
+        auto = ns['auto']
+        select_streams(input_to_cmd, output_file, overwrite=overwrite, convert_config=convert_config, language=language, auto=auto)
 
 
 SubCommand.register(SelectStreamsCommand)
@@ -47,60 +52,69 @@ def video_to_str(v: Stream) -> Tuple[str, str, bool]:
     return (tag, name, status)
 
 
-def audio_to_str(a: Stream) -> Tuple[str, str, bool]:
+def audio_to_str(a: Stream, lang: str) -> Tuple[str, str, bool]:
     tag = str(a.index)
     if a.title:
         name = '{} ({}) - {} - {}'.format(a.codec, a.channel_layout, a.language, a.title)
     else:
         name = '{} ({}) - {}'.format(a.codec, a.channel_layout, a.language)
-    status = a.language == 'eng' or a.language == 'unknown'
+    status = a.language == lang or a.language == 'unknown'
     return (tag, name, status)
 
 
-def sub_to_str(s: Stream, lang_override: str = None) -> Tuple[str, str, bool]:
+def sub_to_str(s: Stream, lang: str, lang_override: str = None) -> Tuple[str, str, bool]:
     tag = str(s.index)
     language = lang_override if lang_override else s.language
     if s.title:
         name = '{} ({}) - {}'.format(language, s.codec, s.title)
     else:
         name = '{} ({})'.format(language, s.codec)
-    status = (language == 'eng' or language == 'unknown') and s.codec.lower() != 'eia_608'
+    status = (language == lang or language == 'unknown') and s.codec.lower() != 'eia_608'
     return (tag, name, status)
 
 
-def _get_stream_indexes(metadata, lang_override=None) -> List[int]:
+def _get_stream_indexes(metadata, lang, lang_override=None, auto=False) -> List[int]:
     d = Dialog(autowidgetsize=True)
     title = os.path.basename(metadata.file)
 
     if len(metadata.video_streams) > 0:
         video_options = [video_to_str(v) for v in metadata.video_streams]
-        code, video_tags = d.checklist(title=title, text='Video Options', choices=video_options)
-        if code != d.OK:
-            return
+        if auto:
+            video_tags = [v[0] for v in video_options if v[2]]
+        else:
+            code, video_tags = d.checklist(title=title, text='Video Options', choices=video_options)
+            if code != d.OK:
+                return
     else:
         video_tags = []
 
     if len(metadata.audio_streams) > 0:
-        audio_options = [audio_to_str(a) for a in
+        audio_options = [audio_to_str(a, lang) for a in
                          sorted(metadata.audio_streams, key=lambda s: s.channels, reverse=True)]
 
-        code, audio_tags = d.checklist(title=title, text='Audio Options', choices=audio_options)
-        if code != d.OK:
-            return
+        if auto:
+            audio_tags = [a[0] for a in audio_options if a[2]]
+        else:
+            code, audio_tags = d.checklist(title=title, text='Audio Options', choices=audio_options)
+            if code != d.OK:
+                return
     else:
         audio_tags = []
 
     if len(metadata.subtitle_streams) > 0:
-        sub_options = [sub_to_str(a, lang_override) for a in metadata.subtitle_streams]
-        code, sub_tags = d.checklist(title=title, text='Subtitle Options', choices=sub_options)
-        if code != d.OK:
-            return
+        sub_options = [sub_to_str(a, lang, lang_override) for a in metadata.subtitle_streams]
+        if auto:
+            sub_tags = [s[0] for s in sub_options if s[2]]
+        else:
+            code, sub_tags = d.checklist(title=title, text='Subtitle Options', choices=sub_options)
+            if code != d.OK:
+                return
     else:
         sub_tags = []
     return video_tags, audio_tags, sub_tags
 
 
-def select_streams(files, output_file, overwrite=False, convert_config: ConvertConfig = None):
+def select_streams(files, output_file, overwrite=False, convert_config: ConvertConfig = None, language='eng' ,auto:bool=False):
     from media_management_scripts.support.executables import execute_ffmpeg_with_dialog
     from media_management_scripts.support.combine_all import get_lang
     if not overwrite and os.path.exists(output_file):
@@ -120,10 +134,13 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
             is_srt = True
             lang = get_lang(file)
             if lang is None:
-                d = Dialog(autowidgetsize=True)
-                exit_code, lang = d.inputbox('Enter language', init='Unknown', title=os.path.basename(file))
-                if exit_code != d.OK:
-                    return
+                if auto:
+                    lang=language
+                else:
+                    d = Dialog(autowidgetsize=True)
+                    exit_code, lang = d.inputbox('Enter language', init='Unknown', title=os.path.basename(file))
+                    if exit_code != d.OK:
+                        return
         else:
             is_srt = False
             lang = None
@@ -131,7 +148,7 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
         metadata = extract_metadata(file)
         if metadata.estimated_duration and metadata.estimated_duration > max_duration:
             max_duration = metadata.estimated_duration
-        all_tags = _get_stream_indexes(metadata, lang_override=lang)
+        all_tags = _get_stream_indexes(metadata, language, lang_override=lang, auto=auto)
         if all_tags is not None:
             video_tags, audio_tags, subtitle_tags = all_tags
             indexes = video_tags + audio_tags + subtitle_tags
