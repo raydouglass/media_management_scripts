@@ -9,7 +9,11 @@ def split_by_chapter(input, output_dir, chapters=4, initial_count=0):
 
     num_chapters = len(metadata.chapters)
     if num_chapters % chapters != 0:
-        raise Exception('Cannot evenly split {} by {} - {} chapters'.format(input, chapters, num_chapters))
+        raise Exception(
+            'Cannot evenly split {} by {} - {} chapters'.format(
+                input, chapters, num_chapters
+            )
+        )
     count = initial_count
     for i in range(0, num_chapters, chapters):
         if i != 0:

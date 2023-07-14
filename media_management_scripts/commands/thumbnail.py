@@ -14,10 +14,18 @@ class ThumbnailCommand(SubCommand):
         return 'thumbnail'
 
     def build_argparse(self, subparser):
-        parser = subparser.add_parser('thumbnail', help='Extract a number of thumbnails from a video',
-                                      parents=[parent_parser, input_parser, output_parser, start_end_parser])
-        parser.add_argument('--count', '-c', default=10, type=int,
-                            help='Number of thumbnails to generate. Default is 10')
+        parser = subparser.add_parser(
+            'thumbnail',
+            help='Extract a number of thumbnails from a video',
+            parents=[parent_parser, input_parser, output_parser, start_end_parser],
+        )
+        parser.add_argument(
+            '--count',
+            '-c',
+            default=10,
+            type=int,
+            help='Number of thumbnails to generate. Default is 10',
+        )
 
     def _output_format(self, output, number):
         basename, ext = os.path.splitext(os.path.basename(output))
@@ -37,9 +45,9 @@ class ThumbnailCommand(SubCommand):
         duration = extract_metadata(input_to_cmd).estimated_duration
 
         if end:
-            duration=end
+            duration = end
         if start:
-            duration-=start
+            duration -= start
 
         every_frame = str(number / duration)
 
@@ -48,7 +56,7 @@ class ThumbnailCommand(SubCommand):
             args.extend(['-ss', str(start)])
         if end:
             args.extend(['-to', str(end)])
-        args.extend(['-i', input_to_cmd, '-vf', 'fps='+every_frame, output])
+        args.extend(['-i', input_to_cmd, '-vf', 'fps=' + every_frame, output])
         print(args)
         execute_with_output(args, print_output=True)
 

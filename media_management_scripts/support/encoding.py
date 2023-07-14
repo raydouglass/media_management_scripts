@@ -28,6 +28,7 @@ class Resolution(Enum):
     def auto_bitrate_name(self):
         return self.value[3]
 
+
 class BitDepth(Enum):
     BIT_8 = (8, 'yuv420p')
     BIT_10 = (10, 'yuv420p10le')
@@ -65,7 +66,7 @@ def resolution_name(height):
 class VideoCodec(Enum):
     H264 = ('libx264', ['h264'])
     H265 = ('libx265', ['hevc', 'h265'])
-    MPEG2 = ('mpeg2video', ['mpeg2video','mpeg2'])
+    MPEG2 = ('mpeg2video', ['mpeg2video', 'mpeg2'])
     COPY = ('copy', ['copy'])
 
     @property

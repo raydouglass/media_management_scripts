@@ -5,10 +5,16 @@ from media_management_scripts.convert import combine
 
 LANG_PATTERN = re.compile('\.(\w+)\.(srt|idx|ttml)')
 
-subtitle_exts=('.srt', '.idx', '.ttml')
+subtitle_exts = ('.srt', '.idx', '.ttml')
+
 
 def _filter(f: str):
-    return movie_files_filter(f) or f.endswith('.srt') or f.endswith('.idx') or f.endswith('.ttml')
+    return (
+        movie_files_filter(f)
+        or f.endswith('.srt')
+        or f.endswith('.idx')
+        or f.endswith('.ttml')
+    )
 
 
 def get_lang(srt_file):
@@ -61,4 +67,12 @@ def combine_all(files, convert=False, crf=15, preset='veryfast'):
             print('No video file for {}'.format(srt_file))
         else:
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
-            combine(video_file, srt_file, output_file, crf=crf, preset=preset, convert=convert, lang=language)
+            combine(
+                video_file,
+                srt_file,
+                output_file,
+                crf=crf,
+                preset=preset,
+                convert=convert,
+                lang=language,
+            )

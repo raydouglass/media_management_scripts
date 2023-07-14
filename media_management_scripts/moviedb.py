@@ -4,14 +4,16 @@ from media_management_scripts.utils import create_metadata_extractor
 import shelve
 
 
-class NameInformation():
+class NameInformation:
     def __init__(self, title, year, metadata):
         self.title = title.replace(':', '')
         self.year = year
         self.metadata = metadata
 
     def __repr__(self):
-        return '<NameInformation: title={}, year={}, meta={}>'.format(self.title, self.year, self.metadata)
+        return '<NameInformation: title={}, year={}, meta={}>'.format(
+            self.title, self.year, self.metadata
+        )
 
     @property
     def simple_name(self):
@@ -32,12 +34,13 @@ class NameInformation():
         return new_path
 
 
-class MovieDbApi():
+class MovieDbApi:
     def __init__(self, api_key=None, config_file=None, shelve_file='./tvdb.shelve'):
         if api_key is not None:
             tmdb.API_KEY = api_key
         else:
             import configparser
+
             if config_file is None:
                 config_file = os.path.expanduser('~/.config/moviedb/moviedb.ini')
                 if not os.path.exists(config_file):
@@ -113,7 +116,6 @@ class MovieDbApi():
 
 
 class MovieDbEpisode:
-
     def __init__(self, info_json):
         self.air_date = info_json['air_date']
         self.season = info_json['season_number']

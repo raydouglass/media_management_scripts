@@ -9,7 +9,11 @@ import operator
 from typing import List, Tuple
 from media_management_scripts.support.encoding import BitDepth, resolution_name
 from media_management_scripts.support.interlace import find_interlace, InterlaceReport
-from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
+from media_management_scripts.support.formatting import (
+    sizeof_fmt,
+    duration_to_str,
+    bitrate_to_str,
+)
 import shelve
 from media_management_scripts.support.executables import ffprobe
 from media_management_scripts.support.files import get_mime, movie_files_filter
@@ -30,26 +34,26 @@ WTV_ATTRIBUTES = {
     ATTRIBUTE_KEY_SUBTITLE: 'WM/SubTitle',
     ATTRIBUTE_KEY_DESCRIPTION: 'WM/SubTitleDescription',
     ATTRIBUTE_KEY_AIR_DATE: 'WM/MediaOriginalBroadcastDateTime',
-    ATTRIBUTE_KEY_NETWORK: 'service_provider'
+    ATTRIBUTE_KEY_NETWORK: 'service_provider',
 }
 
-GENERIC_ATTRIBUTES = {
-    ATTRIBUTE_KEY_TITLE: 'title'
-}
+GENERIC_ATTRIBUTES = {ATTRIBUTE_KEY_TITLE: 'title'}
 
 FORMATS = {
     'wtv': WTV_ATTRIBUTES,
 }
 
 
-class Metadata():
+class Metadata:
     def __init__(self, file, ffprobe_output, interlace_report: InterlaceReport = None):
         self.file = file
         self._ffprobe_output = ffprobe_output
-        self.mime_type=get_mime(file)
+        self.mime_type = get_mime(file)
         self.interlace_report = interlace_report
         if 'streams' not in ffprobe_output:
-            raise Exception('Invalid ffprobe output ({}): {}'.format(file, ffprobe_output))
+            raise Exception(
+                'Invalid ffprobe output ({}): {}'.format(file, ffprobe_output)
+            )
         self.streams = [Stream(s) for s in ffprobe_output['streams']]
         format = ffprobe_output['format']
         self.size = float(format['size'])
@@ -120,7 +124,9 @@ class Metadata():
             'file': self.file,
             'title': self.title,
             'duration': self.estimated_duration,
-            'duration_str': duration_to_str(self.estimated_duration) if self.estimated_duration else None,
+            'duration_str': duration_to_str(self.estimated_duration)
+            if self.estimated_duration
+            else None,
             'size': self.size,
             'size_str': sizeof_fmt(self.size),
             'resolution': self.resolution._name_ if self.resolution else None,
@@ -137,15 +143,18 @@ class Metadata():
             'subtitle_streams': [s.to_dict() for s in self.subtitle_streams],
             'other_streams': [s.to_dict() for s in self.other_streams],
             'chapters': [c.to_dict() for c in self.chapters] if self.chapters else [],
-            'interlace': self.interlace_report.to_dict() if self.interlace_report else None
+            'interlace': self.interlace_report.to_dict()
+            if self.interlace_report
+            else None,
         }
 
     def __repr__(self):
-        return '<Metadata: file={}, streams={}, format={}, size={}>'.format(self.file, len(self.streams), self.format,
-                                                                            self.size)
+        return '<Metadata: file={}, streams={}, format={}, size={}>'.format(
+            self.file, len(self.streams), self.format, self.size
+        )
 
 
-class Chapter():
+class Chapter:
     def __init__(self, chapter):
         self.id = chapter['id']
         self.start_time = float(chapter['start_time'])
@@ -157,14 +166,16 @@ class Chapter():
             'id': self.id,
             'title': self.title,
             'start': duration_to_str(self.start_time),
-            'end': duration_to_str(self.end_time)
+            'end': duration_to_str(self.end_time),
         }
 
     def __repr__(self):
-        return '<Chapter start={}, end={}, title={}>'.format(self.start_time, self.end_time, self.title)
+        return '<Chapter start={}, end={}, title={}>'.format(
+            self.start_time, self.end_time, self.title
+        )
 
 
-class Stream():
+class Stream:
     def __init__(self, stream):
         self.index = stream['index']
         self.codec = stream.get('codec_name', None)
@@ -184,7 +195,9 @@ class Stream():
             self.channel_layout = stream.get('channel_layout', None)
         if not self.duration:
             for tag in self.tags:
-                if tag.startswith('DURATION') and DURATION_PATTERN.match(self.tags[tag]):
+                if tag.startswith('DURATION') and DURATION_PATTERN.match(
+                    self.tags[tag]
+                ):
                     # 01:31:21.856000000
                     parts = [float(s) for s in self.tags[tag].split(':')]
                     self.duration = parts[0] * 60 * 60 + parts[1] * 60 + parts[2]
@@ -220,7 +233,7 @@ class Stream():
             'codec': self.codec,
             'codec_long_name': self.codec_long_name,
             'duration': self.duration,
-            'duration_str': duration_to_str(self.duration) if self.duration else None
+            'duration_str': duration_to_str(self.duration) if self.duration else None,
         }
         if self.is_audio():
             d['channels'] = self.channels
@@ -235,13 +248,17 @@ class Stream():
         return d
 
     def __repr__(self):
-        return '<Stream: index={}, codec={}, type={}, lang={}, width={}, height={}>'.format(self.index, self.codec,
-                                                                                            self.codec_type,
-                                                                                            self.language, self.width,
-                                                                                            self.height)
+        return '<Stream: index={}, codec={}, type={}, lang={}, width={}, height={}>'.format(
+            self.index,
+            self.codec,
+            self.codec_type,
+            self.language,
+            self.width,
+            self.height,
+        )
 
 
-class MetadataExtractor():
+class MetadataExtractor:
     def __init__(self, extractor_config, db_file=None):
         self._ffprobe_exe = extractor_config['ffprobe_exe']
         self.extractor_attributes = {'title': 'Title'}
@@ -258,13 +275,22 @@ class MetadataExtractor():
             self.db.close()
 
     def _execute(self, file):
-        args = [ffprobe(), '-show_chapters', '-show_streams', '-show_format', '-print_format',
-                'json', file]
+        args = [
+            ffprobe(),
+            '-show_chapters',
+            '-show_streams',
+            '-show_format',
+            '-print_format',
+            'json',
+            file,
+        ]
         p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         ret = p.wait()
         if ret != 0:
-            raise Exception('ffprobe error, return code={}, stderr={}'.format(ret, stderr))
+            raise Exception(
+                'ffprobe error, return code={}, stderr={}'.format(ret, stderr)
+            )
         return json.loads(stdout.decode('UTF-8'))
 
     def extract(self, file: str, detect_interlace=False) -> Metadata:

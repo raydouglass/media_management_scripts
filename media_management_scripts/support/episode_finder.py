@@ -4,32 +4,39 @@ from typing import Tuple, Iterator, Iterable
 import functools
 
 from media_management_scripts.utils import compare, season_episode_name, to_int
-from media_management_scripts.support.files import  list_files, movie_and_subtitle_files_filter
+from media_management_scripts.support.files import (
+    list_files,
+    movie_and_subtitle_files_filter,
+)
 
-patterns = [(re.compile('[Ss](\d+),?\s*[Ee](\d+)'), 1, 2),
-            (re.compile('(\d+)x(\d+)'), 1, 2),
-            (re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
-            (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
-            (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)'), 1, 2)]
+patterns = [
+    (re.compile('[Ss](\d+),?\s*[Ee](\d+)'), 1, 2),
+    (re.compile('(\d+)x(\d+)'), 1, 2),
+    (re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
+    (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
+    (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)'), 1, 2),
+]
 pattern_101 = re.compile('(\d)(\d\d)')
 
 part_patterns = [re.compile('[Pp]art\s*(\d+)'), re.compile('pt\s*(\d+)')]
 
 
 @functools.total_ordering
-class EpisodePart():
+class EpisodePart:
     def __init__(self, name, path, season, episode, part):
         self.name = name
         self.path = path
-        self.season=season
-        self.episode=episode
+        self.season = season
+        self.episode = episode
         self.part = part
 
     def __str__(self):
         if self.season is None or self.episode is None:
             return '{}: No match'.format(self.name)
         if self.part is not None:
-            return '{}: S{:02d}E{:02d} pt{}'.format(self.name, self.season, self.episode, self.part)
+            return '{}: S{:02d}E{:02d} pt{}'.format(
+                self.name, self.season, self.episode, self.part
+            )
         else:
             return '{}: S{:02d}E{:02d}'.format(self.name, self.season, self.episode)
 
@@ -45,8 +52,12 @@ class EpisodePart():
 
     def __eq__(self, other):
         if issubclass(type(other), EpisodePart):
-            return self.name == other.name and self.season == other.season \
-                   and self.episode == other.episode and self.part == other.part
+            return (
+                self.name == other.name
+                and self.season == other.season
+                and self.episode == other.episode
+                and self.part == other.part
+            )
         return False
 
     def __gt__(self, other):
@@ -95,7 +106,10 @@ def find_episodes(dir, use101=False) -> Iterator[EpisodePart]:
         path = os.path.join(dir, path)
         yield EpisodePart(name, path, season, ep, part)
 
-def calculate_new_filenames(episodes: Iterable[EpisodePart], output_dir, use_season_folders, show_name):
+
+def calculate_new_filenames(
+    episodes: Iterable[EpisodePart], output_dir, use_season_folders, show_name
+):
     for ep in episodes:
         if ep.season and ep.episode:
             path = ep.path

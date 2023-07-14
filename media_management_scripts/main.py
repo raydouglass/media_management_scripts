@@ -14,7 +14,6 @@ class ArgParseException(Exception):
 
 
 class NoExitArgumentParser(argparse.ArgumentParser):
-
     def __init__(self, *args, **kwargs):
         super(NoExitArgumentParser, self).__init__(*args, **kwargs)
 
@@ -26,7 +25,14 @@ class NoExitArgumentParser(argparse.ArgumentParser):
 
 def build_argparse():
     parser = NoExitArgumentParser()
-    parser.add_argument('-v', '--version', help='Display version', action='store_const', const=True, default=False)
+    parser.add_argument(
+        '-v',
+        '--version',
+        help='Display version',
+        action='store_const',
+        const=True,
+        default=False,
+    )
     subparsers = parser.add_subparsers(help='Sub commands', dest='command')
 
     for cmd in COMMANDS.values():

@@ -16,22 +16,29 @@ def all_files_filter(f: str) -> bool:
 
 
 def movie_files_filter(file) -> bool:
-    return os.path.isfile(file) and \
-           (mp4_mkv_filter(file) or \
-            file.endswith('.avi') or \
-            file.endswith('.m4v') or \
-            file.endswith('.webm') or \
-            get_mime(file).startswith('video/'))
+    return os.path.isfile(file) and (
+        mp4_mkv_filter(file)
+        or file.endswith('.avi')
+        or file.endswith('.m4v')
+        or file.endswith('.webm')
+        or get_mime(file).startswith('video/')
+    )
+
 
 def subtitle_files_filter(file) -> bool:
-    return file.endswith('.srt') or \
-        file.endswith('.ass') or \
-        file.endswith('.ttml') or \
-        file.endswith('.vtt') or \
-        file.endswith('.xml') or \
-        file.endswith('.dfxp')
+    return (
+        file.endswith('.srt')
+        or file.endswith('.ass')
+        or file.endswith('.ttml')
+        or file.endswith('.vtt')
+        or file.endswith('.xml')
+        or file.endswith('.dfxp')
+    )
 
-def multi_files_filter(filters: Iterable[Callable[[str], bool]]) -> Callable[[str], bool]:
+
+def multi_files_filter(
+    filters: Iterable[Callable[[str], bool]]
+) -> Callable[[str], bool]:
     def new_filter(file):
         for f in filters:
             if f(file):
@@ -40,18 +47,23 @@ def multi_files_filter(filters: Iterable[Callable[[str], bool]]) -> Callable[[st
 
     return new_filter
 
+
 def movie_and_subtitle_files_filter(file) -> bool:
     return multi_files_filter([movie_files_filter, subtitle_files_filter])(file)
 
+
 def get_mime(file):
     import magic
+
     return magic.from_file(file, mime=True)
 
 
 def check_exists(output: str, log=True):
     if os.path.exists(output):
         if log:
-            logger.warning('Cowardly refusing to overwrite existing file: {}'.format(output))
+            logger.warning(
+                'Cowardly refusing to overwrite existing file: {}'.format(output)
+            )
         return True
     return False
 
@@ -62,8 +74,9 @@ def create_dirs(file: str):
         os.makedirs(dir, exist_ok=True)
 
 
-def list_files(input_dir: str,
-               file_filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
+def list_files(
+    input_dir: str, file_filter: Callable[[str], bool] = mp4_mkv_filter
+) -> Iterator[str]:
     """
     List relative files in directory
     """
@@ -76,12 +89,16 @@ def list_files(input_dir: str,
                 yield path
 
 
-def list_files_absolute(input_dir: str,
-               file_filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
+def list_files_absolute(
+    input_dir: str, file_filter: Callable[[str], bool] = mp4_mkv_filter
+) -> Iterator[str]:
     for file in list_files(input_dir, file_filter):
         yield os.path.realpath(os.path.join(input_dir, file))
 
-def get_files_in_directories(input_dirs, file_filter: Callable[[str], bool] = mp4_mkv_filter) -> Iterator[str]:
+
+def get_files_in_directories(
+    input_dirs, file_filter: Callable[[str], bool] = mp4_mkv_filter
+) -> Iterator[str]:
     for input_dir in input_dirs:
         if os.path.isdir(input_dir):
             for f in list_files(input_dir, file_filter=file_filter):
@@ -90,10 +107,12 @@ def get_files_in_directories(input_dirs, file_filter: Callable[[str], bool] = mp
             yield input_dir
 
 
-def get_input_output(input_dir: str,
-                     output_dir: str,
-                     work_dir: str = None,
-                     filter: Callable[[str], bool] = movie_files_filter) -> Iterator[Tuple[str, ...]]:
+def get_input_output(
+    input_dir: str,
+    output_dir: str,
+    work_dir: str = None,
+    filter: Callable[[str], bool] = movie_files_filter,
+) -> Iterator[Tuple[str, ...]]:
     """
     Mimic the file structure from input_dir into output_dir (and optionally work_dir).
 

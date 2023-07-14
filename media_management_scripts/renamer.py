@@ -65,7 +65,9 @@ def create_namespace(size: int = 2):
 
     def plex_episode(episode_num, episode_num_final, length=length):
         if episode_num_final:
-            return 'E{}-E{}'.format(zpad(episode_num, length), zpad(episode_num_final, length))
+            return 'E{}-E{}'.format(
+                zpad(episode_num, length), zpad(episode_num_final, length)
+            )
         else:
             return 'E{}'.format(zpad(episode_num))
 
@@ -73,18 +75,29 @@ def create_namespace(size: int = 2):
         'lpad': lpad,
         'zpad': zpad,
         'plex_episode': plex_episode,
-        'plex_season_specials': plex_season_specials
+        'plex_season_specials': plex_season_specials,
     }
     d.update(_RENAMER_NAMESPACE)
     return d
 
 
-def rename_plex(file: str, plex_params: PlexTemplateParams = None, output_dir=None) -> str:
-    return rename_process('{plex}', [file], output_dir=output_dir, params=plex_params)[0][1]
+def rename_plex(
+    file: str, plex_params: PlexTemplateParams = None, output_dir=None
+) -> str:
+    return rename_process('{plex}', [file], output_dir=output_dir, params=plex_params)[
+        0
+    ][1]
 
 
-def rename_process(template: str, files, index_start=1, output_dir=None, regex=None, ignore_missing_regex=False,
-                   params={}):
+def rename_process(
+    template: str,
+    files,
+    index_start=1,
+    output_dir=None,
+    regex=None,
+    ignore_missing_regex=False,
+    params={},
+):
     if regex:
         regex = re.compile(regex)
 
@@ -98,7 +111,9 @@ def rename_process(template: str, files, index_start=1, output_dir=None, regex=N
     if 'length' not in params:
         params['length'] = length
 
-    t = Template(content=template, delimiters=('${', '}'), namespace=create_namespace(length))
+    t = Template(
+        content=template, delimiters=('${', '}'), namespace=create_namespace(length)
+    )
     results = []
 
     index = index_start
@@ -116,7 +131,7 @@ def rename_process(template: str, files, index_start=1, output_dir=None, regex=N
             'wo_ext': wo_ext,
             'ext': ext,
             'filename': base,
-            're': RegexResults(ignore_missing=ignore_missing_regex)
+            're': RegexResults(ignore_missing=ignore_missing_regex),
         }
         new_params.update(params)
         if regex:
@@ -131,7 +146,9 @@ def rename_process(template: str, files, index_start=1, output_dir=None, regex=N
                         pass
                     items.append(item)
                     m_index += 1
-                    new_params['re'] = new_params['regex'] = RegexResults(items, ignore_missing=ignore_missing_regex)
+                    new_params['re'] = new_params['regex'] = RegexResults(
+                        items, ignore_missing=ignore_missing_regex
+                    )
         result = t.substitute(new_params)
         result = os.path.join(dir, result)
         results.append((file, result))

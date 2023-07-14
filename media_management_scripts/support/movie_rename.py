@@ -13,7 +13,9 @@ OK = 0
 CANCEL = 1
 
 
-def _transfer(result: NameInformation, input_file, username, pkey_file, host, output_path):
+def _transfer(
+    result: NameInformation, input_file, username, pkey_file, host, output_path
+):
     output_file = os.path.join(output_path, os.path.basename(input_file))
     pkey = RSAKey.from_private_key_file(filename=pkey_file)
     with Transport((host, 22)) as transport:
@@ -21,8 +23,11 @@ def _transfer(result: NameInformation, input_file, username, pkey_file, host, ou
 
         filename = os.path.basename(output_file)
         d = Dialog(autowidgetsize=False)
-        d.gauge_start(title=result.simple_name, text='Transferring...\n{}'.format(filename),
-                      percent=0)
+        d.gauge_start(
+            title=result.simple_name,
+            text='Transferring...\n{}'.format(filename),
+            percent=0,
+        )
         try:
 
             def callback(file, m, curr):
@@ -31,7 +36,9 @@ def _transfer(result: NameInformation, input_file, username, pkey_file, host, ou
                 text = 'Transferring...\n{}\n{} of {}'.format(filename, current, max)
                 d.gauge_update(percent=int(curr / m * 100), text=text, update_text=True)
 
-            with SCPClient(transport, buff_size=2 * 1024 * 1024, progress=callback) as client:
+            with SCPClient(
+                transport, buff_size=2 * 1024 * 1024, progress=callback
+            ) as client:
                 client.put(input_file, output_file)
         finally:
             d.gauge_stop()
@@ -42,7 +49,13 @@ def _search(title, file, metadata):
     # Sort by closeness to file's title, then title, then year
     if len(results) > 0:
         metadata_title = metadata.title if metadata.title is not None else ''
-        results.sort(key=lambda x: (-SequenceMatcher(None, x.title, metadata_title).ratio(), x.title, x.year))
+        results.sort(
+            key=lambda x: (
+                -SequenceMatcher(None, x.title, metadata_title).ratio(),
+                x.title,
+                x.year,
+            )
+        )
         choices = []
         for i in range(len(results)):
             choices.append((str(i), results[i].simple_name))
@@ -66,8 +79,11 @@ def _get_new_name(input_to_cmd) -> NameInformation:
     while result is None:
         title = ''
         d = Dialog(autowidgetsize=True)
-        exit_code, title = d.inputbox('No matches found. Try a different title?', init=title,
-                                      title=os.path.basename(input_to_cmd))
+        exit_code, title = d.inputbox(
+            'No matches found. Try a different title?',
+            init=title,
+            title=os.path.basename(input_to_cmd),
+        )
         if exit_code == d.OK:
             code, result = _search(title, input_to_cmd, metadata)
             if code == CANCEL:
@@ -92,12 +108,18 @@ def movie_rename(input_to_cmd, ns):
                 new_file = result.new_name(original)
                 if not dry_run:
                     if not host or not pkey_file or not output_path:
-                        print('If not using dry-run, you must include the host, pkey, and output path')
+                        print(
+                            'If not using dry-run, you must include the host, pkey, and output path'
+                        )
                     else:
                         move(original, new_file)
-                        _transfer(result, new_file, username, pkey_file, host, output_path)
+                        _transfer(
+                            result, new_file, username, pkey_file, host, output_path
+                        )
                         if move_source:
-                            new_loc = os.path.join(move_source, os.path.basename(new_file))
+                            new_loc = os.path.join(
+                                move_source, os.path.basename(new_file)
+                            )
                             dir = os.path.dirname(new_file)
                             move(new_file, new_loc)
                             if len(os.listdir(dir)) == 0:

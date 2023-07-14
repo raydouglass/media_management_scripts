@@ -13,24 +13,51 @@ class SelectStreamsCommand(SubCommand):
         input_parser = argparse.ArgumentParser(add_help=False)
         input_parser.add_argument('input', nargs='+', help='Input directory')
 
-        stream_select_parser = subparser.add_parser('select-streams',
-                                                    parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
-                                                    help='Extract specific streams in a video file to a new file')
-        stream_select_parser.add_argument('-c', '--convert', action='store_const', default=False, const=True,
-                                          help='Whether to convert the file or just remux it')
-        stream_select_parser.add_argument('-l', '--language', default='eng', help='Default language to select for audio and subtitle streams. Default is "eng"')
-        stream_select_parser.add_argument('-a', '--auto', action='store_const', default=False, const=True,
-                                          help='Whether to automatically select streams without prompting')
+        stream_select_parser = subparser.add_parser(
+            'select-streams',
+            parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
+            help='Extract specific streams in a video file to a new file',
+        )
+        stream_select_parser.add_argument(
+            '-c',
+            '--convert',
+            action='store_const',
+            default=False,
+            const=True,
+            help='Whether to convert the file or just remux it',
+        )
+        stream_select_parser.add_argument(
+            '-l',
+            '--language',
+            default='eng',
+            help='Default language to select for audio and subtitle streams. Default is "eng"',
+        )
+        stream_select_parser.add_argument(
+            '-a',
+            '--auto',
+            action='store_const',
+            default=False,
+            const=True,
+            help='Whether to automatically select streams without prompting',
+        )
 
     def subexecute(self, ns):
         from media_management_scripts.convert import convert_config_from_ns
+
         input_to_cmd = ns['input']
         convert_config = convert_config_from_ns(ns) if ns['convert'] else None
         output_file = ns['output']
         overwrite = ns['overwrite']
         language = ns['language']
         auto = ns['auto']
-        select_streams(input_to_cmd, output_file, overwrite=overwrite, convert_config=convert_config, language=language, auto=auto)
+        select_streams(
+            input_to_cmd,
+            output_file,
+            overwrite=overwrite,
+            convert_config=convert_config,
+            language=language,
+            auto=auto,
+        )
 
 
 SubCommand.register(SelectStreamsCommand)
@@ -55,23 +82,28 @@ def video_to_str(v: Stream) -> Tuple[str, str, bool]:
 def audio_to_str(a: Stream, lang: str) -> Tuple[str, str, bool]:
     tag = str(a.index)
     if a.title:
-        name = '{} ({}) - {} - {}'.format(a.codec, a.channel_layout, a.language, a.title)
+        name = '{} ({}) - {} - {}'.format(
+            a.codec, a.channel_layout, a.language, a.title
+        )
     else:
         name = '{} ({}) - {}'.format(a.codec, a.channel_layout, a.language)
     status = a.language == lang or a.language == 'unknown'
     return (tag, name, status)
 
 
-def sub_to_str(s: Stream, lang: str, lang_override: str = None) -> Tuple[str, str, bool]:
+def sub_to_str(
+    s: Stream, lang: str, lang_override: str = None
+) -> Tuple[str, str, bool]:
     tag = str(s.index)
     language = lang_override if lang_override else s.language
     if s.title:
         name = '{} ({}) - {}'.format(language, s.codec, s.title)
     else:
         name = '{} ({})'.format(language, s.codec)
-    status = (language == lang or language == 'unknown') and s.codec.lower() != 'eia_608'
+    status = (
+        language == lang or language == 'unknown'
+    ) and s.codec.lower() != 'eia_608'
     return (tag, name, status)
-
 
 
 def _get_stream_indexes(streams, title, text, converter, auto):
@@ -89,23 +121,49 @@ def _get_stream_indexes(streams, title, text, converter, auto):
     return tags
 
 
-def _get_all_stream_indexes(metadata, lang, lang_override=None, auto=False) -> List[int]:
+def _get_all_stream_indexes(
+    metadata, lang, lang_override=None, auto=False
+) -> List[int]:
     title = os.path.basename(metadata.file)
-    video_tags = _get_stream_indexes(metadata.video_streams, title, 'Video Options', video_to_str, auto)
-    audio_tags = _get_stream_indexes(metadata.audio_streams, title, 'Audio Options', lambda a: audio_to_str(a, lang), auto)
-    sub_tags = _get_stream_indexes(metadata.subtitle_streams, title, 'Subtitle Options', lambda s: sub_to_str(s, lang, lang_override), auto)
+    video_tags = _get_stream_indexes(
+        metadata.video_streams, title, 'Video Options', video_to_str, auto
+    )
+    audio_tags = _get_stream_indexes(
+        metadata.audio_streams,
+        title,
+        'Audio Options',
+        lambda a: audio_to_str(a, lang),
+        auto,
+    )
+    sub_tags = _get_stream_indexes(
+        metadata.subtitle_streams,
+        title,
+        'Subtitle Options',
+        lambda s: sub_to_str(s, lang, lang_override),
+        auto,
+    )
 
     return video_tags, audio_tags, sub_tags
 
 
-def select_streams(files, output_file, overwrite=False, convert_config: ConvertConfig = None, language='eng' ,auto:bool=False):
+def select_streams(
+    files,
+    output_file,
+    overwrite=False,
+    convert_config: ConvertConfig = None,
+    language='eng',
+    auto: bool = False,
+):
     from media_management_scripts.support.executables import execute_ffmpeg_with_dialog
     from media_management_scripts.support.combine_all import get_lang
+
     if not overwrite and os.path.exists(output_file):
         print('Output file exists: {}'.format(output_file))
         return
 
-    if any(file.endswith('.srt') for file in files) and not output_file.endswith('.mkv'):
+    if any(file.endswith('.srt') for file in files) and not output_file.endswith(
+        '.mkv'
+    ):
         print('Cannot mix an SRT file into a non MKV output')
         return
 
@@ -119,10 +177,12 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
             lang = get_lang(file)
             if lang is None:
                 if auto:
-                    lang=language
+                    lang = language
                 else:
                     d = Dialog(autowidgetsize=True)
-                    exit_code, lang = d.inputbox('Enter language', init='Unknown', title=os.path.basename(file))
+                    exit_code, lang = d.inputbox(
+                        'Enter language', init='Unknown', title=os.path.basename(file)
+                    )
                     if exit_code != d.OK:
                         return
         else:
@@ -132,7 +192,9 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
         metadata = extract_metadata(file)
         if metadata.estimated_duration and metadata.estimated_duration > max_duration:
             max_duration = metadata.estimated_duration
-        all_tags = _get_all_stream_indexes(metadata, language, lang_override=lang, auto=auto)
+        all_tags = _get_all_stream_indexes(
+            metadata, language, lang_override=lang, auto=auto
+        )
         if all_tags is not None:
             video_tags, audio_tags, subtitle_tags = all_tags
             indexes = video_tags + audio_tags + subtitle_tags
@@ -150,7 +212,13 @@ def select_streams(files, output_file, overwrite=False, convert_config: ConvertC
     if convert_config:
         raise Exception('Convert is not supported in select-streams currently')
     elif len(final_indexes) > 0:
-        args = create_remux_args(files, output_file, mappings=final_indexes, overwrite=overwrite, metadata=output_meta)
+        args = create_remux_args(
+            files,
+            output_file,
+            mappings=final_indexes,
+            overwrite=overwrite,
+            metadata=output_meta,
+        )
         if len(files) == 1:
             title = os.path.basename(files[0])
         else:

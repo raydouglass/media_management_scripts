@@ -1,5 +1,8 @@
 import xml.etree.ElementTree as ET
-from media_management_scripts.utils import create_metadata_extractor, convert_config_from_config_section
+from media_management_scripts.utils import (
+    create_metadata_extractor,
+    convert_config_from_config_section,
+)
 from media_management_scripts.silver_tube.wtv import extract_original_air_date
 from media_management_scripts import tvdb_api
 from media_management_scripts.silver_tube.wtv_db import WtvDb
@@ -18,7 +21,12 @@ import glob
 from string import Template
 from typing import Tuple, List
 
-from media_management_scripts.support.executables import execute_with_output, ffmpeg, execute_with_timeout, nice_exe
+from media_management_scripts.support.executables import (
+    execute_with_output,
+    ffmpeg,
+    execute_with_timeout,
+    nice_exe,
+)
 from media_management_scripts.renamer import create_namespace
 from tempita import Template
 
@@ -26,19 +34,23 @@ logger = logging.getLogger(__name__)
 exe_logger = logging.getLogger('executable-logger')
 
 
-class Configuration():
+class Configuration:
     def __init__(self, config_file, tvdb):
         config = configparser.ConfigParser()
         config.read(config_file)
         log_file = config.get('main', 'log.config', fallback=None)
         if log_file:
             import yaml
+
             with open(log_file) as f:
                 log_config = yaml.load(f)
                 logging.config.dictConfig(log_config)
 
-        template = config.get('directories', 'out.pattern',
-                              fallback='${series}/Season ${season}/${series} - S${season|zpad}E${episode|zpad} - ${episode_name}.${ext}')
+        template = config.get(
+            'directories',
+            'out.pattern',
+            fallback='${series}/Season ${season}/${series} - S${season|zpad}E${episode|zpad} - ${episode_name}.${ext}',
+        )
         self.template = template
 
         self.wtv_in_dir = config.get('directories', 'tv.in')
@@ -47,7 +59,9 @@ class Configuration():
         self.srt_in_dir = config.get('directories', 'srt.in')
         self.temp_dir = config.get('directories', 'temp.dir')
         self.out_dir = config.get('directories', 'out.dir')
-        self.delete_source = config.getboolean('directories', 'delete.source.files', fallback=True)
+        self.delete_source = config.getboolean(
+            'directories', 'delete.source.files', fallback=True
+        )
 
         self.convert_config = convert_config_from_config_section(config, 'transcode')
 
@@ -57,11 +71,17 @@ class Configuration():
 
         self.debug = config.getboolean('main', 'debug', fallback=False)
 
-        self.ccextractor_exe = config.get('ccextractor', 'executable', fallback=ccextractor())
-        self.ccextractor_run = config.getboolean('ccextractor', 'run.if.missing', fallback=False)
+        self.ccextractor_exe = config.get(
+            'ccextractor', 'executable', fallback=ccextractor()
+        )
+        self.ccextractor_run = config.getboolean(
+            'ccextractor', 'run.if.missing', fallback=False
+        )
 
         self.comskip_exe = config.get('comskip', 'executable', fallback=None)
-        self.comskip_run = config.getboolean('comskip', 'run.if.missing', fallback=comskip())
+        self.comskip_run = config.getboolean(
+            'comskip', 'run.if.missing', fallback=comskip()
+        )
         self.comskip_ini = config.get('comskip', 'comskip.ini', fallback=None)
 
         db_file = config.get('main', 'database.file', fallback='db.sqlite')
@@ -70,7 +90,9 @@ class Configuration():
         self.tvdb = tvdb
 
         if self.convert_config.include_subtitles:
-            logger.warning('Include Subtitles is True. This usually does not work with TV captions.')
+            logger.warning(
+                'Include Subtitles is True. This usually does not work with TV captions.'
+            )
 
     def get_metadata(self, wtv_file: str) -> Tuple[str, str, int, int]:
         # Will detect deinterlace if we actually have to process this file
@@ -89,8 +111,12 @@ class Configuration():
                 episode_name = ep.name
         elif series is not None:
             # Get season & episode number
-            air_date = extract_original_air_date(wtv_file, parse_from_filename=True, metadata=metadata)
-            episodes = self.tvdb.find_episode(series, episode=episode_name, air_date=air_date)
+            air_date = extract_original_air_date(
+                wtv_file, parse_from_filename=True, metadata=metadata
+            )
+            episodes = self.tvdb.find_episode(
+                series, episode=episode_name, air_date=air_date
+            )
             if len(episodes) == 1:
                 season, episode_num = tvdb_api.TVDB.season_number(episodes[0])
                 if episodes[0]['episodeName'] is not None:
@@ -105,8 +131,14 @@ class Configuration():
             episode_num = None
 
         # Try searching the description
-        if season is None and episode_num is None and 'WM/SubTitleDescription' in metadata.tags:
-            season, episode_num, _ = extract_season_ep(metadata.tags['WM/SubTitleDescription'])
+        if (
+            season is None
+            and episode_num is None
+            and 'WM/SubTitleDescription' in metadata.tags
+        ):
+            season, episode_num, _ = extract_season_ep(
+                metadata.tags['WM/SubTitleDescription']
+            )
 
         if episode_name is None and episode_num is not None:
             episode_name = 'Episode #{}'.format(episode_num)
@@ -117,19 +149,38 @@ class Configuration():
         # Ensure TVDB client is authenticated
         self.tvdb.refresh()
 
-        series, episode_name, season, episode_num, metadata = self.get_metadata(wtv_file)
+        series, episode_name, season, episode_num, metadata = self.get_metadata(
+            wtv_file
+        )
         if series is not None and season is not None and episode_num is not None:
             # Detect interlace
             create_metadata_extractor().add_interlace_report(metadata)
             filename = os.path.basename(wtv_file)
             filename_wo_ext = os.path.splitext(filename)[0]
-            out_video = os.path.join(self.out_dir,
-                                     create_filename(self.template, series, season, episode_num, episode_name,
-                                                     filename_wo_ext, 'mp4'))
-            out_srt = os.path.join(self.out_dir,
-                                   create_filename(self.template, series, season, episode_num, episode_name,
-                                                   filename_wo_ext,
-                                                   'eng.srt'))
+            out_video = os.path.join(
+                self.out_dir,
+                create_filename(
+                    self.template,
+                    series,
+                    season,
+                    episode_num,
+                    episode_name,
+                    filename_wo_ext,
+                    'mp4',
+                ),
+            )
+            out_srt = os.path.join(
+                self.out_dir,
+                create_filename(
+                    self.template,
+                    series,
+                    season,
+                    episode_num,
+                    episode_name,
+                    filename_wo_ext,
+                    'eng.srt',
+                ),
+            )
 
             if not os.path.exists(os.path.dirname(out_video)):
                 os.makedirs(os.path.dirname(out_video))
@@ -152,10 +203,10 @@ class Configuration():
                 logger.warning('Failure to convert {}'.format(wtv_file))
         else:
             logger.warning(
-                'Missing data for {}: series={}, episode_name={}, season={}, episode_num={}'.format(wtv_file, series,
-                                                                                                    episode_name,
-                                                                                                    season,
-                                                                                                    episode_num))
+                'Missing data for {}: series={}, episode_name={}, season={}, episode_num={}'.format(
+                    wtv_file, series, episode_name, season, episode_num
+                )
+            )
 
     def extract_subtitles(self, wtv_file, out_srt):
         execute_with_output([self.ccextractor_exe, wtv_file, '-o', out_srt])
@@ -164,11 +215,20 @@ class Configuration():
         try:
             if self.comskip_ini:
                 ret, stdout = execute_with_timeout(
-                    [self.comskip_exe, '--ini=' + self.comskip_ini, '--output=' + out_dir, wtv_file],
-                    timeout=60 * 10)
+                    [
+                        self.comskip_exe,
+                        '--ini=' + self.comskip_ini,
+                        '--output=' + out_dir,
+                        wtv_file,
+                    ],
+                    timeout=60 * 10,
+                )
             else:
-                ret, stdout = execute_with_timeout([self.comskip_exe, '--output=' + out_dir, wtv_file], timeout=60 * 10,
-                                                   log_output=True)
+                ret, stdout = execute_with_timeout(
+                    [self.comskip_exe, '--output=' + out_dir, wtv_file],
+                    timeout=60 * 10,
+                    log_output=True,
+                )
             if ret != 0:
                 logger.error('Comskip error: {}, Output={}'.format(ret, stdout))
                 return False
@@ -193,7 +253,9 @@ class Configuration():
         try:
             args = [ffmpeg(), '-i', in_file]
             for i in invert:
-                temp_file = os.path.join(self.temp_dir, wo_ext + '.' + str(len(temp_files)) + '.ts')
+                temp_file = os.path.join(
+                    self.temp_dir, wo_ext + '.' + str(len(temp_files)) + '.ts'
+                )
                 temp_files.append(temp_file)
                 if os.path.isfile(temp_file):
                     os.remove(temp_file)
@@ -205,8 +267,14 @@ class Configuration():
                 return False
             else:
                 input = 'concat:{}'.format('|'.join(temp_files))
-                ret = convert_with_config(input, out_file, config=self.convert_config, print_output=False,
-                                          overwrite=True, metadata=metadata)
+                ret = convert_with_config(
+                    input,
+                    out_file,
+                    config=self.convert_config,
+                    print_output=False,
+                    overwrite=True,
+                    metadata=metadata,
+                )
                 if ret != 0:
                     logger.error('Nonzero return code from ffmpeg: {}'.format(ret))
                 # Cleanup temp files
@@ -229,28 +297,46 @@ class Configuration():
                     # wtv_file = os.path.join(wtv_dir, wtv)
                     wtv = os.path.basename(wtv_file)
                     time = datetime.datetime.now() - datetime.timedelta(minutes=5)
-                    modified = datetime.datetime.fromtimestamp(os.path.getmtime(wtv_file))
+                    modified = datetime.datetime.fromtimestamp(
+                        os.path.getmtime(wtv_file)
+                    )
                     if modified < time:
                         com = wtv.replace('wtv', 'xml')
                         srt = wtv.replace('wtv', 'srt')
                         com_file = os.path.join(com_dir, com)
                         srt_file = os.path.join(srt_dir, srt)
                         if not os.path.isfile(com_file) and self.comskip_run:
-                            logger.debug('No commercial file for {}. Running comskip'.format(wtv_file))
+                            logger.debug(
+                                'No commercial file for {}. Running comskip'.format(
+                                    wtv_file
+                                )
+                            )
                             if not self.run_comskip(wtv_file, com_dir):
-                                logger.error('Comskip error or timed out for: {}'.format(wtv_file))
+                                logger.error(
+                                    'Comskip error or timed out for: {}'.format(
+                                        wtv_file
+                                    )
+                                )
                                 continue
                         if not os.path.isfile(srt_file) and self.ccextractor_run:
-                            logger.debug('No srt file for {}. Running ccextractor'.format(wtv_file))
+                            logger.debug(
+                                'No srt file for {}. Running ccextractor'.format(
+                                    wtv_file
+                                )
+                            )
                             self.extract_subtitles(wtv_file, srt_file)
                         if os.path.isfile(com_file) and os.path.isfile(srt_file):
                             logger.info('Processing {}'.format(wtv_file))
                             self.process(wtv_file, com_file, srt_file)
                             self.count += 1
                         elif not os.path.isfile(com_file):
-                            logger.warning('No commercial file for {}...skipping'.format(wtv_file))
+                            logger.warning(
+                                'No commercial file for {}...skipping'.format(wtv_file)
+                            )
                         else:
-                            logger.warning('No srt file for {}...skipping'.format(wtv_file))
+                            logger.warning(
+                                'No srt file for {}...skipping'.format(wtv_file)
+                            )
                     else:
                         logger.debug('File too new, skipping: {}'.format(wtv))
                 except Exception:
@@ -288,7 +374,12 @@ def to_time(c):
     else:
         seconds = -int(-c % 60)
     milliseconds = int((c - int(c)) * 1000)
-    return {'hours': hours, 'minutes': minutes, 'seconds': seconds, 'milliseconds': milliseconds}
+    return {
+        'hours': hours,
+        'minutes': minutes,
+        'seconds': seconds,
+        'milliseconds': milliseconds,
+    }
 
 
 def split_subtitles(srt_file, invert_commercials, out_file):
@@ -303,8 +394,12 @@ def split_subtitles(srt_file, invert_commercials, out_file):
             if i.start >= to_time(c[0]) and (c[1] is None or i.start < to_time(c[1])):
                 temp = copy(i)
                 time = to_time(shift)
-                temp.shift(hours=time['hours'], minutes=time['minutes'], seconds=time['seconds'],
-                           milliseconds=time['milliseconds'])
+                temp.shift(
+                    hours=time['hours'],
+                    minutes=time['minutes'],
+                    seconds=time['seconds'],
+                    milliseconds=time['milliseconds'],
+                )
                 parts.append(temp)
             else:
                 pass
@@ -322,7 +417,9 @@ def durations_to_invert(durations):
     return ret
 
 
-def create_filename(template, series, season, episode_num, episode_name, filename, extension):
+def create_filename(
+    template, series, season, episode_num, episode_name, filename, extension
+):
     t = Template(content=template, delimiters=('${', '}'), namespace=create_namespace())
     d = dict(
         series=series,
@@ -330,6 +427,6 @@ def create_filename(template, series, season, episode_num, episode_name, filenam
         episode=episode_num,
         episode_name=episode_name,
         ext=extension,
-        orig_basename=filename
+        orig_basename=filename,
     )
     return t.substitute(d)

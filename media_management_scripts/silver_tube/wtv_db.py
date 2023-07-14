@@ -59,15 +59,29 @@ class CandidateEpisode(Base):
     wtv_file = relationship('WtvFile', back_populates='candidate_episodes')
 
     def get_details(self):
-        padded_season = str(self.season) if self.season >= 10 else '0' + str(self.season)
-        padded_episode_num = str(self.episode_num) if self.episode_num >= 10 else '0' + str(self.episode_num)
-        return '{} - s{}e{} - {}'.format(self.series.name, padded_season, padded_episode_num, self.name)
+        padded_season = (
+            str(self.season) if self.season >= 10 else '0' + str(self.season)
+        )
+        padded_episode_num = (
+            str(self.episode_num)
+            if self.episode_num >= 10
+            else '0' + str(self.episode_num)
+        )
+        return '{} - s{}e{} - {}'.format(
+            self.series.name, padded_season, padded_episode_num, self.name
+        )
 
     def __repr__(self):
-        return 'Episode[id={}, series={}, name={}, air_date={}, season={}, num={}]'.format(self.id, self.series.name,
-                                                                                           self.name, self.air_date,
-                                                                                           self.season,
-                                                                                           self.episode_num)
+        return (
+            'Episode[id={}, series={}, name={}, air_date={}, season={}, num={}]'.format(
+                self.id,
+                self.series.name,
+                self.name,
+                self.air_date,
+                self.season,
+                self.episode_num,
+            )
+        )
 
 
 class WtvFile(Base):
@@ -78,8 +92,12 @@ class WtvFile(Base):
     series_id = Column(Integer, ForeignKey('series.id'))
     series = relationship('Series')
     candidate_episodes = relationship('CandidateEpisode', cascade='all, delete-orphan')
-    selected_episode = relationship('SelectedEpisode', back_populates='wtv_file', uselist=False,
-                                    cascade='all, delete-orphan')
+    selected_episode = relationship(
+        'SelectedEpisode',
+        back_populates='wtv_file',
+        uselist=False,
+        cascade='all, delete-orphan',
+    )
 
 
 class SelectedEpisode(Base):
@@ -88,11 +106,13 @@ class SelectedEpisode(Base):
     # id = Column(Integer, primary_key=True)
     episode_id = Column(Integer, ForeignKey('candidate_episode.id'), nullable=False)
     episode = relationship('CandidateEpisode', uselist=False)
-    wtv_file_id = Column(String(256), ForeignKey('wtv_file.filename'), nullable=False, primary_key=True)
+    wtv_file_id = Column(
+        String(256), ForeignKey('wtv_file.filename'), nullable=False, primary_key=True
+    )
     wtv_file = relationship('WtvFile', uselist=False, back_populates='selected_episode')
 
 
-class WtvDb():
+class WtvDb:
     def __init__(self, db_file):
         if ':memory:' == db_file:
             self._engine = create_engine('sqlite:///:memory:', echo=False)
@@ -123,8 +143,11 @@ class WtvDb():
         if series_id:
             series = self.get_or_create_series(series_id, series_name)
             candidates = [self.from_tvdb(series, e) for e in episodes]
-            wtv_file = WtvFile(filename=wtv_filename, description=meta.tags.get('WM/SubTitleDescription', None),
-                               series=series)
+            wtv_file = WtvFile(
+                filename=wtv_filename,
+                description=meta.tags.get('WM/SubTitleDescription', None),
+                series=series,
+            )
             wtv_file = self._session.merge(wtv_file)
             wtv_file.candidate_episodes = candidates
             self._session.commit()
@@ -133,13 +156,17 @@ class WtvDb():
 
     def from_tvdb(self, series, e):
         self._check_session()
-        return self._session.merge(CandidateEpisode(id=int(e['id']),
-                                                    name=e['episodeName'],
-                                                    description=e['overview'],
-                                                    air_date=datetime.strptime(e['firstAired'], '%Y-%m-%d').date(),
-                                                    season=int(e['airedSeason']),
-                                                    episode_num=int(e['airedEpisodeNumber']),
-                                                    series=series))
+        return self._session.merge(
+            CandidateEpisode(
+                id=int(e['id']),
+                name=e['episodeName'],
+                description=e['overview'],
+                air_date=datetime.strptime(e['firstAired'], '%Y-%m-%d').date(),
+                season=int(e['airedSeason']),
+                episode_num=int(e['airedEpisodeNumber']),
+                series=series,
+            )
+        )
 
     def get_or_create_series(self, series_id, series_name) -> Series:
         self._check_session()
@@ -196,8 +223,13 @@ class WtvDb():
         episode = input_int('Enter Episode Number: ')
         if episode is None:
             return None
-        candidate_episode = CandidateEpisode(episode_num=episode, season=season, name='Episode #{}'.format(episode),
-                                             series=wtv_file.series, wtv_file=wtv_file)
+        candidate_episode = CandidateEpisode(
+            episode_num=episode,
+            season=season,
+            name='Episode #{}'.format(episode),
+            series=wtv_file.series,
+            wtv_file=wtv_file,
+        )
         self.save(candidate_episode)
         self.save(SelectedEpisode(episode=candidate_episode, wtv_file=wtv_file))
 
@@ -211,7 +243,10 @@ class WtvDb():
             count = 1
             for ep in wtv_file.candidate_episodes:
                 selected = ''
-                if wtv_file.selected_episode and wtv_file.selected_episode.episode == ep:
+                if (
+                    wtv_file.selected_episode
+                    and wtv_file.selected_episode.episode == ep
+                ):
                     selected = '*'
                 print('  {}{}) '.format(selected, count), end='')
                 print(ep.get_details())
@@ -228,10 +263,17 @@ class WtvDb():
                 s = int(selection)
                 if 0 < s < count:
                     if wtv_file.selected_episode:
-                        wtv_file.selected_episode.episode = wtv_file.candidate_episodes[s - 1]
+                        wtv_file.selected_episode.episode = wtv_file.candidate_episodes[
+                            s - 1
+                        ]
                         self.save(wtv_file)
                     else:
-                        self.save(SelectedEpisode(episode=wtv_file.candidate_episodes[s - 1], wtv_file=wtv_file))
+                        self.save(
+                            SelectedEpisode(
+                                episode=wtv_file.candidate_episodes[s - 1],
+                                wtv_file=wtv_file,
+                            )
+                        )
                 elif s == count:
                     self.custom_season_episode(wtv_file)
                 else:

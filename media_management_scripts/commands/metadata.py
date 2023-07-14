@@ -8,14 +8,28 @@ class MetadataCommand(SubCommand):
         return 'metadata'
 
     def build_argparse(self, subparser):
-        metadata_parser = subparser.add_parser(self.name, help='Show metadata for a file',
-                                               parents=[parent_parser, input_parser])
+        metadata_parser = subparser.add_parser(
+            self.name,
+            help='Show metadata for a file',
+            parents=[parent_parser, input_parser],
+        )
         metadata_group = metadata_parser.add_mutually_exclusive_group()
-        metadata_group.add_argument('--popup', action='store_const', const=True, default=False,
-                                    help='Show the metadata in a popup (MacOS only)')
-        metadata_group.add_argument('--json', '-j', action='store_const', const=True, default=False)
-        metadata_parser.add_argument('--interlace', help='Try to detect interlacing',
-                                     choices=['none', 'summary', 'report'], default='none')
+        metadata_group.add_argument(
+            '--popup',
+            action='store_const',
+            const=True,
+            default=False,
+            help='Show the metadata in a popup (MacOS only)',
+        )
+        metadata_group.add_argument(
+            '--json', '-j', action='store_const', const=True, default=False
+        )
+        metadata_parser.add_argument(
+            '--interlace',
+            help='Try to detect interlacing',
+            choices=['none', 'summary', 'report'],
+            default='none',
+        )
 
     def subexecute(self, ns):
         input_to_cmd = ns['input']
@@ -32,7 +46,11 @@ import json
 from itertools import groupby
 
 from media_management_scripts.utils import create_metadata_extractor
-from media_management_scripts.support.formatting import sizeof_fmt, duration_to_str, bitrate_to_str
+from media_management_scripts.support.formatting import (
+    sizeof_fmt,
+    duration_to_str,
+    bitrate_to_str,
+)
 
 
 def output(text, *args):
@@ -42,7 +60,11 @@ def output(text, *args):
 def popup(text):
     applescript = """
     display dialog "{}"
-    """.format(text).replace('"', '\\"')
+    """.format(
+        text
+    ).replace(
+        '"', '\\"'
+    )
 
     os.system('osascript -e "{}"'.format(applescript))
 
@@ -78,9 +100,19 @@ def print_metadata(input, show_popup=False, interlace='none'):
     o.append(output('Bitrate: {}', bitrate_to_str(meta.bit_rate)))
     for video in meta.video_streams:
         if video.bit_depth:
-            o.append(output('Video: {} {} bit ({}x{})', video.codec,video.bit_depth, video.width, video.height))
+            o.append(
+                output(
+                    'Video: {} {} bit ({}x{})',
+                    video.codec,
+                    video.bit_depth,
+                    video.width,
+                    video.height,
+                )
+            )
         else:
-            o.append(output('Video: {} ({}x{})', video.codec, video.width, video.height))
+            o.append(
+                output('Video: {} ({}x{})', video.codec, video.width, video.height)
+            )
 
     audio_streams = []
     for audio in meta.audio_streams:
@@ -102,11 +134,27 @@ def print_metadata(input, show_popup=False, interlace='none'):
         elif interlace == 'report':
             o.append(output('Interlaced:'))
             single = meta.interlace_report.single
-            o.append(output('  Single: TFF={}, BFF={}, Progressive={}, Undetermined={} ({:.2f}%)', single.tff, single.bff,
-                            single.progressive, single.undetermined, single.ratio * 100))
+            o.append(
+                output(
+                    '  Single: TFF={}, BFF={}, Progressive={}, Undetermined={} ({:.2f}%)',
+                    single.tff,
+                    single.bff,
+                    single.progressive,
+                    single.undetermined,
+                    single.ratio * 100,
+                )
+            )
             multi = meta.interlace_report.multi
-            o.append(output('  Multi: TFF={}, BFF={}, Progressive={}, Undetermined={} ({:.2f}%)', multi.tff, multi.bff,
-                            multi.progressive, multi.undetermined, multi.ratio * 100))
+            o.append(
+                output(
+                    '  Multi: TFF={}, BFF={}, Progressive={}, Undetermined={} ({:.2f}%)',
+                    multi.tff,
+                    multi.bff,
+                    multi.progressive,
+                    multi.undetermined,
+                    multi.ratio * 100,
+                )
+            )
 
     final = '\n'.join(o)
     if show_popup:

@@ -14,7 +14,7 @@ def resolve_from_context(context, path):
     return d
 
 
-class Operation():
+class Operation:
     def __init__(self, s, l, t):
         self.s = s
         self.l = l
@@ -36,7 +36,9 @@ class Operation():
         return self.__repr__()
 
     def __repr__(self):
-        return '{}<{} {} {}>'.format(self.__class__.__name__, self.t[0][1], self.t[0][1], self.t[0][2])
+        return '{}<{} {} {}>'.format(
+            self.__class__.__name__, self.t[0][1], self.t[0][1], self.t[0][2]
+        )
 
 
 class GenericOperation(Operation):
@@ -85,7 +87,9 @@ class ComparisonOperation(Operation):
             raise Exception()
 
     def __repr__(self):
-        return 'ComparisonOperation<{} {} {}>'.format(self.t[0][0], self.t[0][1], self.t[0][2])
+        return 'ComparisonOperation<{} {} {}>'.format(
+            self.t[0][0], self.t[0][1], self.t[0][2]
+        )
 
 
 class Addition(TwoOperandOperation):
@@ -176,7 +180,7 @@ class AllOperation(Operation):
 
 
 @total_ordering
-class Variable():
+class Variable:
     def __init__(self, value):
         self.value = value
         self.all = all
@@ -224,36 +228,48 @@ variable = Word(alphanums + '_')
 dot_variable = delimitedList(variable, delim='.', combine=True)
 string_var = QuotedString('"')
 
-list_expr = Literal('[') + Group(delimitedList(integer | variable | string_var, delim=',', combine=False)) + Literal(
-    ']')
+list_expr = (
+    Literal('[')
+    + Group(delimitedList(integer | variable | string_var, delim=',', combine=False))
+    + Literal(']')
+)
 list_expr.setParseAction(ListOperation)
 
-true_false = oneOf('true false', caseless=True).setParseAction(lambda s, l, t: t[0].lower() == 'true')
-none_op = (Literal('isNull') + Literal('(') + dot_variable + Literal(')')).setParseAction(IsNullOperation)
+true_false = oneOf('true false', caseless=True).setParseAction(
+    lambda s, l, t: t[0].lower() == 'true'
+)
+none_op = (
+    Literal('isNull') + Literal('(') + dot_variable + Literal(')')
+).setParseAction(IsNullOperation)
 
-all_op = (Literal('all') + Literal('(') + dot_variable + Literal(')')).setParseAction(AllOperation)
+all_op = (Literal('all') + Literal('(') + dot_variable + Literal(')')).setParseAction(
+    AllOperation
+)
 
-operand = true_false | none_op | integer | all_op | dot_variable | list_expr | string_var
+operand = (
+    true_false | none_op | integer | all_op | dot_variable | list_expr | string_var
+)
 
 andop = CaselessKeyword('and')
 orop = CaselessKeyword('or')
 notop = CaselessKeyword('not')
 inop = CaselessKeyword('in')
 
-expr = infixNotation(operand,
-                     [
-                         ('-', 1, opAssoc.RIGHT, Negative),
-                         ('*', 2, opAssoc.LEFT, Multiplication),
-                         ('/', 2, opAssoc.LEFT, Division),
-                         ('+', 2, opAssoc.LEFT, Addition),
-                         ('-', 2, opAssoc.LEFT, Subtraction),
-                         (oneOf('= != > >= < <='), 2, opAssoc.LEFT, ComparisonOperation),
-                         (inop, 2, opAssoc.LEFT, InOperation),
-                         (notop, 1, opAssoc.RIGHT, Not),
-                         (andop, 2, opAssoc.LEFT, And),
-                         (orop, 2, opAssoc.LEFT, Or),
-                     ]
-                     ).setParseAction(GenericOperation)
+expr = infixNotation(
+    operand,
+    [
+        ('-', 1, opAssoc.RIGHT, Negative),
+        ('*', 2, opAssoc.LEFT, Multiplication),
+        ('/', 2, opAssoc.LEFT, Division),
+        ('+', 2, opAssoc.LEFT, Addition),
+        ('-', 2, opAssoc.LEFT, Subtraction),
+        (oneOf('= != > >= < <='), 2, opAssoc.LEFT, ComparisonOperation),
+        (inop, 2, opAssoc.LEFT, InOperation),
+        (notop, 1, opAssoc.RIGHT, Not),
+        (andop, 2, opAssoc.LEFT, And),
+        (orop, 2, opAssoc.LEFT, Or),
+    ],
+).setParseAction(GenericOperation)
 
 
 def parse(query: str) -> Operation:

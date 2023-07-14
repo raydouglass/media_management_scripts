@@ -29,9 +29,9 @@ if os.path.exists(config_file):
     filebot_jar_loc = config.get('main', 'filebot_jar', fallback=filebot_jar_loc)
 
 
-
 class ExecutableNotFoundException(Exception):
     pass
+
 
 def ffmpeg():
     if ffmpeg_exe is None:
@@ -62,10 +62,12 @@ def java():
         raise ExecutableNotFoundException('java executable was not found.')
     return java_exe
 
+
 def filebot_jar():
     if filebot_jar_loc is None:
         raise ExecutableNotFoundException('filebot jar was not found.')
     return filebot_jar_loc
+
 
 EXECUTABLES = [ffmpeg, ffprobe, comskip, ccextractor, java, filebot_jar]
 
@@ -81,6 +83,7 @@ class FFMpegProgress(NamedTuple):
     Represents the periodic output of FFMPEG as a key-value store:
     frame=  128 fps= 85 q=28.0 size=      27kB time=00:00:05.66 bitrate=  39.1kbits/s speed=3.77x
     """
+
     time: str
     bitrate: str
     speed: str
@@ -104,7 +107,9 @@ class FFMpegProgress(NamedTuple):
             return None
 
 
-def create_ffmpeg_callback(cb: Callable[[FFMpegProgress], None]) -> Callable[[str], None]:
+def create_ffmpeg_callback(
+    cb: Callable[[FFMpegProgress], None]
+) -> Callable[[str], None]:
     """
     Converts a callback function that accepts a FFMpegProgress to one that accepts a str for use in execute_with_callback
     :param cb:
@@ -119,13 +124,17 @@ def create_ffmpeg_callback(cb: Callable[[FFMpegProgress], None]) -> Callable[[st
             value = m.group(2).lstrip()
             values[key] = value
         if 'time' in values and 'bitrate' in values and 'speed' in values:
-            progress = FFMpegProgress(values['time'], values['bitrate'], values['speed'])
+            progress = FFMpegProgress(
+                values['time'], values['bitrate'], values['speed']
+            )
             cb(progress)
 
     return wrapper
 
 
-def execute_with_timeout(args, timeout: int, use_nice=True, log_output=False) -> Tuple[int, str]:
+def execute_with_timeout(
+    args, timeout: int, use_nice=True, log_output=False
+) -> Tuple[int, str]:
     if use_nice:
         a = [nice_exe]
         a.extend(args)
@@ -188,7 +197,9 @@ def execute_with_output(args, print_output=False, use_nice=True) -> Tuple[int, s
         return p.poll(), result
 
 
-def execute_with_callback(args: List[str], callback: Callable[[str], None], use_nice: bool = True) -> int:
+def execute_with_callback(
+    args: List[str], callback: Callable[[str], None], use_nice: bool = True
+) -> int:
     if use_nice and nice_exe:
         a = [nice_exe]
         a.extend(args)
@@ -226,20 +237,26 @@ def execute_with_callback(args: List[str], callback: Callable[[str], None], use_
 
 def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=None):
     from media_management_scripts.support.formatting import duration_to_str
+
     if ffmpeg() not in args:
         raise Exception('Execute ffmpeg called without ffmpeg args')
     from dialog import Dialog
+
     d = Dialog(autowidgetsize=False)
-    d.gauge_start(title=title, text=text if text else "", percent=0 if duration else None)
+    d.gauge_start(
+        title=title, text=text if text else "", percent=0 if duration else None
+    )
 
     def cb(ffmpeg_progress: FFMpegProgress):
         if duration:
             remaining = ffmpeg_progress.remaining_time(duration)
             if remaining:
                 remaining_time = duration_to_str(remaining)
-                d.gauge_update(percent=int(ffmpeg_progress.progress(duration) * 100),
-                            text='Remaining: {}'.format(remaining_time),
-                            update_text=True)
+                d.gauge_update(
+                    percent=int(ffmpeg_progress.progress(duration) * 100),
+                    text='Remaining: {}'.format(remaining_time),
+                    update_text=True,
+                )
 
     try:
         callback = create_ffmpeg_callback(cb)

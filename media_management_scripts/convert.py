@@ -4,12 +4,30 @@ from typing import List
 
 from texttable import Texttable
 
-from media_management_scripts.support.encoding import DEFAULT_PRESET, DEFAULT_CRF, Resolution, resolution_name, \
-    VideoCodec, AudioCodec
-from media_management_scripts.support.executables import execute_with_output, ffmpeg, nice_exe
-from media_management_scripts.support.files import check_exists, create_dirs, get_input_output
+from media_management_scripts.support.encoding import (
+    DEFAULT_PRESET,
+    DEFAULT_CRF,
+    Resolution,
+    resolution_name,
+    VideoCodec,
+    AudioCodec,
+)
+from media_management_scripts.support.executables import (
+    execute_with_output,
+    ffmpeg,
+    nice_exe,
+)
+from media_management_scripts.support.files import (
+    check_exists,
+    create_dirs,
+    get_input_output,
+)
 from media_management_scripts.support.formatting import sizeof_fmt
-from media_management_scripts.utils import create_metadata_extractor, ConvertConfig, extract_metadata
+from media_management_scripts.utils import (
+    create_metadata_extractor,
+    ConvertConfig,
+    extract_metadata,
+)
 from media_management_scripts.support.ttml2srt import convert_to_srt
 
 logger = logging.getLogger(__name__)
@@ -43,8 +61,16 @@ def auto_bitrate_from_config(resolution, convert_config):
         raise Exception('Not auto bitrate for {}'.format(resolution))
 
 
-def convert_with_config(input, output, config: ConvertConfig, print_output=True, overwrite=False, metadata=None,
-                        mappings=None, use_nice=True):
+def convert_with_config(
+    input,
+    output,
+    config: ConvertConfig,
+    print_output=True,
+    overwrite=False,
+    metadata=None,
+    mappings=None,
+    use_nice=True,
+):
     """
 
     :param input:
@@ -63,14 +89,29 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         print('Using config: {}'.format(config))
 
     if not metadata:
-        metadata = create_metadata_extractor().extract(input, detect_interlace=config.deinterlace)
+        metadata = create_metadata_extractor().extract(
+            input, detect_interlace=config.deinterlace
+        )
     elif config.deinterlace and not metadata.interlace_report:
-        raise Exception('Metadata provided without interlace report, but convert requires deinterlace checks')
+        raise Exception(
+            'Metadata provided without interlace report, but convert requires deinterlace checks'
+        )
 
-    if metadata.resolution not in (
-            Resolution.LOW_DEF, Resolution.STANDARD_DEF, Resolution.MEDIUM_DEF,
-            Resolution.HIGH_DEF) and not config.scale:
-        print('{}: Resolution not supported for conversion: {}'.format(input, metadata.resolution))
+    if (
+        metadata.resolution
+        not in (
+            Resolution.LOW_DEF,
+            Resolution.STANDARD_DEF,
+            Resolution.MEDIUM_DEF,
+            Resolution.HIGH_DEF,
+        )
+        and not config.scale
+    ):
+        print(
+            '{}: Resolution not supported for conversion: {}'.format(
+                input, metadata.resolution
+            )
+        )
         # TODO Handle converting 4k content in H.265/HVEC
         return -2
     if use_nice and nice_exe:
@@ -85,7 +126,7 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
         if config.end > 0:
             args.extend(['-to', str(config.end)])
         else:
-            new_end = metadata.estimated_duration+config.end
+            new_end = metadata.estimated_duration + config.end
             args.extend(['-to', str(new_end)])
 
     args.extend(['-i', input])
@@ -96,21 +137,35 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     args.extend(['-c:v', config.video_codec])
     crf = config.crf
     bitrate = config.bitrate
-    if VideoCodec.H264.equals(config.video_codec) and config.bitrate is not None and config.bitrate != 'disabled':
+    if (
+        VideoCodec.H264.equals(config.video_codec)
+        and config.bitrate is not None
+        and config.bitrate != 'disabled'
+    ):
         crf = 1
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
         if config.bitrate == 'auto':
             bitrate = auto_bitrate_from_config(metadata.resolution, config)
-        params = 'vbv-maxrate={}:vbv-bufsize={}:crf-max=25:qpmax=34'.format(str(bitrate), str(bitrate * 2))
+        params = 'vbv-maxrate={}:vbv-bufsize={}:crf-max=25:qpmax=34'.format(
+            str(bitrate), str(bitrate * 2)
+        )
         args.extend(['-x264-params', params])
-    elif VideoCodec.H265.equals(config.video_codec) and config.bitrate is not None and config.bitrate != 'disabled':
+    elif (
+        VideoCodec.H265.equals(config.video_codec)
+        and config.bitrate is not None
+        and config.bitrate != 'disabled'
+    ):
         raise Exception('Avg Bitrate not supported for H265')
 
     args.extend(['-crf', str(crf), '-preset', config.preset])
     if config.deinterlace:
-        is_interlaced = metadata.interlace_report.is_interlaced(config.deinterlace_threshold)
+        is_interlaced = metadata.interlace_report.is_interlaced(
+            config.deinterlace_threshold
+        )
         if print_output:
-            print('{} - Interlaced: {}'.format(metadata.interlace_report, is_interlaced))
+            print(
+                '{} - Interlaced: {}'.format(metadata.interlace_report, is_interlaced)
+            )
         if is_interlaced:
             # Video is interlaced, so add the deinterlace filter
             args.extend(['-vf', 'yadif'])
@@ -144,7 +199,13 @@ def convert_with_config(input, output, config: ConvertConfig, print_output=True,
     return execute(args, print_output)
 
 
-def create_remux_args(input_files: List[str], output_file: str, mappings: List, overwrite=False, metadata={}):
+def create_remux_args(
+    input_files: List[str],
+    output_file: str,
+    mappings: List,
+    overwrite=False,
+    metadata={},
+):
     """
 
     :param input_files:
@@ -178,13 +239,32 @@ def create_remux_args(input_files: List[str], output_file: str, mappings: List, 
     return args
 
 
-def convert(input, output, crf=DEFAULT_CRF, preset=DEFAULT_PRESET, bitrate=None, include_meta=True, print_output=True):
-    config = ConvertConfig(crf=crf, preset=preset, bitrate=bitrate, include_meta=include_meta)
+def convert(
+    input,
+    output,
+    crf=DEFAULT_CRF,
+    preset=DEFAULT_PRESET,
+    bitrate=None,
+    include_meta=True,
+    print_output=True,
+):
+    config = ConvertConfig(
+        crf=crf, preset=preset, bitrate=bitrate, include_meta=include_meta
+    )
     return convert_with_config(input, output, config, print_output)
 
 
-def combine(video, srt, output, lang=None, overwrite=False, convert=False, crf=DEFAULT_CRF, preset=DEFAULT_PRESET,
-            skip_eia_608=True):
+def combine(
+    video,
+    srt,
+    output,
+    lang=None,
+    overwrite=False,
+    convert=False,
+    crf=DEFAULT_CRF,
+    preset=DEFAULT_PRESET,
+    skip_eia_608=True,
+):
     if not overwrite and check_exists(output):
         return -1
 
@@ -247,7 +327,9 @@ def main(input_dir, output_dir, config):
         for input_file, output_file in files:
             if not os.path.exists(output_file):
                 try:
-                    logger.info('Starting convert of {} -> {}'.format(input_file, output_file))
+                    logger.info(
+                        'Starting convert of {} -> {}'.format(input_file, output_file)
+                    )
                     create_dirs(output_file)
                     ret = convert_with_config(input_file, output_file, config)
                     if ret == 0:
@@ -286,14 +368,18 @@ def do_compare(input, output):
                 total_i += i_size
                 total_o += o_size
                 sum_percent += percent
-                table.append([name, sizeof_fmt(i_size), sizeof_fmt(o_size), _f_percent(percent)])
+                table.append(
+                    [name, sizeof_fmt(i_size), sizeof_fmt(o_size), _f_percent(percent)]
+                )
         else:
             not_converted.append(name)
 
     if count > 0:
         table.append(['', '', '', ''])
         per = total_o / float(total_i) * 100
-        table.append(['Total', sizeof_fmt(total_i), sizeof_fmt(total_o), _f_percent(per)])
+        table.append(
+            ['Total', sizeof_fmt(total_i), sizeof_fmt(total_o), _f_percent(per)]
+        )
 
         avg = sum_percent / count
         table.append(['Average', '', '', _f_percent(avg)])
@@ -307,8 +393,11 @@ def do_compare(input, output):
 
     print('{} Larger than original'.format(len(bigger)))
     for i, o, i_size, o_size, percent in bigger:
-        print('{}: {} -> {} ({:.2f}%)'.format(i, sizeof_fmt(i_size), sizeof_fmt(o_size),
-                                              percent))
+        print(
+            '{}: {} -> {} ({:.2f}%)'.format(
+                i, sizeof_fmt(i_size), sizeof_fmt(o_size), percent
+            )
+        )
     if len(not_converted) > 0:
         print('Not Converted:')
         for i in not_converted:
@@ -324,15 +413,18 @@ def convert_subtitles_to_srt(i: str, o: str):
     ext = os.path.splitext(i)[1]
     if ext == '.srt':
         import shutil
+
         shutil.copy(i, o)
     elif ext in ('.ttml', '.xml', '.dfxp', '.tt'):
         # TTML
         from media_management_scripts.support.ttml2srt import convert_to_srt
+
         convert_to_srt(i, o)
     else:
         # VTT, SCC, etc
 
         from pycaption import detect_format, SRTWriter
+
         subtitle_str = _read_file(i)
         reader = detect_format(subtitle_str)
         if reader:
@@ -343,7 +435,10 @@ def convert_subtitles_to_srt(i: str, o: str):
             # Attempt to use FFMPEG
             from media_management_scripts.support.executables import ffmpeg
             from media_management_scripts.support.executables import execute_with_output
+
             args = [ffmpeg(), '-loglevel', 'fatal', '-y', '-i', i, '-c:s', 'srt', o]
             ret, output = execute_with_output(args)
             if ret != 0:
-                raise Exception('Exception during subtitle conversion: {}'.format(output))
+                raise Exception(
+                    'Exception during subtitle conversion: {}'.format(output)
+                )

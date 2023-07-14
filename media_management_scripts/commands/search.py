@@ -10,9 +10,11 @@ class SearchCommand(SubCommand):
         return 'search'
 
     def build_argparse(self, subparser):
-        search_parser = subparser.add_parser('search', parents=[parent_parser],
-                                             formatter_class=argparse.RawTextHelpFormatter,
-                                             description="""
+        search_parser = subparser.add_parser(
+            'search',
+            parents=[parent_parser],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="""
     Searches a directory for video files matching parameters.
     
     If a video has multiple streams, comparisons mean at least one stream matches.
@@ -54,20 +56,42 @@ class SearchCommand(SubCommand):
             v.height < 1080
         Find all videos that have ONLY AAC audio
             all(a.codec) = aac
-""")
+""",
+        )
         search_parser.add_argument('--db', default=None, dest='db_file')
         search_parser.add_argument('input', nargs='+', help='Input directories')
-        search_parser.add_argument('query',
-                                   help="The query to run. Recommended to enclose in single-quotes to avoid bash completions")
-        search_parser.add_argument('-0', help='Output with null byte. Useful for piping into xargs -0.',
-                                   action='store_const', const=True, default=False)
-        search_parser.add_argument('-r', '--recursive', action='store_const', const=True, default=False,
-                                   help='Recursively search input directory')
-        search_parser.add_argument('-e', '--print-errors', dest='print_errors', action='store_const', const=True, default=False,
-                                   help='Print the files that have an error')
+        search_parser.add_argument(
+            'query',
+            help="The query to run. Recommended to enclose in single-quotes to avoid bash completions",
+        )
+        search_parser.add_argument(
+            '-0',
+            help='Output with null byte. Useful for piping into xargs -0.',
+            action='store_const',
+            const=True,
+            default=False,
+        )
+        search_parser.add_argument(
+            '-r',
+            '--recursive',
+            action='store_const',
+            const=True,
+            default=False,
+            help='Recursively search input directory',
+        )
+        search_parser.add_argument(
+            '-e',
+            '--print-errors',
+            dest='print_errors',
+            action='store_const',
+            const=True,
+            default=False,
+            help='Print the files that have an error',
+        )
 
     def subexecute(self, ns):
         import sys
+
         input_to_cmd = ns['input']
         null_byte = ns['0']
         query = ns['query']
@@ -92,11 +116,16 @@ class SearchCommand(SubCommand):
 SubCommand.register(SearchCommand)
 
 
-class SearchParameters():
+class SearchParameters:
     def __init__(self, ns):
         from media_management_scripts.support.encoding import AudioChannelName
-        self.video_codecs = set(ns['video_codec'].split(',')) if ns['video_codec'] else []
-        self.audio_codecs = set(ns['audio_codec'].split(',')) if ns['audio_codec'] else []
+
+        self.video_codecs = (
+            set(ns['video_codec'].split(',')) if ns['video_codec'] else []
+        )
+        self.audio_codecs = (
+            set(ns['audio_codec'].split(',')) if ns['audio_codec'] else []
+        )
         self.subtitles = set(ns['subtitle'].split(',')) if ns['subtitle'] else []
         self.audio_channels = []
         acs = set(ns['audio_channels'].split(',')) if ns['audio_channels'] else []
@@ -131,7 +160,9 @@ class SearchParameters():
             if vs.language in self.subtitles:
                 st_matches = True
 
-        result = video_matches and audio_matches and st_matches and audio_channel_matches
+        result = (
+            video_matches and audio_matches and st_matches and audio_channel_matches
+        )
         if self.invert:
             return not result
         else:
@@ -140,6 +171,7 @@ class SearchParameters():
 
 def _filter(file: str):
     from media_management_scripts.support.files import movie_files_filter
+
     return not os.path.basename(file).startswith('.') and movie_files_filter(file)
 
 
@@ -147,13 +179,16 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
     from media_management_scripts.support.search_parser import parse
     from media_management_scripts.utils import create_metadata_extractor
     from media_management_scripts.support.files import list_files
+
     query = parse(query)
     db_exists = os.path.exists(db_file) if db_file else False
     with create_metadata_extractor(db_file) as extractor:
         if recursive:
             files = list_files(input_dir, _filter)
         else:
-            files = [x for x in os.listdir(input_dir) if _filter(os.path.join(input_dir, x))]
+            files = [
+                x for x in os.listdir(input_dir) if _filter(os.path.join(input_dir, x))
+            ]
         for file in files:
             path = os.path.join(input_dir, file)
             if db_exists and os.path.samefile(db_file, path):
@@ -165,7 +200,7 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
                     'v': {
                         'codec': [v.codec for v in metadata.video_streams],
                         'width': [v.width for v in metadata.video_streams],
-                        'height': [v.height for v in metadata.video_streams]
+                        'height': [v.height for v in metadata.video_streams],
                     },
                     'a': {
                         'codec': [a.codec for a in metadata.audio_streams],
@@ -174,13 +209,12 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
                     },
                     's': {
                         'codec': [s.codec for s in metadata.subtitle_streams],
-                        'lang': [s.language for s in metadata.subtitle_streams]
+                        'lang': [s.language for s in metadata.subtitle_streams],
                     },
                     'ripped': metadata.ripped,
                     'bit_rate': metadata.bit_rate,
                     'resolution': metadata.resolution._name_,
-                    'meta': metadata.to_dict()
-
+                    'meta': metadata.to_dict(),
                 }
                 if query.exec(context) is True:
                     yield path, metadata, True

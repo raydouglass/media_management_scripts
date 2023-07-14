@@ -18,7 +18,7 @@ class ConvertCommand(SubCommand):
         return 'convert'
 
     def build_argparse(self, subparser):
-        desc="""
+        desc = """
     Converts a video file to 'standard' parameters. By default, this is H264 with AAC audio.
     
     Convert to HEVC/H.265:
@@ -31,18 +31,30 @@ class ConvertCommand(SubCommand):
         convert --scale 480
         """
 
-
-        convert_parser = subparser.add_parser('convert', help='Convert a file',
-                                              parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
-                                              formatter_class=argparse.RawTextHelpFormatter,
-                                              description=desc)
-        convert_parser.add_argument('--bulk', help='Enables bulk conversion mode', action='store_const', const=True,
-                                    default=False)
-        convert_parser.add_argument('--bulk-ext', help='Use a difference extension for the output files', default=None)
+        convert_parser = subparser.add_parser(
+            'convert',
+            help='Convert a file',
+            parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description=desc,
+        )
+        convert_parser.add_argument(
+            '--bulk',
+            help='Enables bulk conversion mode',
+            action='store_const',
+            const=True,
+            default=False,
+        )
+        convert_parser.add_argument(
+            '--bulk-ext',
+            help='Use a difference extension for the output files',
+            default=None,
+        )
 
     def subexecute(self, ns):
         import os
         from media_management_scripts.convert import convert_config_from_ns
+
         input_to_cmd = ns['input']
         output = ns['output']
         overwrite = ns['overwrite']
@@ -53,16 +65,32 @@ class ConvertCommand(SubCommand):
         if os.path.isdir(input_to_cmd):
             if bulk:
                 os.makedirs(output, exist_ok=True)
-                files = list(get_input_output(input_to_cmd, output, filter=movie_files_filter))
+                files = list(
+                    get_input_output(input_to_cmd, output, filter=movie_files_filter)
+                )
                 if bulk_ext:
-                    files = list(map(lambda i: (i[0], os.path.splitext(i[1])[0]+'.'+bulk_ext), files))
-                self._bulk(files, lambda i, o: _bulk_convert(i, o, config, overwrite), ['Input', 'Output'])
+                    files = list(
+                        map(
+                            lambda i: (
+                                i[0],
+                                os.path.splitext(i[1])[0] + '.' + bulk_ext,
+                            ),
+                            files,
+                        )
+                    )
+                self._bulk(
+                    files,
+                    lambda i, o: _bulk_convert(i, o, config, overwrite),
+                    ['Input', 'Output'],
+                )
             else:
                 print('Cowardly refusing to convert a direction without --bulk flag')
         elif not overwrite and os.path.exists(output):
             print('Cowardly refusing to overwrite existing file: {}'.format(output))
         else:
-            convert_with_config(input_to_cmd, output, config, print_output=True, overwrite=overwrite)
+            convert_with_config(
+                input_to_cmd, output, config, print_output=True, overwrite=overwrite
+            )
 
 
 SubCommand.register(ConvertCommand)

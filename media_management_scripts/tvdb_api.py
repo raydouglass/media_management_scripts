@@ -17,10 +17,11 @@ def get_season_episode(tvdb_episode, use_dvd=False):
     return int(season), int(episode_num)
 
 
-class TVDB():
+class TVDB:
     """
     Class to interact with thetvdb.com
     """
+
     def __init__(self, api_key, username, user_key, shelve_file='./tvdb.shelve'):
         self._api_key = api_key
         self._username = username
@@ -29,7 +30,11 @@ class TVDB():
         self._db = shelve.open(shelve_file)
 
     def _get_jwt(self):
-        payload = {'apikey': self._api_key, 'username': self._username, 'userkey': self._user_key}
+        payload = {
+            'apikey': self._api_key,
+            'username': self._username,
+            'userkey': self._user_key,
+        }
         res = requests.post(BASE_URL + '/login', json=payload)
         res.raise_for_status()
         return res.json()['token']
@@ -82,8 +87,11 @@ class TVDB():
         page = 1
         episodes = []
         while page is not None:
-            res = requests.get(BASE_URL + '/series/{}/episodes'.format(series_id), headers=headers,
-                               params={'page': page})
+            res = requests.get(
+                BASE_URL + '/series/{}/episodes'.format(series_id),
+                headers=headers,
+                params={'page': page},
+            )
             res.raise_for_status()
             res = res.json()
             episodes.extend(res['data'])
@@ -100,7 +108,9 @@ class TVDB():
         if self._jwt is None:
             self.refresh()
         headers = {'Authorization': 'Bearer ' + self._jwt}
-        res = requests.get(BASE_URL+'/episodes/{}'.format(episode_id), headers=headers)
+        res = requests.get(
+            BASE_URL + '/episodes/{}'.format(episode_id), headers=headers
+        )
         res.raise_for_status()
         return res.json()['data']
 
@@ -127,9 +137,11 @@ class TVDB():
                     self.refresh()
                 headers = {'Authorization': 'Bearer ' + self._jwt}
                 params = {'firstAired': air_date}
-                res = requests.get(BASE_URL + '/series/{}/episodes/query'.format(series_id),
-                                   headers=headers,
-                                   params=params)
+                res = requests.get(
+                    BASE_URL + '/series/{}/episodes/query'.format(series_id),
+                    headers=headers,
+                    params=params,
+                )
                 res = res.json()
                 if 'data' in res:
                     return res['data']
@@ -142,7 +154,11 @@ class TVDB():
         headers = {'Authorization': 'Bearer ' + self._jwt}
         series_id = self.get_series_id(series_name)
         params = {'firstAired': firstAired}
-        res = requests.get(BASE_URL + '/series/{}/episodes/query'.format(series_id), headers=headers, params=params)
+        res = requests.get(
+            BASE_URL + '/series/{}/episodes/query'.format(series_id),
+            headers=headers,
+            params=params,
+        )
         return res.json()
 
     def _write_data(self):
@@ -162,12 +178,15 @@ def from_config(config: str = DEFAULT_CONFIG_LOCATION) -> TVDB:
         config = DEFAULT_CONFIG_LOCATION
     config = os.path.expanduser(config)
     import configparser
+
     parser = configparser.ConfigParser()
     parser.read(config)
     username = parser.get('tvdb', 'username')
     user_key = parser.get('tvdb', 'userkey')
     api_key = parser.get('tvdb', 'apikey')
-    shelve_file = os.path.expanduser(parser.get('tvdb', 'shelve.file', fallback='~/.config/tvdb/tvdb.shelve'))
+    shelve_file = os.path.expanduser(
+        parser.get('tvdb', 'shelve.file', fallback='~/.config/tvdb/tvdb.shelve')
+    )
 
     return TVDB(api_key, username, user_key, shelve_file)
 
@@ -188,12 +207,15 @@ def _run_command(cmd, ns):
         episode_name = ns.get('episode_name', None)
         if not air_date and not episode_name:
             raise Exception('Must provide air date or episode name')
-        result = tvdb.find_episode(series_name=series_name, air_date=air_date, episode=episode_name)
+        result = tvdb.find_episode(
+            series_name=series_name, air_date=air_date, episode=episode_name
+        )
         print(json.dumps(result))
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--config', type=str, default='~/.config/tvdb/tvdb.ini')
@@ -203,8 +225,11 @@ def main():
     episodes_parser = subparsers.add_parser('episodes', parents=[parent_parser])
     episodes_parser.add_argument('series', type=str)
 
-    search_parser = subparsers.add_parser('search', parents=[parent_parser],
-                                          help='Search for an episode by name or air date')
+    search_parser = subparsers.add_parser(
+        'search',
+        parents=[parent_parser],
+        help='Search for an episode by name or air date',
+    )
     search_parser.add_argument('series', type=str)
     group = search_parser.add_mutually_exclusive_group()
     group.add_argument('--air-date', type=str)

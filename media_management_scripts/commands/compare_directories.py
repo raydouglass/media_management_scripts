@@ -9,9 +9,9 @@ class CompareDirectoriesCommand(SubCommand):
         return 'compare-directories'
 
     def build_argparse(self, subparser):
-        combine_video_subtitles_parser = subparser.add_parser(self.name,
-                                                              help='',
-                                                              parents=[parent_parser])
+        combine_video_subtitles_parser = subparser.add_parser(
+            self.name, help='', parents=[parent_parser]
+        )
         combine_video_subtitles_parser.add_argument('source', help='')
         combine_video_subtitles_parser.add_argument('destination', help='')
 
@@ -34,6 +34,7 @@ class CompareDirectoriesCommand(SubCommand):
         from media_management_scripts.support.files import list_files
         from dialog import Dialog
         import os
+
         source_files = sorted(list_files(source))
         destination_files = set(list_files(destination))
 

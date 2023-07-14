@@ -21,8 +21,14 @@ def _parse_dir(dir) -> Iterable[TvShow]:
             filepath = os.path.join(dir, file)
             show = m.group(1)
             network = m.group(2)
-            recorded_datetime = datetime(year=int(m.group(3)), month=int(m.group(4)), day=int(m.group(5)),
-                                         hour=int(m.group(6)), minute=int(m.group(7)), second=int(m.group(8)))
+            recorded_datetime = datetime(
+                year=int(m.group(3)),
+                month=int(m.group(4)),
+                day=int(m.group(5)),
+                hour=int(m.group(6)),
+                minute=int(m.group(7)),
+                second=int(m.group(8)),
+            )
             yield TvShow(filepath, show, network, recorded_datetime)
 
 

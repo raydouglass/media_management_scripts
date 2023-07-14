@@ -19,18 +19,38 @@ class TvRenameCommand(SubCommand):
         return 'tv-rename'
 
     def build_argparse(self, subparser):
-        tv_rename_parser = subparser.add_parser('tv-rename',
-                                                help='Renames files in a directory to sXXeYY. Can also use TVDB to name files (<show> - SxxeYY - <episode_name>)',
-                                                parents=[parent_parser])
-        tv_rename_parser.add_argument('-s', '--season', default=1, help='The season to use', type=int)
-        tv_rename_parser.add_argument('-e', '--episode', default=1, help='The episode to start with', type=int)
-        tv_rename_parser.add_argument('--tvdb', default=False, action='store_const', const=True,
-                                      help='Use TVDB to rename episodes')
-        tv_rename_parser.add_argument('--show', default=None, help='The name of the show', type=str)
-        tv_rename_parser.add_argument('--output', default=None, help='The output directory to move & rename to',
-                                      type=str)
-        tv_rename_parser.add_argument('input', nargs='*',
-                                      help='The directories to search for files. These will be processed in order.')
+        tv_rename_parser = subparser.add_parser(
+            'tv-rename',
+            help='Renames files in a directory to sXXeYY. Can also use TVDB to name files (<show> - SxxeYY - <episode_name>)',
+            parents=[parent_parser],
+        )
+        tv_rename_parser.add_argument(
+            '-s', '--season', default=1, help='The season to use', type=int
+        )
+        tv_rename_parser.add_argument(
+            '-e', '--episode', default=1, help='The episode to start with', type=int
+        )
+        tv_rename_parser.add_argument(
+            '--tvdb',
+            default=False,
+            action='store_const',
+            const=True,
+            help='Use TVDB to rename episodes',
+        )
+        tv_rename_parser.add_argument(
+            '--show', default=None, help='The name of the show', type=str
+        )
+        tv_rename_parser.add_argument(
+            '--output',
+            default=None,
+            help='The output directory to move & rename to',
+            type=str,
+        )
+        tv_rename_parser.add_argument(
+            'input',
+            nargs='*',
+            help='The directories to search for files. These will be processed in order.',
+        )
 
     def subexecute(self, ns):
         input_to_cmd = ns['input']
@@ -41,11 +61,13 @@ class TvRenameCommand(SubCommand):
         use_tvb = ns['tvdb']
         if use_tvb and show is None:
             import sys
+
             print('You must specify a show name if using TVDB')
             sys.exit(1)
 
         if use_tvb:
             from media_management_scripts.tvdb_api import from_config
+
             tvdb = from_config()
         else:
             tvdb = None
@@ -64,8 +86,12 @@ class TvRenameCommand(SubCommand):
         files = []
         for input_dir in input_dirs:
             new_files = sorted(
-                [join(input_dir, f) for f in listdir(input_dir) if
-                 isfile(join(input_dir, f)) and not f.startswith('.')])
+                [
+                    join(input_dir, f)
+                    for f in listdir(input_dir)
+                    if isfile(join(input_dir, f)) and not f.startswith('.')
+                ]
+            )
             files.extend(new_files)
         if tvdb:
             shows = [(str(i), name) for i, name in tvdb.search_series(show)]
@@ -74,6 +100,7 @@ class TvRenameCommand(SubCommand):
                 return
             if len(shows) > 1:
                 from dialog import Dialog
+
                 d = Dialog(autowidgetsize=True)
                 code, tag = d.menu('Choices:', choices=shows, title='Pick a show')
                 if code != d.OK:
@@ -92,7 +119,9 @@ class TvRenameCommand(SubCommand):
             ep = episode_map.get((season, episode), None)
             ep_name = ep.get('episodeName', None) if ep else None
             if show is not None and ep is not None and ep_name is not None:
-                new_name = '{} - S{}E{} - {}{}'.format(show, pad(season), pad(episode), ep_name, ext)
+                new_name = '{} - S{}E{} - {}{}'.format(
+                    show, pad(season), pad(episode), ep_name, ext
+                )
             elif show is not None:
                 new_name = '{} - S{}E{}{}'.format(show, pad(season), pad(episode), ext)
             else:

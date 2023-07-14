@@ -39,19 +39,41 @@ class ItunesCommand(SubCommand):
         return 'itunes'
 
     def build_argparse(self, subparser):
-        itunes_parser = subparser.add_parser('itunes', parents=[parent_parser],
-                                             help='Attempts to rename iTunes episodes to the standard Plex format.')
-        itunes_parser.add_argument('-o', '--output', type=str, default='./', help='Directory to output to')
-        itunes_parser.add_argument('--meta-shelve', type=str, default=None, dest='meta_shelve',
-                                   help='A file to hold metadata information for faster subsequent runs on the same files')
+        itunes_parser = subparser.add_parser(
+            'itunes',
+            parents=[parent_parser],
+            help='Attempts to rename iTunes episodes to the standard Plex format.',
+        )
+        itunes_parser.add_argument(
+            '-o', '--output', type=str, default='./', help='Directory to output to'
+        )
+        itunes_parser.add_argument(
+            '--meta-shelve',
+            type=str,
+            default=None,
+            dest='meta_shelve',
+            help='A file to hold metadata information for faster subsequent runs on the same files',
+        )
         itunes_parser.add_argument('input', nargs='+', help='Input files')
-        itunes_parser.add_argument('--dvd', action='store_const', default=False, const=True, help='Use DVD ordering')
-        itunes_parser.add_argument('--fuzzy', action='store_const', default=False, const=True,
-                                   help='Use fuzzy matching. Enables this uses less strict exact episode name matching.')
+        itunes_parser.add_argument(
+            '--dvd',
+            action='store_const',
+            default=False,
+            const=True,
+            help='Use DVD ordering',
+        )
+        itunes_parser.add_argument(
+            '--fuzzy',
+            action='store_const',
+            default=False,
+            const=True,
+            help='Use fuzzy matching. Enables this uses less strict exact episode name matching.',
+        )
 
     def subexecute(self, ns):
         from media_management_scripts.tvdb_api import from_config
         import os
+
         input_to_cmd = ns['input']
         tvdb = from_config()
         output = ns['output']
@@ -61,12 +83,27 @@ class ItunesCommand(SubCommand):
         dry_run = ns['dry_run']
         if meta_shelve:
             import shelve
+
             with shelve.open(meta_shelve) as meta_store:
-                self.process_itunes_tv(input_to_cmd, output, tvdb, meta_shelve=meta_store, use_dvd=dvd, fuzzy=fuzzy,
-                                       dry_run=dry_run)
+                self.process_itunes_tv(
+                    input_to_cmd,
+                    output,
+                    tvdb,
+                    meta_shelve=meta_store,
+                    use_dvd=dvd,
+                    fuzzy=fuzzy,
+                    dry_run=dry_run,
+                )
         else:
-            self.process_itunes_tv(input_to_cmd, output, tvdb, meta_shelve=None, use_dvd=dvd, fuzzy=fuzzy,
-                                   dry_run=dry_run)
+            self.process_itunes_tv(
+                input_to_cmd,
+                output,
+                tvdb,
+                meta_shelve=None,
+                use_dvd=dvd,
+                fuzzy=fuzzy,
+                dry_run=dry_run,
+            )
 
     def _find_match(self, metadata: Metadata, episodes, use_dvd=False, fuzzy=False):
         date = metadata.tags['date'].split('T')[0]
@@ -81,7 +118,7 @@ class ItunesCommand(SubCommand):
                     return ep
                 elif fuzzy:
                     ratio = SequenceMatcher(None, title, ep_name).ratio()
-                    if ratio >= .85 and ratio > fuzzy_match:
+                    if ratio >= 0.85 and ratio > fuzzy_match:
                         fuzzy_episode = ep
                         fuzzy_match = ratio
         if not fuzzy_episode:
@@ -105,9 +142,8 @@ class ItunesCommand(SubCommand):
         table = []
         for file, params in matched.items():
             new_name = rename_process(
-                '{plex}', files=[file],
-                output_dir=output_dir,
-                params=params)[0][1]
+                '{plex}', files=[file], output_dir=output_dir, params=params
+            )[0][1]
             table.append((file, new_name))
         table.sort(key=lambda s: s[1])
         header = ('Input', 'Output')
@@ -117,8 +153,16 @@ class ItunesCommand(SubCommand):
             for file in not_matched:
                 print('  {}'.format(file))
 
-    def process_itunes_tv(self, input_files, output_dir, tvdb: TVDB, meta_shelve=None, use_dvd=False, fuzzy=False,
-                          dry_run=True):
+    def process_itunes_tv(
+        self,
+        input_files,
+        output_dir,
+        tvdb: TVDB,
+        meta_shelve=None,
+        use_dvd=False,
+        fuzzy=False,
+        dry_run=True,
+    ):
         metadata_map = _map_metadata(input_files, meta_shelve)
         series_name = {value.tags['show'] for value in metadata_map.values()}
         if len(series_name) != 1:
@@ -136,7 +180,7 @@ class ItunesCommand(SubCommand):
                     'show': series_name,
                     'season': season,
                     'ep_num': episode_num,
-                    'name': episode['episodeName']
+                    'name': episode['episodeName'],
                 }
                 matched[file] = params
             else:

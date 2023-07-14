@@ -29,13 +29,20 @@ from xml.etree import ElementTree as ET
 
 
 def format_timestamp(timestamp: timedelta):
-    return ('%02d:%02d:%02.3f' % (timestamp.total_seconds() // 3600,
-                                  timestamp.total_seconds() // 60 % 60,
-                                  timestamp.total_seconds() % 60)).replace('.', ',')
+    return (
+        '%02d:%02d:%02.3f'
+        % (
+            timestamp.total_seconds() // 3600,
+            timestamp.total_seconds() // 60 % 60,
+            timestamp.total_seconds() % 60,
+        )
+    ).replace('.', ',')
 
 
 # parse correct start and end times
-def parse_time_expression(expression, default_offset=timedelta(0), frame_rate: int = None):
+def parse_time_expression(
+    expression, default_offset=timedelta(0), frame_rate: int = None
+):
     offset_time = re.match(r'^([0-9]+(\.[0-9]+)?)(h|m|s|ms|f|t)$', expression)
     if offset_time:
         time_value, fraction, metric = offset_time.groups()
@@ -49,18 +56,28 @@ def parse_time_expression(expression, default_offset=timedelta(0), frame_rate: i
         elif metric == 'ms':
             return default_offset + timedelta(milliseconds=time_value)
         elif metric == 'f':
-            raise NotImplementedError('Parsing time expressions by frame is not supported!')
+            raise NotImplementedError(
+                'Parsing time expressions by frame is not supported!'
+            )
         elif metric == 't':
-            raise NotImplementedError('Parsing time expressions by ticks is not supported!')
+            raise NotImplementedError(
+                'Parsing time expressions by ticks is not supported!'
+            )
 
-    clock_time = re.match(r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression)
+    clock_time = re.match(
+        r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression
+    )
     if clock_time:
         hours, minutes, seconds, fraction = clock_time.groups()
         return timedelta(hours=int(hours), minutes=int(minutes), seconds=float(seconds))
 
-    clock_time_frames = re.match(r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression)
+    clock_time_frames = re.match(
+        r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression
+    )
     if clock_time_frames and not frame_rate:
-        raise NotImplementedError('Parsing time expressions by frame is not supported! No frame_rate provided.')
+        raise NotImplementedError(
+            'Parsing time expressions by frame is not supported! No frame_rate provided.'
+        )
     elif clock_time_frames:
         hours, minutes, seconds, fraction, _ = clock_time_frames.groups()
         seconds = float(seconds) + int(fraction) / frame_rate
@@ -71,16 +88,18 @@ def parse_time_expression(expression, default_offset=timedelta(0), frame_rate: i
 
 def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
     if 'begin' in elem.attrib:
-        begin = parse_time_expression(elem.attrib['begin'], default_offset=default_begin,
-                                      frame_rate=frame_rate)
+        begin = parse_time_expression(
+            elem.attrib['begin'], default_offset=default_begin, frame_rate=frame_rate
+        )
     else:
         begin = default_begin
     elem.attrib['{abs}begin'] = begin
 
     end = None
     if 'end' in elem.attrib:
-        end = parse_time_expression(elem.attrib['end'], default_offset=default_begin,
-                                    frame_rate=frame_rate)
+        end = parse_time_expression(
+            elem.attrib['end'], default_offset=default_begin, frame_rate=frame_rate
+        )
 
     dur = None
     if 'dur' in elem.attrib:
@@ -96,6 +115,7 @@ def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
 
     for child in elem:
         parse_times(child, default_begin=begin, frame_rate=frame_rate)
+
 
 # render subtitles on each timestamp
 def render_subtitles(elem, timestamp, styles, parent_style={}):
@@ -114,9 +134,12 @@ def render_subtitles(elem, timestamp, styles, parent_style={}):
         result += '<font color="%s">' % style['color']
 
     is_italic = False
-    if style.get('fontstyle') == 'italic' or elem.attrib.get('fontStyle', None) == 'italic':
+    if (
+        style.get('fontstyle') == 'italic'
+        or elem.attrib.get('fontStyle', None) == 'italic'
+    ):
         result += ' <i>'
-        is_italic=True
+        is_italic = True
 
     if elem.text:
         result += elem.text.strip()
@@ -146,7 +169,9 @@ def convert_to_srt(srt_file: str, output_file: str = None):
     # strip namespaces
     for elem in root.getiterator():
         elem.tag = elem.tag.split('}', 1)[-1]
-        elem.attrib = {name.split('}', 1)[-1]: value for name, value in elem.attrib.items()}
+        elem.attrib = {
+            name.split('}', 1)[-1]: value for name, value in elem.attrib.items()
+        }
 
     # get styles
     styles = {}
@@ -181,7 +206,14 @@ def convert_to_srt(srt_file: str, output_file: str = None):
 
     rendered = []
     for timestamp in sorted(timestamps):
-        rendered.append((timestamp, re.sub(r'\n\n\n+', '\n\n', render_subtitles(body, timestamp, styles)).strip()))
+        rendered.append(
+            (
+                timestamp,
+                re.sub(
+                    r'\n\n\n+', '\n\n', render_subtitles(body, timestamp, styles)
+                ).strip(),
+            )
+        )
 
     if not rendered:
         exit(0)
@@ -195,16 +227,21 @@ def convert_to_srt(srt_file: str, output_file: str = None):
         last_text = content
 
     # output srt
-    #rendered_grouped.append((rendered_grouped[-1][0] + timedelta(hours=24), ''))
+    # rendered_grouped.append((rendered_grouped[-1][0] + timedelta(hours=24), ''))
 
     with open(output_file, 'w') if output_file else sys.stdout as f:
         srt_i = 1
         for i, (timestamp, content) in enumerate(rendered_grouped[:-1]):
             if content == '':
                 continue
-            content=content.strip()
+            content = content.strip()
             print(str(srt_i), file=f)
-            print(format_timestamp(timestamp) + ' --> ' + format_timestamp(rendered_grouped[i + 1][0]), file=f)
+            print(
+                format_timestamp(timestamp)
+                + ' --> '
+                + format_timestamp(rendered_grouped[i + 1][0]),
+                file=f,
+            )
             print(content, file=f)
             srt_i += 1
             print('', file=f)

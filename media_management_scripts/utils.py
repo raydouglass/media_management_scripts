@@ -1,8 +1,15 @@
-from media_management_scripts.support.encoding import DEFAULT_CRF, DEFAULT_PRESET, Resolution, VideoCodec, AudioCodec
+from media_management_scripts.support.encoding import (
+    DEFAULT_CRF,
+    DEFAULT_PRESET,
+    Resolution,
+    VideoCodec,
+    AudioCodec,
+)
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
 from typing import Iterable, NamedTuple
 from configparser import ConfigParser
 from media_management_scripts.support.executables import ffprobe
+
 
 def to_int(maybe_int) -> int:
     if maybe_int is None:
@@ -11,6 +18,7 @@ def to_int(maybe_int) -> int:
         return int(maybe_int)
     except ValueError:
         return None
+
 
 def compare_gt(this, other):
     if this is not None and other is not None:
@@ -50,7 +58,9 @@ def season_episode_name(season, episode, episode_name=None, ext=None):
         if not ext.startswith('.'):
             ext = '.' + ext
         if episode_name:
-            return 'S{:02d}E{:02d} - {}{}'.format(int(season), int(episode), episode_name, ext)
+            return 'S{:02d}E{:02d} - {}{}'.format(
+                int(season), int(episode), episode_name, ext
+            )
         else:
             return 'S{:02d}E{:02d}{}'.format(int(season), int(episode), ext)
     else:
@@ -60,15 +70,19 @@ def season_episode_name(season, episode, episode_name=None, ext=None):
             return 'S{:02d}E{:02d}'.format(int(season), int(episode))
 
 
-def fuzzy_equals(a: str, b: str, ignore_chars: Iterable[str] = [], ratio: float = .85) -> bool:
+def fuzzy_equals(
+    a: str, b: str, ignore_chars: Iterable[str] = [], ratio: float = 0.85
+) -> bool:
     from difflib import SequenceMatcher
+
     ifignore = (lambda x: x in ignore_chars) if ignore_chars else None
     return SequenceMatcher(ifignore, a, b).ratio() >= ratio
 
 
-def fuzzy_equals_word(a: str, b: str, ratio: float = .85):
+def fuzzy_equals_word(a: str, b: str, ratio: float = 0.85):
     from difflib import SequenceMatcher
     import re
+
     pattern = re.compile('\w+')
     ifignore = lambda x: pattern.match(x) is None
     return SequenceMatcher(ifignore, a, b).ratio() >= ratio
@@ -80,7 +94,7 @@ class ConvertConfig(NamedTuple):
     bitrate: str = None
     include_meta: bool = False
     deinterlace: bool = False
-    deinterlace_threshold: float = .5
+    deinterlace_threshold: float = 0.5
     include_subtitles: bool = True
     start: float = None
     end: float = None
@@ -93,7 +107,9 @@ class ConvertConfig(NamedTuple):
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
 
 
-def convert_config_from_config_section(config: ConfigParser, section: str) -> ConvertConfig:
+def convert_config_from_config_section(
+    config: ConfigParser, section: str
+) -> ConvertConfig:
     """
     Creates a ConvertConfig from a configparser section.
 
@@ -125,22 +141,42 @@ def convert_config_from_config_section(config: ConfigParser, section: str) -> Co
         try:
             int(bitrate)
         except ValueError:
-            raise Exception("Bitrate in [{}] must be 'auto', 'disabled' or an integer".format(section))
+            raise Exception(
+                "Bitrate in [{}] must be 'auto', 'disabled' or an integer".format(
+                    section
+                )
+            )
     deinterlace = bool(config.get(section, 'deinterlace', fallback=False))
-    deinterlace_threshold = float(config.get(section, 'deinterlace_threshold', fallback='.5'))
+    deinterlace_threshold = float(
+        config.get(section, 'deinterlace_threshold', fallback='.5')
+    )
 
-    auto_bitrate_240 = config.getint(section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate)
-    auto_bitrate_480 = config.getint(section, 'auto_bitrate_480',
-                                     fallback=Resolution.STANDARD_DEF.auto_bitrate)
-    auto_bitrate_720 = config.getint(section, 'auto_bitrate_720',
-                                     fallback=Resolution.MEDIUM_DEF.auto_bitrate)
-    auto_bitrate_1080 = config.getint(section, 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate)
+    auto_bitrate_240 = config.getint(
+        section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate
+    )
+    auto_bitrate_480 = config.getint(
+        section, 'auto_bitrate_480', fallback=Resolution.STANDARD_DEF.auto_bitrate
+    )
+    auto_bitrate_720 = config.getint(
+        section, 'auto_bitrate_720', fallback=Resolution.MEDIUM_DEF.auto_bitrate
+    )
+    auto_bitrate_1080 = config.getint(
+        section, 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate
+    )
 
     include_subtitles = config.getboolean(section, 'include_subtitles', fallback=True)
     ripped = config.getboolean(section, 'ripped', fallback=False)
 
-    return ConvertConfig(crf=crf, preset=preset, bitrate=bitrate,
-                         auto_bitrate_240=auto_bitrate_240, auto_bitrate_480=auto_bitrate_480,
-                         auto_bitrate_720=auto_bitrate_720, auto_bitrate_1080=auto_bitrate_1080,
-                         deinterlace=deinterlace, deinterlace_threshold=deinterlace_threshold,
-                         include_subtitles=include_subtitles, include_meta=ripped)
+    return ConvertConfig(
+        crf=crf,
+        preset=preset,
+        bitrate=bitrate,
+        auto_bitrate_240=auto_bitrate_240,
+        auto_bitrate_480=auto_bitrate_480,
+        auto_bitrate_720=auto_bitrate_720,
+        auto_bitrate_1080=auto_bitrate_1080,
+        deinterlace=deinterlace,
+        deinterlace_threshold=deinterlace_threshold,
+        include_subtitles=include_subtitles,
+        include_meta=ripped,
+    )

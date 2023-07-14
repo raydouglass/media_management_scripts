@@ -47,9 +47,17 @@ class SubCommand(metaclass=ABCMeta):
             shutil.copy(src, dst)
             return True
 
-    def _bulk(self, files: List[Tuple[str, ...]], op: Callable[[str, str], None],
-              column_descriptions: List[str] = [], src_index=0, dest_index=1, print_table=True):
+    def _bulk(
+        self,
+        files: List[Tuple[str, ...]],
+        op: Callable[[str, str], None],
+        column_descriptions: List[str] = [],
+        src_index=0,
+        dest_index=1,
+        print_table=True,
+    ):
         from texttable import Texttable
+
         if not print_table and self.dry_run:
             return
         if print_table:
@@ -66,8 +74,14 @@ class SubCommand(metaclass=ABCMeta):
                 if src and dst:
                     op(src, dst)
 
-    def _bulk_move(self, files: List[Tuple[str, ...]], column_descriptions: List[str] = [], src_index=0,
-                   dest_index=1, print_table=True):
+    def _bulk_move(
+        self,
+        files: List[Tuple[str, ...]],
+        column_descriptions: List[str] = [],
+        src_index=0,
+        dest_index=1,
+        print_table=True,
+    ):
         """
         Moves/Renames multiple files
         :param files: a list of tuples containing the source file, destination file, and any other information to display
@@ -76,43 +90,74 @@ class SubCommand(metaclass=ABCMeta):
         :param dest_index: which index of the tuple is the destination file
         :return:
         """
-        self._bulk(files, op=self._move, column_descriptions=column_descriptions, src_index=src_index,
-                   dest_index=dest_index, print_table=print_table)
+        self._bulk(
+            files,
+            op=self._move,
+            column_descriptions=column_descriptions,
+            src_index=src_index,
+            dest_index=dest_index,
+            print_table=print_table,
+        )
 
-    def _bulk_copy(self, files: List[Tuple[str, ...]], column_descriptions: List[str] = [], src_index=0,
-                   dest_index=1, print_table=True):
+    def _bulk_copy(
+        self,
+        files: List[Tuple[str, ...]],
+        column_descriptions: List[str] = [],
+        src_index=0,
+        dest_index=1,
+        print_table=True,
+    ):
         """
-       Copies multiple files
-        :param files: a list of tuples containing the source file, destination file, and any other information to display
-        :param column_descriptions: a list of the description for each column in the file list tuple
-        :param src_index: which index of the tuple is the source file
-        :param dest_index: which index of the tuple is the destination file
-        :return:
+        Copies multiple files
+         :param files: a list of tuples containing the source file, destination file, and any other information to display
+         :param column_descriptions: a list of the description for each column in the file list tuple
+         :param src_index: which index of the tuple is the source file
+         :param dest_index: which index of the tuple is the destination file
+         :return:
         """
-        self._bulk(files, op=self._copy, column_descriptions=column_descriptions, src_index=src_index,
-                   dest_index=dest_index, print_table=print_table)
+        self._bulk(
+            files,
+            op=self._copy,
+            column_descriptions=column_descriptions,
+            src_index=src_index,
+            dest_index=dest_index,
+            print_table=print_table,
+        )
 
-    def _bulk_print(self, files: List[Tuple[str, ...]], column_descriptions: List[str] = [], src_index=0,
-                    dest_index=1):
-        self._bulk(files, op=lambda x, y: None, column_descriptions=column_descriptions, src_index=src_index,
-                   dest_index=dest_index, print_table=True)
+    def _bulk_print(
+        self,
+        files: List[Tuple[str, ...]],
+        column_descriptions: List[str] = [],
+        src_index=0,
+        dest_index=1,
+    ):
+        self._bulk(
+            files,
+            op=lambda x, y: None,
+            column_descriptions=column_descriptions,
+            src_index=src_index,
+            dest_index=dest_index,
+            print_table=True,
+        )
 
 
-__all__ = ['SubCommand',
-           'combine_subtitles',
-           #'compare_directories',
-           'concat_mp4',
-           'convert',
-           'executables',
-           'find_episodes',
-           'itunes',
-           'metadata',
-           'metadata_compare',
-           #'movie_rename',
-           'rename',
-           'search',
-           'select_streams',
-           #'split',
-           'subtitles',
-           'thumbnail',
-           'tv_rename']
+__all__ = [
+    'SubCommand',
+    'combine_subtitles',
+    #'compare_directories',
+    'concat_mp4',
+    'convert',
+    'executables',
+    'find_episodes',
+    'itunes',
+    'metadata',
+    'metadata_compare',
+    #'movie_rename',
+    'rename',
+    'search',
+    'select_streams',
+    #'split',
+    'subtitles',
+    'thumbnail',
+    'tv_rename',
+]
