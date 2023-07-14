@@ -11,3 +11,4 @@ awsCredentials.py
 temperature_package.tgz
 .coverage
 *.egg-info/
+.vscode/
