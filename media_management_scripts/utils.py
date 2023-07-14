@@ -83,7 +83,7 @@ def fuzzy_equals_word(a: str, b: str, ratio: float = 0.85):
     from difflib import SequenceMatcher
     import re
 
-    pattern = re.compile("\w+")
+    pattern = re.compile(r"\w+")
     ifignore = lambda x: pattern.match(x) is None
     return SequenceMatcher(ifignore, a, b).ratio() >= ratio
 

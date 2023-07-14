@@ -10,15 +10,15 @@ from media_management_scripts.support.files import (
 )
 
 patterns = [
-    (re.compile("[Ss](\d+),?\s*[Ee](\d+)"), 1, 2),
-    (re.compile("(\d+)x(\d+)"), 1, 2),
-    (re.compile("[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)"), 1, 2),
-    (re.compile("[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)"), 1, 2),
-    (re.compile("[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)"), 1, 2),
+    (re.compile(r"[Ss](\d+),?\s*[Ee](\d+)"), 1, 2),
+    (re.compile(r"(\d+)x(\d+)"), 1, 2),
+    (re.compile(r"[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)"), 1, 2),
+    (re.compile(r"[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)"), 1, 2),
+    (re.compile(r"[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)"), 1, 2),
 ]
-pattern_101 = re.compile("(\d)(\d\d)")
+pattern_101 = re.compile(r"(\d)(\d\d)")
 
-part_patterns = [re.compile("[Pp]art\s*(\d+)"), re.compile("pt\s*(\d+)")]
+part_patterns = [re.compile(r"[Pp]art\s*(\d+)"), re.compile("pt\s*(\d+)")]
 
 
 @functools.total_ordering

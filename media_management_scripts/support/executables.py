@@ -115,7 +115,7 @@ def create_ffmpeg_callback(
     :param cb:
     :return:
     """
-    pattern = re.compile("(\w+)=\s*([-\w:/\.]+)")
+    pattern = re.compile(r"(\w+)=\s*([-\w:/\.]+)")
 
     def wrapper(line):
         values = {}

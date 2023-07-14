@@ -14,7 +14,7 @@ class TvShow(NamedTuple):
 
 
 def _parse_dir(dir) -> Iterable[TvShow]:
-    pattern = re.compile("(.+)_(.+)_(\d{4})_(\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d).wtv")
+    pattern = re.compile(r"(.+)_(.+)_(\d{4})_(\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d).wtv")
     for file in os.listdir(dir):
         m = pattern.search(file)
         if m:

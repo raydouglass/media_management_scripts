@@ -18,9 +18,9 @@ import shelve
 from media_management_scripts.support.executables import ffprobe
 from media_management_scripts.support.files import get_mime, movie_files_filter
 
-DATE_PATTERN = re.compile("\d{4}_\d{2}_\d{2}")
-ONLY_DATE_PATTERN = re.compile("^\d{4}-\d{2}-\d{2}$")
-DURATION_PATTERN = re.compile("\d+:\d+:\d+(.\d+)?")
+DATE_PATTERN = re.compile(r"\d{4}_\d{2}_\d{2}")
+ONLY_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+DURATION_PATTERN = re.compile(r"\d+:\d+:\d+(.\d+)?")
 
 ATTRIBUTE_KEY_TITLE = "title"
 ATTRIBUTE_KEY_SUBTITLE = "subtitle"

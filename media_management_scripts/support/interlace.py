@@ -5,7 +5,7 @@ from collections import namedtuple
 import re
 
 REPORT_PATTERN = re.compile(
-    "(Single|Multi)[\w\s]+: TFF:\s+(\d+) BFF:\s+(\d+) Progressive:\s+(\d+) Undetermined:\s+(\d+)"
+    r"(Single|Multi)[\w\s]+: TFF:\s+(\d+) BFF:\s+(\d+) Progressive:\s+(\d+) Undetermined:\s+(\d+)"
 )
 
 

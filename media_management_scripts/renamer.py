@@ -4,7 +4,7 @@ import re
 from tempita import Template
 from typing import NamedTuple, Tuple
 
-season_pattern = re.compile("Season (\d+)")
+season_pattern = re.compile(r"Season (\d+)")
 PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad}${plex_episode(episode_num, episode_num_final)}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
 
 

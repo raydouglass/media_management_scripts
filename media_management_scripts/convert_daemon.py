@@ -16,8 +16,8 @@ from media_management_scripts.utils import convert_config_from_config_section
 
 logger = logging.getLogger(__name__)
 
-TV_NAME_REGEX = re.compile(".+ - S\d{2,}E\d{2,}(-E\d{2,})?( - .+)?\.mkv")
-MOVIE_NAME_REGEX = re.compile(".+ \(\d{4}\)( - .+)?\.mkv")
+TV_NAME_REGEX = re.compile(r".+ - S\d{2,}E\d{2,}(-E\d{2,})?( - .+)?\.mkv")
+MOVIE_NAME_REGEX = re.compile(r".+ \(\d{4}\)( - .+)?\.mkv")
 
 
 class ConvertDvdResults(NamedTuple):

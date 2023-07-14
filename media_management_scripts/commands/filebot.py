@@ -11,7 +11,7 @@ import re
 
 
 def parse_filebot_text(text):
-    pattern = re.compile("\s\[(.+)\] to \[(.+)\]")
+    pattern = re.compile(r"\s\[(.+)\] to \[(.+)\]")
     # Rename episodes using [TheTVDB]
     # Auto-detected query: [QI XL, qi xl series o]
     # Fetching episode data for [QI]

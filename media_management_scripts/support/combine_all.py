@@ -3,7 +3,7 @@ import re
 from media_management_scripts.support.files import get_input_output, movie_files_filter
 from media_management_scripts.convert import combine
 
-LANG_PATTERN = re.compile("\.(\w+)\.(srt|idx|ttml)")
+LANG_PATTERN = re.compile(r"\.(\w+)\.(srt|idx|ttml)")
 
 subtitle_exts = (".srt", ".idx", ".ttml")
 
