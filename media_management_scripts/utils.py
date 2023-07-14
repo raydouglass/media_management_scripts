@@ -46,7 +46,7 @@ def compare_lt(this, other):
 
 
 def create_metadata_extractor(db_file=None) -> MetadataExtractor:
-    return MetadataExtractor({'ffprobe_exe': ffprobe()}, db_file=db_file)
+    return MetadataExtractor({"ffprobe_exe": ffprobe()}, db_file=db_file)
 
 
 def extract_metadata(input: str, detect_interlace=False, db_file=None) -> Metadata:
@@ -55,19 +55,19 @@ def extract_metadata(input: str, detect_interlace=False, db_file=None) -> Metada
 
 def season_episode_name(season, episode, episode_name=None, ext=None):
     if ext:
-        if not ext.startswith('.'):
-            ext = '.' + ext
+        if not ext.startswith("."):
+            ext = "." + ext
         if episode_name:
-            return 'S{:02d}E{:02d} - {}{}'.format(
+            return "S{:02d}E{:02d} - {}{}".format(
                 int(season), int(episode), episode_name, ext
             )
         else:
-            return 'S{:02d}E{:02d}{}'.format(int(season), int(episode), ext)
+            return "S{:02d}E{:02d}{}".format(int(season), int(episode), ext)
     else:
         if episode_name:
-            return 'S{:02d}E{:02d} - {}'.format(int(season), int(episode), episode_name)
+            return "S{:02d}E{:02d} - {}".format(int(season), int(episode), episode_name)
         else:
-            return 'S{:02d}E{:02d}'.format(int(season), int(episode))
+            return "S{:02d}E{:02d}".format(int(season), int(episode))
 
 
 def fuzzy_equals(
@@ -83,7 +83,7 @@ def fuzzy_equals_word(a: str, b: str, ratio: float = 0.85):
     from difflib import SequenceMatcher
     import re
 
-    pattern = re.compile('\w+')
+    pattern = re.compile("\w+")
     ifignore = lambda x: pattern.match(x) is None
     return SequenceMatcher(ifignore, a, b).ratio() >= ratio
 
@@ -132,12 +132,12 @@ def convert_config_from_config_section(
     :return:
     """
     # Transcode
-    crf = config.get(section, 'crf', fallback=DEFAULT_CRF)
-    preset = config.get(section, 'preset', fallback=DEFAULT_PRESET)
-    bitrate = config.get(section, 'bitrate', fallback='disabled')
-    if bitrate == 'disabled':
+    crf = config.get(section, "crf", fallback=DEFAULT_CRF)
+    preset = config.get(section, "preset", fallback=DEFAULT_PRESET)
+    bitrate = config.get(section, "bitrate", fallback="disabled")
+    if bitrate == "disabled":
         bitrate = None
-    elif bitrate and bitrate != 'auto':
+    elif bitrate and bitrate != "auto":
         try:
             int(bitrate)
         except ValueError:
@@ -146,26 +146,26 @@ def convert_config_from_config_section(
                     section
                 )
             )
-    deinterlace = bool(config.get(section, 'deinterlace', fallback=False))
+    deinterlace = bool(config.get(section, "deinterlace", fallback=False))
     deinterlace_threshold = float(
-        config.get(section, 'deinterlace_threshold', fallback='.5')
+        config.get(section, "deinterlace_threshold", fallback=".5")
     )
 
     auto_bitrate_240 = config.getint(
-        section, 'auto_bitrate_240', fallback=Resolution.LOW_DEF.auto_bitrate
+        section, "auto_bitrate_240", fallback=Resolution.LOW_DEF.auto_bitrate
     )
     auto_bitrate_480 = config.getint(
-        section, 'auto_bitrate_480', fallback=Resolution.STANDARD_DEF.auto_bitrate
+        section, "auto_bitrate_480", fallback=Resolution.STANDARD_DEF.auto_bitrate
     )
     auto_bitrate_720 = config.getint(
-        section, 'auto_bitrate_720', fallback=Resolution.MEDIUM_DEF.auto_bitrate
+        section, "auto_bitrate_720", fallback=Resolution.MEDIUM_DEF.auto_bitrate
     )
     auto_bitrate_1080 = config.getint(
-        section, 'auto_bitrate_1080', fallback=Resolution.HIGH_DEF.auto_bitrate
+        section, "auto_bitrate_1080", fallback=Resolution.HIGH_DEF.auto_bitrate
     )
 
-    include_subtitles = config.getboolean(section, 'include_subtitles', fallback=True)
-    ripped = config.getboolean(section, 'ripped', fallback=False)
+    include_subtitles = config.getboolean(section, "include_subtitles", fallback=True)
+    ripped = config.getboolean(section, "ripped", fallback=False)
 
     return ConvertConfig(
         crf=crf,

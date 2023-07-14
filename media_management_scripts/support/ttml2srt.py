@@ -30,80 +30,80 @@ from xml.etree import ElementTree as ET
 
 def format_timestamp(timestamp: timedelta):
     return (
-        '%02d:%02d:%02.3f'
+        "%02d:%02d:%02.3f"
         % (
             timestamp.total_seconds() // 3600,
             timestamp.total_seconds() // 60 % 60,
             timestamp.total_seconds() % 60,
         )
-    ).replace('.', ',')
+    ).replace(".", ",")
 
 
 # parse correct start and end times
 def parse_time_expression(
     expression, default_offset=timedelta(0), frame_rate: int = None
 ):
-    offset_time = re.match(r'^([0-9]+(\.[0-9]+)?)(h|m|s|ms|f|t)$', expression)
+    offset_time = re.match(r"^([0-9]+(\.[0-9]+)?)(h|m|s|ms|f|t)$", expression)
     if offset_time:
         time_value, fraction, metric = offset_time.groups()
         time_value = float(time_value)
-        if metric == 'h':
+        if metric == "h":
             return default_offset + timedelta(hours=time_value)
-        elif metric == 'm':
+        elif metric == "m":
             return default_offset + timedelta(minutes=time_value)
-        elif metric == 's':
+        elif metric == "s":
             return default_offset + timedelta(seconds=time_value)
-        elif metric == 'ms':
+        elif metric == "ms":
             return default_offset + timedelta(milliseconds=time_value)
-        elif metric == 'f':
+        elif metric == "f":
             raise NotImplementedError(
-                'Parsing time expressions by frame is not supported!'
+                "Parsing time expressions by frame is not supported!"
             )
-        elif metric == 't':
+        elif metric == "t":
             raise NotImplementedError(
-                'Parsing time expressions by ticks is not supported!'
+                "Parsing time expressions by ticks is not supported!"
             )
 
     clock_time = re.match(
-        r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression
+        r"^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$", expression
     )
     if clock_time:
         hours, minutes, seconds, fraction = clock_time.groups()
         return timedelta(hours=int(hours), minutes=int(minutes), seconds=float(seconds))
 
     clock_time_frames = re.match(
-        r'^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$', expression
+        r"^([0-9]{2,}):([0-9]{2,}):([0-9]{2,}):([0-9]{2,}(\.[0-9]+)?)$", expression
     )
     if clock_time_frames and not frame_rate:
         raise NotImplementedError(
-            'Parsing time expressions by frame is not supported! No frame_rate provided.'
+            "Parsing time expressions by frame is not supported! No frame_rate provided."
         )
     elif clock_time_frames:
         hours, minutes, seconds, fraction, _ = clock_time_frames.groups()
         seconds = float(seconds) + int(fraction) / frame_rate
         return timedelta(hours=int(hours), minutes=int(minutes), seconds=seconds)
 
-    raise ValueError('unknown time expression: %s' % expression)
+    raise ValueError("unknown time expression: %s" % expression)
 
 
 def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
-    if 'begin' in elem.attrib:
+    if "begin" in elem.attrib:
         begin = parse_time_expression(
-            elem.attrib['begin'], default_offset=default_begin, frame_rate=frame_rate
+            elem.attrib["begin"], default_offset=default_begin, frame_rate=frame_rate
         )
     else:
         begin = default_begin
-    elem.attrib['{abs}begin'] = begin
+    elem.attrib["{abs}begin"] = begin
 
     end = None
-    if 'end' in elem.attrib:
+    if "end" in elem.attrib:
         end = parse_time_expression(
-            elem.attrib['end'], default_offset=default_begin, frame_rate=frame_rate
+            elem.attrib["end"], default_offset=default_begin, frame_rate=frame_rate
         )
 
     dur = None
-    if 'dur' in elem.attrib:
-        dur = parse_time_expression(elem.attrib['dur'], frame_rate=frame_rate)
+    if "dur" in elem.attrib:
+        dur = parse_time_expression(elem.attrib["dur"], frame_rate=frame_rate)
 
     if dur is not None:
         if end is None:
@@ -111,7 +111,7 @@ def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
         else:
             end = min(end, begin + dur)
 
-    elem.attrib['{abs}end'] = end
+    elem.attrib["{abs}end"] = end
 
     for child in elem:
         parse_times(child, default_begin=begin, frame_rate=frame_rate)
@@ -119,26 +119,26 @@ def parse_times(elem, default_begin=timedelta(0), frame_rate: int = None):
 
 # render subtitles on each timestamp
 def render_subtitles(elem, timestamp, styles, parent_style={}):
-    if timestamp < elem.attrib['{abs}begin']:
-        return ''
-    if elem.attrib['{abs}end'] is not None and timestamp >= elem.attrib['{abs}end']:
-        return ''
+    if timestamp < elem.attrib["{abs}begin"]:
+        return ""
+    if elem.attrib["{abs}end"] is not None and timestamp >= elem.attrib["{abs}end"]:
+        return ""
 
-    result = ''
+    result = ""
 
     style = parent_style.copy()
-    if 'style' in elem.attrib:
-        style.update(styles.get(elem.attrib['style'], {}))
+    if "style" in elem.attrib:
+        style.update(styles.get(elem.attrib["style"], {}))
 
-    if 'color' in style:
-        result += '<font color="%s">' % style['color']
+    if "color" in style:
+        result += '<font color="%s">' % style["color"]
 
     is_italic = False
     if (
-        style.get('fontstyle') == 'italic'
-        or elem.attrib.get('fontStyle', None) == 'italic'
+        style.get("fontstyle") == "italic"
+        or elem.attrib.get("fontStyle", None) == "italic"
     ):
-        result += ' <i>'
+        result += " <i>"
         is_italic = True
 
     if elem.text:
@@ -151,13 +151,13 @@ def render_subtitles(elem, timestamp, styles, parent_style={}):
 
     result = result.rstrip()
     if is_italic:
-        result += '</i> '
+        result += "</i> "
 
-    if 'color' in style:
-        result += '</font>'
+    if "color" in style:
+        result += "</font>"
 
-    if elem.tag in ('div', 'p', 'br'):
-        result += '\n'
+    if elem.tag in ("div", "p", "br"):
+        result += "\n"
 
     return result
 
@@ -168,39 +168,39 @@ def convert_to_srt(srt_file: str, output_file: str = None):
 
     # strip namespaces
     for elem in root.getiterator():
-        elem.tag = elem.tag.split('}', 1)[-1]
+        elem.tag = elem.tag.split("}", 1)[-1]
         elem.attrib = {
-            name.split('}', 1)[-1]: value for name, value in elem.attrib.items()
+            name.split("}", 1)[-1]: value for name, value in elem.attrib.items()
         }
 
     # get styles
     styles = {}
-    for elem in root.findall('./head/styling/style'):
+    for elem in root.findall("./head/styling/style"):
         style = {}
-        if 'color' in elem.attrib:
-            color = elem.attrib['color']
-            if color not in ('#FFFFFF', '#000000'):
-                style['color'] = color
-        if 'fontStyle' in elem.attrib:
-            fontstyle = elem.attrib['fontStyle']
-            if fontstyle in ('italic',):
-                style['fontstyle'] = fontstyle
-        styles[elem.attrib['id']] = style
+        if "color" in elem.attrib:
+            color = elem.attrib["color"]
+            if color not in ("#FFFFFF", "#000000"):
+                style["color"] = color
+        if "fontStyle" in elem.attrib:
+            fontstyle = elem.attrib["fontStyle"]
+            if fontstyle in ("italic",):
+                style["fontstyle"] = fontstyle
+        styles[elem.attrib["id"]] = style
 
-    body = root.find('./body')
+    body = root.find("./body")
 
-    frame_rate = root.attrib.get('frameRate', None)
+    frame_rate = root.attrib.get("frameRate", None)
     if frame_rate:
         frame_rate = int(frame_rate)
 
     parse_times(body, frame_rate=frame_rate)
 
     timestamps = set()
-    for elem in body.findall('.//*[@{abs}begin]'):
-        timestamps.add(elem.attrib['{abs}begin'])
+    for elem in body.findall(".//*[@{abs}begin]"):
+        timestamps.add(elem.attrib["{abs}begin"])
 
-    for elem in body.findall('.//*[@{abs}end]'):
-        timestamps.add(elem.attrib['{abs}end'])
+    for elem in body.findall(".//*[@{abs}end]"):
+        timestamps.add(elem.attrib["{abs}end"])
 
     timestamps.discard(None)
 
@@ -210,7 +210,7 @@ def convert_to_srt(srt_file: str, output_file: str = None):
             (
                 timestamp,
                 re.sub(
-                    r'\n\n\n+', '\n\n', render_subtitles(body, timestamp, styles)
+                    r"\n\n\n+", "\n\n", render_subtitles(body, timestamp, styles)
                 ).strip(),
             )
         )
@@ -229,19 +229,19 @@ def convert_to_srt(srt_file: str, output_file: str = None):
     # output srt
     # rendered_grouped.append((rendered_grouped[-1][0] + timedelta(hours=24), ''))
 
-    with open(output_file, 'w') if output_file else sys.stdout as f:
+    with open(output_file, "w") if output_file else sys.stdout as f:
         srt_i = 1
         for i, (timestamp, content) in enumerate(rendered_grouped[:-1]):
-            if content == '':
+            if content == "":
                 continue
             content = content.strip()
             print(str(srt_i), file=f)
             print(
                 format_timestamp(timestamp)
-                + ' --> '
+                + " --> "
                 + format_timestamp(rendered_grouped[i + 1][0]),
                 file=f,
             )
             print(content, file=f)
             srt_i += 1
-            print('', file=f)
+            print("", file=f)

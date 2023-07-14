@@ -7,23 +7,23 @@ import os
 class SubtitlesCommand(SubCommand):
     @property
     def name(self):
-        return 'subtitles'
+        return "subtitles"
 
     def build_argparse(self, subparser):
         subtitle_parser = subparser.add_parser(
-            'subtitles',
-            help='Convert subtitles to SRT',
+            "subtitles",
+            help="Convert subtitles to SRT",
             parents=[parent_parser, input_parser],
         )  # No input dir
-        subtitle_parser.add_argument('--output', '-o', help='Output file or directory')
+        subtitle_parser.add_argument("--output", "-o", help="Output file or directory")
         subtitle_parser.add_argument(
-            '--ext', help='Only convert files with these extensions', nargs='+'
+            "--ext", help="Only convert files with these extensions", nargs="+"
         )
 
     def _filter(self, file: str):
-        if self.ns.get('ext', None):
-            for i in self.ns['ext']:
-                if file.endswith('.' + i):
+        if self.ns.get("ext", None):
+            for i in self.ns["ext"]:
+                if file.endswith("." + i):
                     return True
             return False
         return True
@@ -33,26 +33,26 @@ class SubtitlesCommand(SubCommand):
 
         for i, o in get_input_output(input_to_cmd, output_dir, filter=self._filter):
             noext, _ = os.path.splitext(o)
-            o = noext + '.srt'
+            o = noext + ".srt"
             yield i, o
 
     def subexecute(self, ns):
-        input_to_cmd = ns['input']
-        output_dir = ns.get('output', None)
+        input_to_cmd = ns["input"]
+        output_dir = ns.get("output", None)
 
         if os.path.isfile(input_to_cmd):
             if not self._filter(input_to_cmd):
-                raise Exception('File specified is filtered by arguments.')
+                raise Exception("File specified is filtered by arguments.")
             base = os.path.basename(input_to_cmd)
             noext, _ = os.path.splitext(base)
             if not output_dir:
                 dir = os.path.dirname(input_to_cmd)
-                output_dir = os.path.join(dir, noext + '.srt')
+                output_dir = os.path.join(dir, noext + ".srt")
 
             self._bulk(
                 [(input_to_cmd, output_dir)],
                 op=convert_subtitles_to_srt,
-                column_descriptions=['Input', 'Output'],
+                column_descriptions=["Input", "Output"],
             )
         else:
             if not output_dir:
@@ -61,7 +61,7 @@ class SubtitlesCommand(SubCommand):
             self._bulk(
                 results,
                 op=convert_subtitles_to_srt,
-                column_descriptions=['Input', 'Output'],
+                column_descriptions=["Input", "Output"],
             )
 
 

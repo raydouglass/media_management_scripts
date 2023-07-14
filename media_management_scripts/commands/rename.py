@@ -6,13 +6,13 @@ from media_management_scripts.support.files import list_files_absolute
 class RenameCommand(SubCommand):
     @property
     def name(self):
-        return 'rename'
+        return "rename"
 
     def build_argparse(self, subparser):
         import argparse
 
         rename_parser = subparser.add_parser(
-            'rename',
+            "rename",
             parents=[parent_parser],
             help="Renames a set of files to the specified template",
             formatter_class=argparse.RawTextHelpFormatter,
@@ -59,23 +59,23 @@ class RenameCommand(SubCommand):
 """,
         )
 
-        rename_parser.add_argument('-x', '--regex', type=str, default=None)
+        rename_parser.add_argument("-x", "--regex", type=str, default=None)
         rename_parser.add_argument(
-            '--ignore-missing-regex',
-            action='store_const',
+            "--ignore-missing-regex",
+            action="store_const",
             default=False,
             const=True,
-            dest='ignore_missing_regex',
+            dest="ignore_missing_regex",
         )
-        rename_parser.add_argument('-i', '--index-start', type=int, default=1)
-        rename_parser.add_argument('-o', '--output', default=None)
+        rename_parser.add_argument("-i", "--index-start", type=int, default=1)
+        rename_parser.add_argument("-o", "--output", default=None)
         rename_parser.add_argument(
-            '-r', '--recursive', action='store_const', default=False, const=True
+            "-r", "--recursive", action="store_const", default=False, const=True
         )
-        rename_parser.add_argument('--filter-by-ext', type=str, default=None)
-        rename_parser.add_argument('template')
+        rename_parser.add_argument("--filter-by-ext", type=str, default=None)
+        rename_parser.add_argument("template")
         rename_parser.add_argument(
-            'input', nargs='+', help='Input files or directories'
+            "input", nargs="+", help="Input files or directories"
         )
 
     def subexecute(self, ns):
@@ -84,14 +84,14 @@ class RenameCommand(SubCommand):
         from media_management_scripts.renamer import rename_process
         import os
 
-        input_to_cmd = ns['input']
-        template = ns['template']
-        output = ns['output']
-        regex = ns['regex']
-        index_start = ns['index_start']
-        recursive = ns['recursive']
-        ignore_missing_regex = ns['ignore_missing_regex']
-        filter_by_ext = ns['filter_by_ext']
+        input_to_cmd = ns["input"]
+        template = ns["template"]
+        output = ns["output"]
+        regex = ns["regex"]
+        index_start = ns["index_start"]
+        recursive = ns["recursive"]
+        ignore_missing_regex = ns["ignore_missing_regex"]
+        filter_by_ext = ns["filter_by_ext"]
         if recursive:
             if filter_by_ext:
                 file_filter = lambda f: f.endswith(filter_by_ext)
@@ -106,7 +106,7 @@ class RenameCommand(SubCommand):
         else:
             for f in input_to_cmd:
                 if os.path.isdir(f):
-                    raise Exception('Directory provided without recursive')
+                    raise Exception("Directory provided without recursive")
             files = input_to_cmd
 
         results = rename_process(
@@ -117,10 +117,10 @@ class RenameCommand(SubCommand):
             regex,
             ignore_missing_regex=ignore_missing_regex,
         )
-        if ns['dry_run']:
+        if ns["dry_run"]:
             t = Texttable(max_width=0)
             t.set_deco(Texttable.VLINES | Texttable.HEADER)
-            t.add_rows([('Source', 'Destination')] + results)
+            t.add_rows([("Source", "Destination")] + results)
             print(t.draw())
         else:
             for src, dest in results:

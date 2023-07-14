@@ -4,7 +4,7 @@ import re
 from tempita import Template
 from typing import NamedTuple, Tuple
 
-season_pattern = re.compile('Season (\d+)')
+season_pattern = re.compile("Season (\d+)")
 PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad}${plex_episode(episode_num, episode_num_final)}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
 
 
@@ -29,7 +29,7 @@ class RegexResults(object):
             if self.ignore_missing:
                 return None
             else:
-                raise IndexError('Index out of bounds: {}'.format(index))
+                raise IndexError("Index out of bounds: {}".format(index))
         else:
             return self.values[index]
 
@@ -42,9 +42,9 @@ def ifempty(check, if_none, if_not_none):
 
 
 _RENAMER_NAMESPACE = {
-    'ifempty': ifempty,
-    'lower': lambda s: s.lower(),
-    'upper': lambda s: s.upper(),
+    "ifempty": ifempty,
+    "lower": lambda s: s.lower(),
+    "upper": lambda s: s.upper(),
 }
 
 
@@ -52,30 +52,30 @@ def create_namespace(size: int = 2):
     length = max(2, len(str(size)))
 
     def zpad(s, length=length):
-        return str(s).rjust(length, '0')
+        return str(s).rjust(length, "0")
 
     def lpad(s, length=length):
-        return str(s).rjust(length, ' ')
+        return str(s).rjust(length, " ")
 
     def plex_season_specials(s, length=length):
         if s:
-            return 'Season ' + zpad(s, length)
+            return "Season " + zpad(s, length)
         else:
-            return 'Specials'
+            return "Specials"
 
     def plex_episode(episode_num, episode_num_final, length=length):
         if episode_num_final:
-            return 'E{}-E{}'.format(
+            return "E{}-E{}".format(
                 zpad(episode_num, length), zpad(episode_num_final, length)
             )
         else:
-            return 'E{}'.format(zpad(episode_num))
+            return "E{}".format(zpad(episode_num))
 
     d = {
-        'lpad': lpad,
-        'zpad': zpad,
-        'plex_episode': plex_episode,
-        'plex_season_specials': plex_season_specials,
+        "lpad": lpad,
+        "zpad": zpad,
+        "plex_episode": plex_episode,
+        "plex_season_specials": plex_season_specials,
     }
     d.update(_RENAMER_NAMESPACE)
     return d
@@ -84,7 +84,7 @@ def create_namespace(size: int = 2):
 def rename_plex(
     file: str, plex_params: PlexTemplateParams = None, output_dir=None
 ) -> str:
-    return rename_process('{plex}', [file], output_dir=output_dir, params=plex_params)[
+    return rename_process("{plex}", [file], output_dir=output_dir, params=plex_params)[
         0
     ][1]
 
@@ -101,18 +101,18 @@ def rename_process(
     if regex:
         regex = re.compile(regex)
 
-    if '{plex}' in template:
-        template = template.replace('{plex}', PLEX_TEMPLATE)
+    if "{plex}" in template:
+        template = template.replace("{plex}", PLEX_TEMPLATE)
 
     if isinstance(params, PlexTemplateParams):
         params = params._asdict()
 
     length = len(files)
-    if 'length' not in params:
-        params['length'] = length
+    if "length" not in params:
+        params["length"] = length
 
     t = Template(
-        content=template, delimiters=('${', '}'), namespace=create_namespace(length)
+        content=template, delimiters=("${", "}"), namespace=create_namespace(length)
     )
     results = []
 
@@ -126,12 +126,12 @@ def rename_process(
         wo_ext = os.path.splitext(file)[0]
         base = os.path.basename(file)
         new_params = {
-            'index': index,
-            'i': index,
-            'wo_ext': wo_ext,
-            'ext': ext,
-            'filename': base,
-            're': RegexResults(ignore_missing=ignore_missing_regex),
+            "index": index,
+            "i": index,
+            "wo_ext": wo_ext,
+            "ext": ext,
+            "filename": base,
+            "re": RegexResults(ignore_missing=ignore_missing_regex),
         }
         new_params.update(params)
         if regex:
@@ -146,7 +146,7 @@ def rename_process(
                         pass
                     items.append(item)
                     m_index += 1
-                    new_params['re'] = new_params['regex'] = RegexResults(
+                    new_params["re"] = new_params["regex"] = RegexResults(
                         items, ignore_missing=ignore_missing_regex
                     )
         result = t.substitute(new_params)

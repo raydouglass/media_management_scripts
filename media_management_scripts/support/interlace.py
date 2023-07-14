@@ -5,7 +5,7 @@ from collections import namedtuple
 import re
 
 REPORT_PATTERN = re.compile(
-    '(Single|Multi)[\w\s]+: TFF:\s+(\d+) BFF:\s+(\d+) Progressive:\s+(\d+) Undetermined:\s+(\d+)'
+    "(Single|Multi)[\w\s]+: TFF:\s+(\d+) BFF:\s+(\d+) Progressive:\s+(\d+) Undetermined:\s+(\d+)"
 )
 
 
@@ -15,7 +15,7 @@ REPORT_PATTERN = re.compile(
 
 
 class InterlaceGroup(
-    namedtuple('InterlaceGroupBase', ['tff', 'bff', 'progressive', 'undetermined'])
+    namedtuple("InterlaceGroupBase", ["tff", "bff", "progressive", "undetermined"])
 ):
     @property
     def ratio(self):
@@ -51,15 +51,15 @@ class InterlaceGroup(
 
     def to_dict(self):
         return {
-            'tff': self.tff,
-            'bff': self.bff,
-            'progressive': self.progressive,
-            'undetermined': self.undetermined,
-            'total_frames': self.total_frames,
+            "tff": self.tff,
+            "bff": self.bff,
+            "progressive": self.progressive,
+            "undetermined": self.undetermined,
+            "total_frames": self.total_frames,
         }
 
 
-class InterlaceReport(namedtuple('InterlaceReportBase', ['single', 'multi'])):
+class InterlaceReport(namedtuple("InterlaceReportBase", ["single", "multi"])):
     single: InterlaceGroup
     multi: InterlaceGroup
 
@@ -102,9 +102,9 @@ class InterlaceReport(namedtuple('InterlaceReportBase', ['single', 'multi'])):
 
     def to_dict(self):
         return {
-            'interlaced': self.is_interlaced(),
-            'single': self.single.to_dict(),
-            'multi': self.single.to_dict(),
+            "interlaced": self.is_interlaced(),
+            "single": self.single.to_dict(),
+            "multi": self.single.to_dict(),
         }
 
 
@@ -115,7 +115,7 @@ def _parse_output(output: str):
     for line in lines:
         m = REPORT_PATTERN.search(line)
         if m:
-            if m.group(1) == 'Single':
+            if m.group(1) == "Single":
                 single = InterlaceGroup(
                     int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5))
                 )
@@ -124,31 +124,31 @@ def _parse_output(output: str):
                     int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5))
                 )
         else:
-            raise Exception('Not matched: {}'.format(line))
+            raise Exception("Not matched: {}".format(line))
     return InterlaceReport(single, multi)
 
 
 def _execute_ffmpeg(input_file: str, frames: int, start: int = 0):
     args = [
         ffmpeg(),
-        '-ss',
+        "-ss",
         str(start),
-        '-i',
+        "-i",
         input_file,
-        '-filter:v',
-        'idet',
-        '-frames:v',
+        "-filter:v",
+        "idet",
+        "-frames:v",
         str(frames),
-        '-an',
-        '-f',
-        'rawvideo',
-        '-y',
-        '/dev/null',
+        "-an",
+        "-f",
+        "rawvideo",
+        "-y",
+        "/dev/null",
     ]
     ret, output = execute_with_output(args, print_output=False)
     if ret != 0:
         raise Exception(
-            'Non-zero ffmpeg return code: {}. Output={}'.format(ret, output)
+            "Non-zero ffmpeg return code: {}. Output={}".format(ret, output)
         )
     return _parse_output(output)
 
@@ -190,7 +190,7 @@ def find_interlace(
     metadata=None,
 ) -> InterlaceReport:
     if frames > max_frames:
-        raise Exception('Frames cannot be larger than max')
+        raise Exception("Frames cannot be larger than max")
     return _find_interlace(
         input_file, frames, max_frames, undetermined_threshold, metadata
     )

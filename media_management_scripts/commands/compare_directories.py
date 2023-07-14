@@ -6,14 +6,14 @@ from .metadata_compare import create_table_object
 class CompareDirectoriesCommand(SubCommand):
     @property
     def name(self):
-        return 'compare-directories'
+        return "compare-directories"
 
     def build_argparse(self, subparser):
         combine_video_subtitles_parser = subparser.add_parser(
-            self.name, help='', parents=[parent_parser]
+            self.name, help="", parents=[parent_parser]
         )
-        combine_video_subtitles_parser.add_argument('source', help='')
-        combine_video_subtitles_parser.add_argument('destination', help='')
+        combine_video_subtitles_parser.add_argument("source", help="")
+        combine_video_subtitles_parser.add_argument("destination", help="")
 
     def get_table(self, header, data):
         from texttable import Texttable
@@ -29,8 +29,8 @@ class CompareDirectoriesCommand(SubCommand):
         pass
 
     def subexecute(self, ns):
-        source = ns['source']
-        destination = ns['destination']
+        source = ns["source"]
+        destination = ns["destination"]
         from media_management_scripts.support.files import list_files
         from dialog import Dialog
         import os
@@ -49,10 +49,10 @@ class CompareDirectoriesCommand(SubCommand):
 
                 header, data = create_table_object([src_path, dst_path])
                 table_str = self.get_table(header, data)
-                table_str += '\n\nOverwrite?'
+                table_str += "\n\nOverwrite?"
 
                 result = Dialog(autowidgetsize=True).yesno(text=table_str)
-                if result == 'ok':
+                if result == "ok":
                     files_to_copy.append(source_file)
 
         for file in files_to_copy:

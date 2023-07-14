@@ -6,7 +6,7 @@ ParserElement.enablePackrat()
 
 def resolve_from_context(context, path):
     d = context
-    for key in path.split('.'):
+    for key in path.split("."):
         if key in d:
             d = d[key]
         else:
@@ -36,7 +36,7 @@ class Operation:
         return self.__repr__()
 
     def __repr__(self):
-        return '{}<{} {} {}>'.format(
+        return "{}<{} {} {}>".format(
             self.__class__.__name__, self.t[0][1], self.t[0][1], self.t[0][2]
         )
 
@@ -46,7 +46,7 @@ class GenericOperation(Operation):
         return self.resolve(context, self.t[0])
 
     def __repr__(self):
-        return 'GenericOperation<{}>'.format(self.t[0])
+        return "GenericOperation<{}>".format(self.t[0])
 
 
 class TwoOperandOperation(Operation):
@@ -63,7 +63,7 @@ class OneOperandOperation(Operation):
         return self._exec_one_operand(op)
 
     def __repr__(self):
-        return '{}<{} {}>'.format(self.__class__, self.t[0][0], self.t[0][1])
+        return "{}<{} {}>".format(self.__class__, self.t[0][0], self.t[0][1])
 
 
 class ComparisonOperation(Operation):
@@ -71,23 +71,23 @@ class ComparisonOperation(Operation):
         l = self.resolve(context, self.t[0][0])
         r = self.resolve(context, self.t[0][2])
         cmp = self.t[0][1]
-        if cmp == '=':
+        if cmp == "=":
             return l == r
-        elif cmp == '!=':
+        elif cmp == "!=":
             return l != r
-        elif cmp == '>':
+        elif cmp == ">":
             return l > r
-        elif cmp == '>=':
+        elif cmp == ">=":
             return l >= r
-        elif cmp == '<':
+        elif cmp == "<":
             return l < r
-        elif cmp == '<=':
+        elif cmp == "<=":
             return l <= r
         else:
             raise Exception()
 
     def __repr__(self):
-        return 'ComparisonOperation<{} {} {}>'.format(
+        return "ComparisonOperation<{} {} {}>".format(
             self.t[0][0], self.t[0][1], self.t[0][2]
         )
 
@@ -150,13 +150,13 @@ class IsNullOperation(Operation):
             return var_name.exec(context)
         elif type(var_name) == str:
             d = context
-            for key in var_name.split('.'):
+            for key in var_name.split("."):
                 if key in d:
                     d = d[key]
         return d is None
 
     def __repr__(self):
-        return 'IsNullOperation<{}>'.format(self.t[2])
+        return "IsNullOperation<{}>".format(self.t[2])
 
 
 class AllOperation(Operation):
@@ -176,7 +176,7 @@ class AllOperation(Operation):
             return self.value == other
 
     def __repr__(self):
-        return 'AllOperation<{}>'.format(self.t[2])
+        return "AllOperation<{}>".format(self.t[2])
 
 
 @total_ordering
@@ -217,32 +217,32 @@ class Variable:
             return self.value > other
 
     def __repr__(self):
-        return 'Variable<value={}>'.format(self.value)
+        return "Variable<value={}>".format(self.value)
 
     def __str__(self):
         return self.__repr__()
 
 
 integer = Word(nums).setParseAction(lambda t: int(t[0]))
-variable = Word(alphanums + '_')
-dot_variable = delimitedList(variable, delim='.', combine=True)
+variable = Word(alphanums + "_")
+dot_variable = delimitedList(variable, delim=".", combine=True)
 string_var = QuotedString('"')
 
 list_expr = (
-    Literal('[')
-    + Group(delimitedList(integer | variable | string_var, delim=',', combine=False))
-    + Literal(']')
+    Literal("[")
+    + Group(delimitedList(integer | variable | string_var, delim=",", combine=False))
+    + Literal("]")
 )
 list_expr.setParseAction(ListOperation)
 
-true_false = oneOf('true false', caseless=True).setParseAction(
-    lambda s, l, t: t[0].lower() == 'true'
+true_false = oneOf("true false", caseless=True).setParseAction(
+    lambda s, l, t: t[0].lower() == "true"
 )
 none_op = (
-    Literal('isNull') + Literal('(') + dot_variable + Literal(')')
+    Literal("isNull") + Literal("(") + dot_variable + Literal(")")
 ).setParseAction(IsNullOperation)
 
-all_op = (Literal('all') + Literal('(') + dot_variable + Literal(')')).setParseAction(
+all_op = (Literal("all") + Literal("(") + dot_variable + Literal(")")).setParseAction(
     AllOperation
 )
 
@@ -250,20 +250,20 @@ operand = (
     true_false | none_op | integer | all_op | dot_variable | list_expr | string_var
 )
 
-andop = CaselessKeyword('and')
-orop = CaselessKeyword('or')
-notop = CaselessKeyword('not')
-inop = CaselessKeyword('in')
+andop = CaselessKeyword("and")
+orop = CaselessKeyword("or")
+notop = CaselessKeyword("not")
+inop = CaselessKeyword("in")
 
 expr = infixNotation(
     operand,
     [
-        ('-', 1, opAssoc.RIGHT, Negative),
-        ('*', 2, opAssoc.LEFT, Multiplication),
-        ('/', 2, opAssoc.LEFT, Division),
-        ('+', 2, opAssoc.LEFT, Addition),
-        ('-', 2, opAssoc.LEFT, Subtraction),
-        (oneOf('= != > >= < <='), 2, opAssoc.LEFT, ComparisonOperation),
+        ("-", 1, opAssoc.RIGHT, Negative),
+        ("*", 2, opAssoc.LEFT, Multiplication),
+        ("/", 2, opAssoc.LEFT, Division),
+        ("+", 2, opAssoc.LEFT, Addition),
+        ("-", 2, opAssoc.LEFT, Subtraction),
+        (oneOf("= != > >= < <="), 2, opAssoc.LEFT, ComparisonOperation),
         (inop, 2, opAssoc.LEFT, InOperation),
         (notop, 1, opAssoc.RIGHT, Not),
         (andop, 2, opAssoc.LEFT, And),

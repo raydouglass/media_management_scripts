@@ -26,14 +26,14 @@ class NoExitArgumentParser(argparse.ArgumentParser):
 def build_argparse():
     parser = NoExitArgumentParser()
     parser.add_argument(
-        '-v',
-        '--version',
-        help='Display version',
-        action='store_const',
+        "-v",
+        "--version",
+        help="Display version",
+        action="store_const",
         const=True,
         default=False,
     )
-    subparsers = parser.add_subparsers(help='Sub commands', dest='command')
+    subparsers = parser.add_subparsers(help="Sub commands", dest="command")
 
     for cmd in COMMANDS.values():
         cmd.build_argparse(subparsers)
@@ -45,12 +45,12 @@ def main():
     parser = build_argparse()
     try:
         ns = vars(parser.parse_args())
-        if ns.get('version'):
-            print('{} v{}'.format(parser.prog, version))
-        elif ns.get('print_args', False):
+        if ns.get("version"):
+            print("{} v{}".format(parser.prog, version))
+        elif ns.get("print_args", False):
             print(ns)
         else:
-            cmd = ns.get('command', None)
+            cmd = ns.get("command", None)
             if not cmd or cmd not in COMMANDS:
                 parser.print_usage()
             else:
@@ -59,5 +59,5 @@ def main():
         sys.exit(e.status)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

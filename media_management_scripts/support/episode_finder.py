@@ -10,15 +10,15 @@ from media_management_scripts.support.files import (
 )
 
 patterns = [
-    (re.compile('[Ss](\d+),?\s*[Ee](\d+)'), 1, 2),
-    (re.compile('(\d+)x(\d+)'), 1, 2),
-    (re.compile('[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
-    (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)'), 1, 2),
-    (re.compile('[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)'), 1, 2),
+    (re.compile("[Ss](\d+),?\s*[Ee](\d+)"), 1, 2),
+    (re.compile("(\d+)x(\d+)"), 1, 2),
+    (re.compile("[Ss]eries\s*(\d+).*[Ee]pisode\s*(\d+)"), 1, 2),
+    (re.compile("[Ss]eason\s*(\d+).*[Ee]pisode\s*(\d+)"), 1, 2),
+    (re.compile("[Ss]eason\s*(\d+).*[Ee]pisode.?\s*(\d+)"), 1, 2),
 ]
-pattern_101 = re.compile('(\d)(\d\d)')
+pattern_101 = re.compile("(\d)(\d\d)")
 
-part_patterns = [re.compile('[Pp]art\s*(\d+)'), re.compile('pt\s*(\d+)')]
+part_patterns = [re.compile("[Pp]art\s*(\d+)"), re.compile("pt\s*(\d+)")]
 
 
 @functools.total_ordering
@@ -32,13 +32,13 @@ class EpisodePart:
 
     def __str__(self):
         if self.season is None or self.episode is None:
-            return '{}: No match'.format(self.name)
+            return "{}: No match".format(self.name)
         if self.part is not None:
-            return '{}: S{:02d}E{:02d} pt{}'.format(
+            return "{}: S{:02d}E{:02d} pt{}".format(
                 self.name, self.season, self.episode, self.part
             )
         else:
-            return '{}: S{:02d}E{:02d}'.format(self.name, self.season, self.episode)
+            return "{}: S{:02d}E{:02d}".format(self.name, self.season, self.episode)
 
     def __repr__(self):
         return self.__str__()
@@ -46,9 +46,9 @@ class EpisodePart:
     @property
     def season_episode(self):
         if self.part is not None:
-            return 'S{:02d}E{:02d} pt{}'.format(self.season, self.episode, self.part)
+            return "S{:02d}E{:02d} pt{}".format(self.season, self.episode, self.part)
         else:
-            return 'S{:02d}E{:02d}'.format(self.season, self.episode)
+            return "S{:02d}E{:02d}".format(self.season, self.episode)
 
     def __eq__(self, other):
         if issubclass(type(other), EpisodePart):
@@ -120,7 +120,7 @@ def calculate_new_filenames(
             if show_name:
                 new_name = "{} - {}".format(show_name, new_name)
             if use_season_folders:
-                season_f = 'Season {:02d}'.format(ep.season)
+                season_f = "Season {:02d}".format(ep.season)
             else:
                 season_f = None
 

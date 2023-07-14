@@ -16,20 +16,20 @@ class SubCommand(metaclass=ABCMeta):
 
     @abstractmethod
     def build_argparse(self, subparser):
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @abstractmethod
     def subexecute(self, ns):
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     def execute(self, ns):
-        self.dry_run = ns['dry_run']
+        self.dry_run = ns["dry_run"]
         self.ns = ns
         self.subexecute(ns)
 
     def _move(self, src, dst, overwrite=False):
         if self.dry_run:
-            print('Move: {}=>{}'.format(src, dst))
+            print("Move: {}=>{}".format(src, dst))
         else:
             if not overwrite and check_exists(dst, log=self.dry_run):
                 return False
@@ -39,7 +39,7 @@ class SubCommand(metaclass=ABCMeta):
 
     def _copy(self, src, dst, overwrite=False):
         if self.dry_run:
-            print('Copy: {}=>{}'.format(src, dst))
+            print("Copy: {}=>{}".format(src, dst))
         else:
             if not overwrite and check_exists(dst, log=self.dry_run):
                 return False
@@ -142,22 +142,22 @@ class SubCommand(metaclass=ABCMeta):
 
 
 __all__ = [
-    'SubCommand',
-    'combine_subtitles',
+    "SubCommand",
+    "combine_subtitles",
     #'compare_directories',
-    'concat_mp4',
-    'convert',
-    'executables',
-    'find_episodes',
-    'itunes',
-    'metadata',
-    'metadata_compare',
+    "concat_mp4",
+    "convert",
+    "executables",
+    "find_episodes",
+    "itunes",
+    "metadata",
+    "metadata_compare",
     #'movie_rename',
-    'rename',
-    'search',
-    'select_streams',
+    "rename",
+    "search",
+    "select_streams",
     #'split',
-    'subtitles',
-    'thumbnail',
-    'tv_rename',
+    "subtitles",
+    "thumbnail",
+    "tv_rename",
 ]

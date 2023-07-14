@@ -7,11 +7,11 @@ import os
 class SearchCommand(SubCommand):
     @property
     def name(self):
-        return 'search'
+        return "search"
 
     def build_argparse(self, subparser):
         search_parser = subparser.add_parser(
-            'search',
+            "search",
             parents=[parent_parser],
             formatter_class=argparse.RawTextHelpFormatter,
             description="""
@@ -58,46 +58,46 @@ class SearchCommand(SubCommand):
             all(a.codec) = aac
 """,
         )
-        search_parser.add_argument('--db', default=None, dest='db_file')
-        search_parser.add_argument('input', nargs='+', help='Input directories')
+        search_parser.add_argument("--db", default=None, dest="db_file")
+        search_parser.add_argument("input", nargs="+", help="Input directories")
         search_parser.add_argument(
-            'query',
+            "query",
             help="The query to run. Recommended to enclose in single-quotes to avoid bash completions",
         )
         search_parser.add_argument(
-            '-0',
-            help='Output with null byte. Useful for piping into xargs -0.',
-            action='store_const',
+            "-0",
+            help="Output with null byte. Useful for piping into xargs -0.",
+            action="store_const",
             const=True,
             default=False,
         )
         search_parser.add_argument(
-            '-r',
-            '--recursive',
-            action='store_const',
+            "-r",
+            "--recursive",
+            action="store_const",
             const=True,
             default=False,
-            help='Recursively search input directory',
+            help="Recursively search input directory",
         )
         search_parser.add_argument(
-            '-e',
-            '--print-errors',
-            dest='print_errors',
-            action='store_const',
+            "-e",
+            "--print-errors",
+            dest="print_errors",
+            action="store_const",
             const=True,
             default=False,
-            help='Print the files that have an error',
+            help="Print the files that have an error",
         )
 
     def subexecute(self, ns):
         import sys
 
-        input_to_cmd = ns['input']
-        null_byte = ns['0']
-        query = ns['query']
-        db_file = ns['db_file']
-        recursive = ns['recursive']
-        print_errors = ns['print_errors']
+        input_to_cmd = ns["input"]
+        null_byte = ns["0"]
+        query = ns["query"]
+        db_file = ns["db_file"]
+        recursive = ns["recursive"]
+        print_errors = ns["print_errors"]
         l = []
         for input_dir in input_to_cmd:
             for file, metadata, status in search(input_dir, query, db_file, recursive):
@@ -106,9 +106,9 @@ class SearchCommand(SubCommand):
                         print(file)
                     else:
                         # l.append(file)
-                        print(file, end='\0')
+                        print(file, end="\0")
                 elif print_errors:
-                    print('Error: {}'.format(file), file=sys.stderr)
+                    print("Error: {}".format(file), file=sys.stderr)
         # if null_byte:
         #     print('\0'.join(l))
 
@@ -121,25 +121,25 @@ class SearchParameters:
         from media_management_scripts.support.encoding import AudioChannelName
 
         self.video_codecs = (
-            set(ns['video_codec'].split(',')) if ns['video_codec'] else []
+            set(ns["video_codec"].split(",")) if ns["video_codec"] else []
         )
         self.audio_codecs = (
-            set(ns['audio_codec'].split(',')) if ns['audio_codec'] else []
+            set(ns["audio_codec"].split(",")) if ns["audio_codec"] else []
         )
-        self.subtitles = set(ns['subtitle'].split(',')) if ns['subtitle'] else []
+        self.subtitles = set(ns["subtitle"].split(",")) if ns["subtitle"] else []
         self.audio_channels = []
-        acs = set(ns['audio_channels'].split(',')) if ns['audio_channels'] else []
+        acs = set(ns["audio_channels"].split(",")) if ns["audio_channels"] else []
         for ac in acs:
             channel = AudioChannelName.from_name(ac)
             if not channel:
-                raise Exception('Unknown AudioChannelName: {}'.format(ac))
+                raise Exception("Unknown AudioChannelName: {}".format(ac))
             self.audio_channels.append(channel.num_channels)
 
-        self.invert = ns['not']
-        if ns['container']:
-            raise Exception('Container not supported')
-        if ns['resolution']:
-            raise Exception('Resolution not supported')
+        self.invert = ns["not"]
+        if ns["container"]:
+            raise Exception("Container not supported")
+        if ns["resolution"]:
+            raise Exception("Resolution not supported")
 
     def match(self, metadata):
         video_matches = len(self.video_codecs) == 0
@@ -172,7 +172,7 @@ class SearchParameters:
 def _filter(file: str):
     from media_management_scripts.support.files import movie_files_filter
 
-    return not os.path.basename(file).startswith('.') and movie_files_filter(file)
+    return not os.path.basename(file).startswith(".") and movie_files_filter(file)
 
 
 def search(input_dir: str, query: str, db_file: str = None, recursive=False):
@@ -197,24 +197,24 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
             try:
                 metadata = extractor.extract(path)
                 context = {
-                    'v': {
-                        'codec': [v.codec for v in metadata.video_streams],
-                        'width': [v.width for v in metadata.video_streams],
-                        'height': [v.height for v in metadata.video_streams],
+                    "v": {
+                        "codec": [v.codec for v in metadata.video_streams],
+                        "width": [v.width for v in metadata.video_streams],
+                        "height": [v.height for v in metadata.video_streams],
                     },
-                    'a': {
-                        'codec': [a.codec for a in metadata.audio_streams],
-                        'channels': [a.channels for a in metadata.audio_streams],
-                        'lang': [a.language for a in metadata.audio_streams],
+                    "a": {
+                        "codec": [a.codec for a in metadata.audio_streams],
+                        "channels": [a.channels for a in metadata.audio_streams],
+                        "lang": [a.language for a in metadata.audio_streams],
                     },
-                    's': {
-                        'codec': [s.codec for s in metadata.subtitle_streams],
-                        'lang': [s.language for s in metadata.subtitle_streams],
+                    "s": {
+                        "codec": [s.codec for s in metadata.subtitle_streams],
+                        "lang": [s.language for s in metadata.subtitle_streams],
                     },
-                    'ripped': metadata.ripped,
-                    'bit_rate': metadata.bit_rate,
-                    'resolution': metadata.resolution._name_,
-                    'meta': metadata.to_dict(),
+                    "ripped": metadata.ripped,
+                    "bit_rate": metadata.bit_rate,
+                    "resolution": metadata.resolution._name_,
+                    "meta": metadata.to_dict(),
                 }
                 if query.exec(context) is True:
                     yield path, metadata, True

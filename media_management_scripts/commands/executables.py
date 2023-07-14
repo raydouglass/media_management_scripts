@@ -9,12 +9,12 @@ from media_management_scripts.support.executables import (
 class ExecutablesCommand(SubCommand):
     @property
     def name(self):
-        return 'executables'
+        return "executables"
 
     def build_argparse(self, subparser):
         split_parser = subparser.add_parser(
-            'executables',
-            help='Print the executables that will be used in other commands',
+            "executables",
+            help="Print the executables that will be used in other commands",
             parents=[parent_parser],
         )
 
@@ -22,13 +22,13 @@ class ExecutablesCommand(SubCommand):
         try:
             return func()
         except ExecutableNotFoundException:
-            return 'Not found'
+            return "Not found"
 
     def subexecute(self, ns):
         executables = [
             (exe.__name__, self._resolve_executable(exe)) for exe in EXECUTABLES
         ]
-        self._bulk_print(executables, ['Name', 'Path'])
+        self._bulk_print(executables, ["Name", "Path"])
 
 
 SubCommand.register(ExecutablesCommand)

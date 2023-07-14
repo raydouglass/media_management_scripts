@@ -7,7 +7,7 @@ from media_management_scripts.convert import convert_with_config
 
 
 def _bulk_convert(i, o, config, overwrite):
-    print('Starting {}'.format(i))
+    print("Starting {}".format(i))
     os.makedirs(os.path.dirname(o), exist_ok=True)
     convert_with_config(i, o, config, print_output=True, overwrite=overwrite)
 
@@ -15,7 +15,7 @@ def _bulk_convert(i, o, config, overwrite):
 class ConvertCommand(SubCommand):
     @property
     def name(self):
-        return 'convert'
+        return "convert"
 
     def build_argparse(self, subparser):
         desc = """
@@ -32,22 +32,22 @@ class ConvertCommand(SubCommand):
         """
 
         convert_parser = subparser.add_parser(
-            'convert',
-            help='Convert a file',
+            "convert",
+            help="Convert a file",
             parents=[parent_parser, input_parser, convert_parent_parser, output_parser],
             formatter_class=argparse.RawTextHelpFormatter,
             description=desc,
         )
         convert_parser.add_argument(
-            '--bulk',
-            help='Enables bulk conversion mode',
-            action='store_const',
+            "--bulk",
+            help="Enables bulk conversion mode",
+            action="store_const",
             const=True,
             default=False,
         )
         convert_parser.add_argument(
-            '--bulk-ext',
-            help='Use a difference extension for the output files',
+            "--bulk-ext",
+            help="Use a difference extension for the output files",
             default=None,
         )
 
@@ -55,11 +55,11 @@ class ConvertCommand(SubCommand):
         import os
         from media_management_scripts.convert import convert_config_from_ns
 
-        input_to_cmd = ns['input']
-        output = ns['output']
-        overwrite = ns['overwrite']
-        bulk = ns['bulk']
-        bulk_ext = ns['bulk_ext']
+        input_to_cmd = ns["input"]
+        output = ns["output"]
+        overwrite = ns["overwrite"]
+        bulk = ns["bulk"]
+        bulk_ext = ns["bulk_ext"]
         config = convert_config_from_ns(ns)
 
         if os.path.isdir(input_to_cmd):
@@ -73,7 +73,7 @@ class ConvertCommand(SubCommand):
                         map(
                             lambda i: (
                                 i[0],
-                                os.path.splitext(i[1])[0] + '.' + bulk_ext,
+                                os.path.splitext(i[1])[0] + "." + bulk_ext,
                             ),
                             files,
                         )
@@ -81,12 +81,12 @@ class ConvertCommand(SubCommand):
                 self._bulk(
                     files,
                     lambda i, o: _bulk_convert(i, o, config, overwrite),
-                    ['Input', 'Output'],
+                    ["Input", "Output"],
                 )
             else:
-                print('Cowardly refusing to convert a direction without --bulk flag')
+                print("Cowardly refusing to convert a direction without --bulk flag")
         elif not overwrite and os.path.exists(output):
-            print('Cowardly refusing to overwrite existing file: {}'.format(output))
+            print("Cowardly refusing to overwrite existing file: {}".format(output))
         else:
             convert_with_config(
                 input_to_cmd, output, config, print_output=True, overwrite=overwrite

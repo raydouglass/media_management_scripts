@@ -14,7 +14,7 @@ class TvShow(NamedTuple):
 
 
 def _parse_dir(dir) -> Iterable[TvShow]:
-    pattern = re.compile('(.+)_(.+)_(\d{4})_(\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d).wtv')
+    pattern = re.compile("(.+)_(.+)_(\d{4})_(\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d).wtv")
     for file in os.listdir(dir):
         m = pattern.search(file)
         if m:
@@ -39,11 +39,11 @@ def run_delete(config_file, dry_run=True):
     :param dry_run:
     :return:
     """
-    with open(config_file, 'r') as file:
+    with open(config_file, "r") as file:
         config = json.load(file)
 
-    dir = config['directory']
-    tv_shows_config = config['tv_shows']
+    dir = config["directory"]
+    tv_shows_config = config["tv_shows"]
 
     key = lambda x: x.show
 
@@ -56,6 +56,6 @@ def run_delete(config_file, dry_run=True):
                 files.sort(key=lambda x: x.recorded_datetime)
                 to_delete = files[:num_to_delete]
                 for d in to_delete:
-                    print('{}'.format(os.path.basename(d.file_path)))
+                    print("{}".format(os.path.basename(d.file_path)))
                     if not dry_run:
                         os.remove(d.file_path)

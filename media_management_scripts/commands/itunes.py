@@ -12,11 +12,11 @@ from difflib import SequenceMatcher
 
 def _get_season_episode(tvdb_episode, use_dvd=False):
     if use_dvd:
-        season = tvdb_episode['dvdSeason']
-        episode_num = tvdb_episode['dvdEpisodeNumber']
+        season = tvdb_episode["dvdSeason"]
+        episode_num = tvdb_episode["dvdEpisodeNumber"]
     else:
-        season = tvdb_episode['airedSeason']
-        episode_num = tvdb_episode['airedEpisodeNumber']
+        season = tvdb_episode["airedSeason"]
+        episode_num = tvdb_episode["airedEpisodeNumber"]
     return int(season), int(episode_num)
 
 
@@ -36,51 +36,51 @@ def _map_metadata(input_files, meta_shelve=None) -> Dict[str, Metadata]:
 class ItunesCommand(SubCommand):
     @property
     def name(self):
-        return 'itunes'
+        return "itunes"
 
     def build_argparse(self, subparser):
         itunes_parser = subparser.add_parser(
-            'itunes',
+            "itunes",
             parents=[parent_parser],
-            help='Attempts to rename iTunes episodes to the standard Plex format.',
+            help="Attempts to rename iTunes episodes to the standard Plex format.",
         )
         itunes_parser.add_argument(
-            '-o', '--output', type=str, default='./', help='Directory to output to'
+            "-o", "--output", type=str, default="./", help="Directory to output to"
         )
         itunes_parser.add_argument(
-            '--meta-shelve',
+            "--meta-shelve",
             type=str,
             default=None,
-            dest='meta_shelve',
-            help='A file to hold metadata information for faster subsequent runs on the same files',
+            dest="meta_shelve",
+            help="A file to hold metadata information for faster subsequent runs on the same files",
         )
-        itunes_parser.add_argument('input', nargs='+', help='Input files')
+        itunes_parser.add_argument("input", nargs="+", help="Input files")
         itunes_parser.add_argument(
-            '--dvd',
-            action='store_const',
+            "--dvd",
+            action="store_const",
             default=False,
             const=True,
-            help='Use DVD ordering',
+            help="Use DVD ordering",
         )
         itunes_parser.add_argument(
-            '--fuzzy',
-            action='store_const',
+            "--fuzzy",
+            action="store_const",
             default=False,
             const=True,
-            help='Use fuzzy matching. Enables this uses less strict exact episode name matching.',
+            help="Use fuzzy matching. Enables this uses less strict exact episode name matching.",
         )
 
     def subexecute(self, ns):
         from media_management_scripts.tvdb_api import from_config
         import os
 
-        input_to_cmd = ns['input']
+        input_to_cmd = ns["input"]
         tvdb = from_config()
-        output = ns['output']
-        dvd = ns['dvd']
-        fuzzy = ns['fuzzy']
-        meta_shelve = ns['meta_shelve']
-        dry_run = ns['dry_run']
+        output = ns["output"]
+        dvd = ns["dvd"]
+        fuzzy = ns["fuzzy"]
+        meta_shelve = ns["meta_shelve"]
+        dry_run = ns["dry_run"]
         if meta_shelve:
             import shelve
 
@@ -106,13 +106,13 @@ class ItunesCommand(SubCommand):
             )
 
     def _find_match(self, metadata: Metadata, episodes, use_dvd=False, fuzzy=False):
-        date = metadata.tags['date'].split('T')[0]
-        title = metadata.tags['title']
+        date = metadata.tags["date"].split("T")[0]
+        title = metadata.tags["title"]
         fuzzy_match = 0
         fuzzy_episode = None
         for ep in episodes:
-            ep_name = ep.get('episodeName', None)
-            ep_date = ep.get('firstAired', None)
+            ep_name = ep.get("episodeName", None)
+            ep_date = ep.get("firstAired", None)
             if ep_date == date:
                 if title.lower() == ep_name.lower():
                     return ep
@@ -122,9 +122,9 @@ class ItunesCommand(SubCommand):
                         fuzzy_episode = ep
                         fuzzy_match = ratio
         if not fuzzy_episode:
-            if 'season_number' in metadata.tags and 'episode_sort' in metadata.tags:
-                season = metadata.tags['season_number']
-                ep_num = metadata.tags['episode_sort']
+            if "season_number" in metadata.tags and "episode_sort" in metadata.tags:
+                season = metadata.tags["season_number"]
+                ep_num = metadata.tags["episode_sort"]
                 for ep in episodes:
                     tvdb_season, tvdb_ep_num = _get_season_episode(ep, use_dvd)
                     if tvdb_season == season and tvdb_ep_num == ep_num:
@@ -142,16 +142,16 @@ class ItunesCommand(SubCommand):
         table = []
         for file, params in matched.items():
             new_name = rename_process(
-                '{plex}', files=[file], output_dir=output_dir, params=params
+                "{plex}", files=[file], output_dir=output_dir, params=params
             )[0][1]
             table.append((file, new_name))
         table.sort(key=lambda s: s[1])
-        header = ('Input', 'Output')
+        header = ("Input", "Output")
         self._bulk_move(table, header, src_index=0, dest_index=1, print_table=True)
         if not_matched:
-            print('Not Matched:')
+            print("Not Matched:")
             for file in not_matched:
-                print('  {}'.format(file))
+                print("  {}".format(file))
 
     def process_itunes_tv(
         self,
@@ -164,9 +164,9 @@ class ItunesCommand(SubCommand):
         dry_run=True,
     ):
         metadata_map = _map_metadata(input_files, meta_shelve)
-        series_name = {value.tags['show'] for value in metadata_map.values()}
+        series_name = {value.tags["show"] for value in metadata_map.values()}
         if len(series_name) != 1:
-            raise Exception('Input files have different shows: {}'.format(series_name))
+            raise Exception("Input files have different shows: {}".format(series_name))
         series_name = series_name.pop()
         series_id = tvdb.get_series_id(series_name)
         tvdb_episodes = tvdb.get_episodes(series_id)
@@ -177,10 +177,10 @@ class ItunesCommand(SubCommand):
             if episode:
                 season, episode_num = _get_season_episode(episode, use_dvd)
                 params = {
-                    'show': series_name,
-                    'season': season,
-                    'ep_num': episode_num,
-                    'name': episode['episodeName'],
+                    "show": series_name,
+                    "season": season,
+                    "ep_num": episode_num,
+                    "name": episode["episodeName"],
                 }
                 matched[file] = params
             else:

@@ -25,7 +25,7 @@ def _transfer(
         d = Dialog(autowidgetsize=False)
         d.gauge_start(
             title=result.simple_name,
-            text='Transferring...\n{}'.format(filename),
+            text="Transferring...\n{}".format(filename),
             percent=0,
         )
         try:
@@ -33,7 +33,7 @@ def _transfer(
             def callback(file, m, curr):
                 current = sizeof_fmt(curr)
                 max = sizeof_fmt(m)
-                text = 'Transferring...\n{}\n{} of {}'.format(filename, current, max)
+                text = "Transferring...\n{}\n{} of {}".format(filename, current, max)
                 d.gauge_update(percent=int(curr / m * 100), text=text, update_text=True)
 
             with SCPClient(
@@ -48,7 +48,7 @@ def _search(title, file, metadata):
     results = MovieDbApi().search_title(title, metadata)
     # Sort by closeness to file's title, then title, then year
     if len(results) > 0:
-        metadata_title = metadata.title if metadata.title is not None else ''
+        metadata_title = metadata.title if metadata.title is not None else ""
         results.sort(
             key=lambda x: (
                 -SequenceMatcher(None, x.title, metadata_title).ratio(),
@@ -60,7 +60,7 @@ def _search(title, file, metadata):
         for i in range(len(results)):
             choices.append((str(i), results[i].simple_name))
         d = Dialog(autowidgetsize=True)
-        code, tag = d.menu('Choices:', choices=choices, title=os.path.basename(file))
+        code, tag = d.menu("Choices:", choices=choices, title=os.path.basename(file))
         if code == d.OK:
             return OK, results[int(tag)]
         else:
@@ -77,10 +77,10 @@ def _get_new_name(input_to_cmd) -> NameInformation:
         if code == CANCEL:
             return None
     while result is None:
-        title = ''
+        title = ""
         d = Dialog(autowidgetsize=True)
         exit_code, title = d.inputbox(
-            'No matches found. Try a different title?',
+            "No matches found. Try a different title?",
             init=title,
             title=os.path.basename(input_to_cmd),
         )
@@ -95,21 +95,21 @@ def _get_new_name(input_to_cmd) -> NameInformation:
 
 
 def movie_rename(input_to_cmd, ns):
-    dry_run = ns.get('dry_run', False)
+    dry_run = ns.get("dry_run", False)
     results = [(i, _get_new_name(i)) for i in input_to_cmd]
     if results:
-        username = ns.get('username', None)
-        host = ns.get('host', None)
-        pkey_file = ns.get('pkey', None)
-        output_path = ns.get('output_path', None)
-        move_source = ns.get('move_source_path', None)
+        username = ns.get("username", None)
+        host = ns.get("host", None)
+        pkey_file = ns.get("pkey", None)
+        output_path = ns.get("output_path", None)
+        move_source = ns.get("move_source_path", None)
         for original, result in results:
             if result:
                 new_file = result.new_name(original)
                 if not dry_run:
                     if not host or not pkey_file or not output_path:
                         print(
-                            'If not using dry-run, you must include the host, pkey, and output path'
+                            "If not using dry-run, you must include the host, pkey, and output path"
                         )
                     else:
                         move(original, new_file)

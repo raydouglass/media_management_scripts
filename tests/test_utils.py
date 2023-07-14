@@ -20,6 +20,7 @@ class UtilsTestCase(unittest.TestCase):
         self.assertEqual(1, utils.compare_lt(1, None))
         self.assertEqual(-1, utils.compare_lt(None, 1))
 
+
 class TestFileTestCase(unittest.TestCase):
     def test(self):
         with create_test_video(length=5) as file:

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def mp4_mkv_filter(f: str) -> bool:
-    return f.endswith('.mkv') or f.endswith('.mp4')
+    return f.endswith(".mkv") or f.endswith(".mp4")
 
 
 def all_files_filter(f: str) -> bool:
@@ -18,21 +18,21 @@ def all_files_filter(f: str) -> bool:
 def movie_files_filter(file) -> bool:
     return os.path.isfile(file) and (
         mp4_mkv_filter(file)
-        or file.endswith('.avi')
-        or file.endswith('.m4v')
-        or file.endswith('.webm')
-        or get_mime(file).startswith('video/')
+        or file.endswith(".avi")
+        or file.endswith(".m4v")
+        or file.endswith(".webm")
+        or get_mime(file).startswith("video/")
     )
 
 
 def subtitle_files_filter(file) -> bool:
     return (
-        file.endswith('.srt')
-        or file.endswith('.ass')
-        or file.endswith('.ttml')
-        or file.endswith('.vtt')
-        or file.endswith('.xml')
-        or file.endswith('.dfxp')
+        file.endswith(".srt")
+        or file.endswith(".ass")
+        or file.endswith(".ttml")
+        or file.endswith(".vtt")
+        or file.endswith(".xml")
+        or file.endswith(".dfxp")
     )
 
 
@@ -62,7 +62,7 @@ def check_exists(output: str, log=True):
     if os.path.exists(output):
         if log:
             logger.warning(
-                'Cowardly refusing to overwrite existing file: {}'.format(output)
+                "Cowardly refusing to overwrite existing file: {}".format(output)
             )
         return True
     return False
@@ -82,9 +82,9 @@ def list_files(
     """
     for root, subdirs, files in os.walk(input_dir):
         for file in files:
-            if not file.startswith('.') and file_filter(os.path.join(root, file)):
-                path = os.path.join(root.replace(input_dir, ''), file)
-                if path.startswith('/'):
+            if not file.startswith(".") and file_filter(os.path.join(root, file)):
+                path = os.path.join(root.replace(input_dir, ""), file)
+                if path.startswith("/"):
                     path = path[1::]
                 yield path
 

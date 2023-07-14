@@ -1,15 +1,15 @@
 from enum import Enum
 
 DEFAULT_CRF = 15
-DEFAULT_PRESET = 'fast'
+DEFAULT_PRESET = "fast"
 
 
 class Resolution(Enum):
     # Width, height, auto bitrate
-    LOW_DEF = (360, 240, 500, 'auto_bitrate_240')
-    STANDARD_DEF = (720, 480, 1600, 'auto_bitrate_480')
-    MEDIUM_DEF = (1280, 720, 4500, 'auto_bitrate_720')
-    HIGH_DEF = (1920, 1080, 8000, 'auto_bitrate_1080')
+    LOW_DEF = (360, 240, 500, "auto_bitrate_240")
+    STANDARD_DEF = (720, 480, 1600, "auto_bitrate_480")
+    MEDIUM_DEF = (1280, 720, 4500, "auto_bitrate_720")
+    HIGH_DEF = (1920, 1080, 8000, "auto_bitrate_1080")
     ULTRA_HIGH_DEF = (3840, 2160, None)
 
     @property
@@ -30,9 +30,9 @@ class Resolution(Enum):
 
 
 class BitDepth(Enum):
-    BIT_8 = (8, 'yuv420p')
-    BIT_10 = (10, 'yuv420p10le')
-    BIT_12 = (12, 'yuv420p12le')
+    BIT_8 = (8, "yuv420p")
+    BIT_10 = (10, "yuv420p10le")
+    BIT_12 = (12, "yuv420p12le")
 
     @property
     def bits(self):
@@ -64,10 +64,10 @@ def resolution_name(height):
 
 
 class VideoCodec(Enum):
-    H264 = ('libx264', ['h264'])
-    H265 = ('libx265', ['hevc', 'h265'])
-    MPEG2 = ('mpeg2video', ['mpeg2video', 'mpeg2'])
-    COPY = ('copy', ['copy'])
+    H264 = ("libx264", ["h264"])
+    H265 = ("libx265", ["hevc", "h265"])
+    MPEG2 = ("mpeg2video", ["mpeg2video", "mpeg2"])
+    COPY = ("copy", ["copy"])
 
     @property
     def ffmpeg_encoder_name(self):
@@ -99,10 +99,10 @@ class VideoCodec(Enum):
 
 
 class AudioCodec(Enum):
-    AAC = 'aac'
-    AC3 = 'ac3'
-    DTS = 'dts'
-    COPY = 'copy'
+    AAC = "aac"
+    AC3 = "ac3"
+    DTS = "dts"
+    COPY = "copy"
 
     @property
     def extension(self):
@@ -126,11 +126,11 @@ class AudioCodec(Enum):
 
 
 class AudioChannelName(Enum):
-    MONO = (1, ['mono'])
-    STEREO = (2, ['stereo'])
-    SURROUND_5_1 = (6, ['surround', '5.1'])
-    SURROUND_6_1 = (7, ['6.1'])
-    SURROUND_7_1 = (8, ['7.1'])
+    MONO = (1, ["mono"])
+    STEREO = (2, ["stereo"])
+    SURROUND_5_1 = (6, ["surround", "5.1"])
+    SURROUND_6_1 = (7, ["6.1"])
+    SURROUND_7_1 = (8, ["7.1"])
 
     @property
     def num_channels(self):
@@ -154,10 +154,10 @@ class AudioChannelName(Enum):
 
 
 class VideoFileContainer(Enum):
-    MP4 = 'mp4'
-    MKV = 'mkv'
-    MPEG = 'mpeg'
-    WTV = 'wtv'
+    MP4 = "mp4"
+    MKV = "mkv"
+    MPEG = "mpeg"
+    WTV = "wtv"
 
     @property
     def extension(self):
@@ -165,15 +165,15 @@ class VideoFileContainer(Enum):
 
 
 class H264Preset(Enum):
-    ULTRAFAST = 'ultrafast'
-    SUPERFAST = 'superfast'
-    VERYFAST = 'veryfast'
-    FASTER = 'faster'
-    FAST = 'fast'
-    MEDIUM = 'medium'
-    SLOW = 'slow'
-    VERYSLOW = 'veryslow'
-    PLACEBO = 'placebo'
+    ULTRAFAST = "ultrafast"
+    SUPERFAST = "superfast"
+    VERYFAST = "veryfast"
+    FASTER = "faster"
+    FAST = "fast"
+    MEDIUM = "medium"
+    SLOW = "slow"
+    VERYSLOW = "veryslow"
+    PLACEBO = "placebo"
 
     @staticmethod
     def from_value(value):

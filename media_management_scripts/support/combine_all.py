@@ -3,17 +3,17 @@ import re
 from media_management_scripts.support.files import get_input_output, movie_files_filter
 from media_management_scripts.convert import combine
 
-LANG_PATTERN = re.compile('\.(\w+)\.(srt|idx|ttml)')
+LANG_PATTERN = re.compile("\.(\w+)\.(srt|idx|ttml)")
 
-subtitle_exts = ('.srt', '.idx', '.ttml')
+subtitle_exts = (".srt", ".idx", ".ttml")
 
 
 def _filter(f: str):
     return (
         movie_files_filter(f)
-        or f.endswith('.srt')
-        or f.endswith('.idx')
-        or f.endswith('.ttml')
+        or f.endswith(".srt")
+        or f.endswith(".idx")
+        or f.endswith(".ttml")
     )
 
 
@@ -54,17 +54,17 @@ def get_combinable_files(input_dir, output_dir, forced_language=None, lower_case
             else:
                 video_file = file
                 output_file = o
-                output_file = output_file.replace(ext, '.mkv')
+                output_file = output_file.replace(ext, ".mkv")
         yield video_file, srt_file, language, output_file
 
 
-def combine_all(files, convert=False, crf=15, preset='veryfast'):
+def combine_all(files, convert=False, crf=15, preset="veryfast"):
     for video_file, srt_file, language, output_file in files:
-        print('Starting {}'.format(video_file))
+        print("Starting {}".format(video_file))
         if not srt_file:
-            print('No subtitles for {}'.format(video_file))
+            print("No subtitles for {}".format(video_file))
         elif not output_file:
-            print('No video file for {}'.format(srt_file))
+            print("No video file for {}".format(srt_file))
         else:
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             combine(
