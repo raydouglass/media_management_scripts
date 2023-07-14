@@ -150,7 +150,7 @@ class ConvertDvdTestCase(unittest.TestCase):
     def test_backup_mock(self):
         ret = self.convert_dvds.backup_file("dir", "file")
         self.assertTrue(type(ret) == BackupMock)
-        self.assertEquals(0, ret.wait())
+        self.assertEqual(0, ret.wait())
         self.assertEqual(1, self.backup_count)
         with NamedTemporaryFile(suffix=".ini") as temp_file:
             ret, split_dir = self.convert_dvds.backup(
@@ -158,7 +158,7 @@ class ConvertDvdTestCase(unittest.TestCase):
             )
             self.assertIsNone(split_dir)
             self.assertTrue(type(ret) == BackupMock)
-            self.assertEquals(0, ret.wait())
+            self.assertEqual(0, ret.wait())
             self.assertEqual(2, self.backup_count)
 
     def test_config_file_created(self):
@@ -187,12 +187,12 @@ class ConvertDvdTestCase(unittest.TestCase):
         self.assertEqual(1, self.backup_count)
         self.assertTrue(os.path.isfile(expected_output_file))
         self.assertFalse(0, os.path.getsize(expected_output_file))
-        self.assertEquals(1, result.movie_processed_count)
-        self.assertEquals(1, result.movie_total_count)
-        self.assertEquals(0, result.movie_error_count)
-        self.assertEquals(0, result.tv_error_count)
-        self.assertEquals(0, result.tv_processed_count)
-        self.assertEquals(0, result.tv_total_count)
+        self.assertEqual(1, result.movie_processed_count)
+        self.assertEqual(1, result.movie_total_count)
+        self.assertEqual(0, result.movie_error_count)
+        self.assertEqual(0, result.tv_error_count)
+        self.assertEqual(0, result.tv_processed_count)
+        self.assertEqual(0, result.tv_total_count)
 
     def test_tv_run(self):
         tv_name = "Show Name/Season 02/Show Name - S02E01 - Episode Title.mkv"
@@ -207,12 +207,12 @@ class ConvertDvdTestCase(unittest.TestCase):
         self.assertEqual(1, self.backup_count)
         self.assertTrue(os.path.isfile(expected_output_file))
         self.assertFalse(0, os.path.getsize(expected_output_file))
-        self.assertEquals(0, result.movie_processed_count)
-        self.assertEquals(0, result.movie_total_count)
-        self.assertEquals(0, result.movie_error_count)
-        self.assertEquals(0, result.tv_error_count)
-        self.assertEquals(1, result.tv_processed_count)
-        self.assertEquals(1, result.tv_total_count)
+        self.assertEqual(0, result.movie_processed_count)
+        self.assertEqual(0, result.movie_total_count)
+        self.assertEqual(0, result.movie_error_count)
+        self.assertEqual(0, result.tv_error_count)
+        self.assertEqual(1, result.tv_processed_count)
+        self.assertEqual(1, result.tv_total_count)
 
     def test_movie_exists(self):
         movie_name = "Move Name (2000) - 1080p.mkv"
@@ -227,13 +227,13 @@ class ConvertDvdTestCase(unittest.TestCase):
         result = self.convert_dvds.run()
 
         self.assertEqual(1, self.backup_count)
-        self.assertEquals(0, os.path.getsize(output_file))
-        self.assertEquals(1, result.movie_processed_count)
-        self.assertEquals(1, result.movie_total_count)
-        self.assertEquals(0, result.movie_error_count)
-        self.assertEquals(0, result.tv_error_count)
-        self.assertEquals(0, result.tv_processed_count)
-        self.assertEquals(0, result.tv_total_count)
+        self.assertEqual(0, os.path.getsize(output_file))
+        self.assertEqual(1, result.movie_processed_count)
+        self.assertEqual(1, result.movie_total_count)
+        self.assertEqual(0, result.movie_error_count)
+        self.assertEqual(0, result.tv_error_count)
+        self.assertEqual(0, result.tv_processed_count)
+        self.assertEqual(0, result.tv_total_count)
 
     def test_multiple(self):
         movie_count = 3
@@ -262,9 +262,9 @@ class ConvertDvdTestCase(unittest.TestCase):
         for f in expected_files:
             self.assertTrue(os.path.isfile(f))
             self.assertFalse(0, os.path.getsize(f))
-        self.assertEquals(movie_count, result.movie_processed_count)
-        self.assertEquals(movie_count, result.movie_total_count)
-        self.assertEquals(0, result.movie_error_count)
-        self.assertEquals(0, result.tv_error_count)
-        self.assertEquals(tv_count, result.tv_processed_count)
-        self.assertEquals(tv_count, result.tv_total_count)
+        self.assertEqual(movie_count, result.movie_processed_count)
+        self.assertEqual(movie_count, result.movie_total_count)
+        self.assertEqual(0, result.movie_error_count)
+        self.assertEqual(0, result.tv_error_count)
+        self.assertEqual(tv_count, result.tv_processed_count)
+        self.assertEqual(tv_count, result.tv_total_count)
