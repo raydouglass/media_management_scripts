@@ -1,0 +1,52 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools",
+    "setuptools-git-versioning",
+    "wheel"
+]
+
+[tool.setuptools]
+zip-safe = false
+license-files = ["LICENSE"]
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[project]
+name = "media-management-scripts"
+description = "Media Management Scripts"
+dynamic = ["version"]
+readme = { file = "README.md", content-type = "text/markdown" }
+authors = [
+    { name = "Ray Douglass" },
+]
+license = { text = "Apache 2.0" }
+requires-python = ">=3.9"
+dependencies = [
+  "requests",
+  "pyOpenSSL",
+  "texttable",
+  "tmdbsimple",
+  "argcomplete",
+  "tempita",
+  "pysrt",
+  "pythondialog",
+  "pyyaml",
+  "pyparsing",
+  "pycaption",
+  "python-magic",
+]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+manage-media = "media_management_scripts.main:main"
+convert-dvds = "media_management_scripts.convert_daemon:main"
+tvdb-api = "media_management_scripts.tvdb_api:main"
+
+[project.urls]
+Homepage = "https://github.com/raydouglass/media_management_scripts"
