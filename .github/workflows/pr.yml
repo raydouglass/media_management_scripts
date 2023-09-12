@@ -7,21 +7,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Run black formatter
-        uses: psf/black@stable
         with:
-          src: media_management_scripts
+          fetch-depth: 0
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.0
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11"]
-    needs: format
+    needs: pre-commit
     steps:
       - name: Checkout
         uses: actions/checkout@v4
