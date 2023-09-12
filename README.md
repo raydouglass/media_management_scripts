@@ -47,7 +47,7 @@ __[rename](#rename)__
 __[search](#search)__
 
 __[tv-rename](#tv-rename)__
- 
+
 
 Help output
 ```
@@ -158,7 +158,7 @@ Battlestar Galatica (2003) - s00e01 - Battlestar Galactica The Miniseries (1).mk
 
 ## rename
 
-`manage-media rename <template> <input file>` or `manage-media rename --recursive <template> <input directory>` 
+`manage-media rename <template> <input file>` or `manage-media rename --recursive <template> <input directory>`
 
 A flexible tool to rename files
 
@@ -272,7 +272,7 @@ For example, if you ripped some Battlestar Galactica blurays, you might have a f
     - BSG_Season1_Disc2_t01.mkv
     - BSG_Season1_Disc2_t02.mkv
     - BSG_Season1_Disc2_t03.mkv
-   
+
 `manage-media tv-rename -s 1 -e 1 --tvdb --show "Battlestar Galactica" --output "BSG/Season 1" BSG_Season1_Disc*`
 
 Result
@@ -286,8 +286,8 @@ Result
         - Battlestar Galatica (2003) - S01E06 - Litmus.mkv
         - Battlestar Galatica (2003) - S01E07 - Six Degrees of Separation.mkv
         - Battlestar Galatica (2003) - S01E08 - Flesh and Bone.mkv
-        
-        
+
+
 ## Configuration
 
 You can configuration where to find various executables by creating a file `~/.config/mms/config.ini`. By default, commands will use the executables found in your path.

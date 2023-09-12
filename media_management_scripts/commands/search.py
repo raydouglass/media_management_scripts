@@ -16,9 +16,9 @@ class SearchCommand(SubCommand):
             formatter_class=argparse.RawTextHelpFormatter,
             description="""
     Searches a directory for video files matching parameters.
-    
+
     If a video has multiple streams, comparisons mean at least one stream matches.
-    
+
     Available parameters:
     Video:
         v.codec - The video codec (h264, h265, mpeg2, etc)
@@ -37,11 +37,11 @@ class SearchCommand(SubCommand):
         resolution - The resolution name (LOW_DEF, HIGH_DEF, etc)
     Metadata:
         meta.xyz - Follows the basic JSON metadata output
-    
+
     Functions:
         isNull(xyz) - Returns true if the value is null
         all(xyz) - Instead of one stream matching, check all of them
-    
+
     Examples:
         Find all videos that are H264
             v.codec = h264

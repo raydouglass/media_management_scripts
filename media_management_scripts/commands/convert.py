@@ -20,7 +20,7 @@ class ConvertCommand(SubCommand):
     def build_argparse(self, subparser):
         desc = """
     Converts a video file to 'standard' parameters. By default, this is H264 with AAC audio.
-    
+
     Convert to HEVC/H.265:
         convert --video-codec hevc <input> <output>
     Convert to HEVC with AC3 audio:
