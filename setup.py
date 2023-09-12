@@ -18,11 +18,10 @@ setup(
     packages=[
         "media_management_scripts",
         "media_management_scripts.commands",
-        "media_management_scripts.silver_tube",
         "media_management_scripts.support",
     ],
     zip_safe=False,
-    scripts=["bin/manage-media", "bin/convert-dvds", "bin/silver-tube", "bin/tvdb-api"],
+    scripts=["bin/manage-media", "bin/convert-dvds", "bin/tvdb-api"],
     install_requires=[
         "requests",
         "pyOpenSSL",
@@ -30,10 +29,7 @@ setup(
         "tmdbsimple",
         "argcomplete",
         "tempita",
-        "SQLAlchemy",
         "pysrt",
-        "paramiko",
-        "scp",
         "pythondialog",
         "pyyaml",
         "pyparsing",

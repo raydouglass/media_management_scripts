@@ -152,7 +152,7 @@ __all__ = [
     "itunes",
     "metadata",
     "metadata_compare",
-    #'movie_rename',
+    "movie_rename",
     "rename",
     "search",
     "select_streams",
