@@ -215,7 +215,7 @@ def execute_with_callback(
                 continue
             try:
                 if l:
-                    l = l.decode("utf-8")
+                    l = l.decode("utf-8", errors="ignore")
                     if l == "\n" or l == "\r":
                         callback(output.getvalue())
                         output = StringIO()

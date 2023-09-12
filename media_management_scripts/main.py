@@ -3,7 +3,7 @@ import argcomplete
 import sys
 
 from media_management_scripts.commands import *
-from media_management_scripts import version
+from media_management_scripts import __version__ as version
 
 COMMANDS = {k.name: k for k in [x() for x in SubCommand.__subclasses__()]}
 

@@ -6,6 +6,10 @@ requires = [
     "wheel"
 ]
 
+[tool.setuptools]
+zip-safe = false
+license-files = ["LICENSE"]
+
 [tool.setuptools-git-versioning]
 enabled = true
 
@@ -39,8 +43,10 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 
+[project.scripts]
+manage-media = "media_management_scripts.main:main"
+convert-dvds = "media_management_scripts.convert_daemon:main"
+tvdb-api = "media_management_scripts.tvdb_api:main"
+
 [project.urls]
 Homepage = "https://github.com/raydouglass/media_management_scripts"
-
-[tool.setuptools]
-license-files = ["LICENSE"]
