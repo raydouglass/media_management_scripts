@@ -93,6 +93,8 @@ class VideoCodec(Enum):
     @staticmethod
     def from_code_name(name):
         for vc in VideoCodec:
+            if name == vc.ffmpeg_encoder_name:
+                return vc
             for n in vc.codec_names:
                 if name == n:
                     return vc
