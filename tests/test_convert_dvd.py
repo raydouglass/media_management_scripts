@@ -1,4 +1,7 @@
-from tests import create_test_video, VideoDefinition
+from media_management_scripts.support.test_video import (
+    create_test_video,
+    VideoDefinition,
+)
 from media_management_scripts.support.encoding import VideoFileContainer
 import unittest
 from tempfile import TemporaryDirectory, NamedTemporaryFile

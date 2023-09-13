@@ -143,6 +143,7 @@ class SubCommand(metaclass=ABCMeta):
 
 __all__ = [
     "SubCommand",
+    "create_test_video",
     "combine_subtitles",
     #'compare_directories',
     "concat_mp4",

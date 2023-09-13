@@ -2,7 +2,7 @@ import unittest
 
 from media_management_scripts.convert import convert_config_from_ns, convert_with_config
 from media_management_scripts.utils import ConvertConfig, extract_metadata
-from tests import (
+from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
     AudioDefition,

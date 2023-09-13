@@ -2,7 +2,7 @@ import unittest
 
 from media_management_scripts import utils
 from media_management_scripts.support.episode_finder import extract
-from tests import create_test_video
+from media_management_scripts.support.test_video import create_test_video
 import os
 from media_management_scripts.commands.metadata import print_metadata
 

@@ -28,6 +28,10 @@ class Resolution(Enum):
     def auto_bitrate_name(self):
         return self.value[3]
 
+    @staticmethod
+    def from_height(height):
+        return resolution_name(height)
+
 
 class BitDepth(Enum):
     BIT_8 = (8, "yuv420p")
@@ -51,6 +55,7 @@ class BitDepth(Enum):
 
 
 def resolution_name(height):
+    height = int(height)
     if height <= 240:
         return Resolution.LOW_DEF
     elif height <= 576:
@@ -64,10 +69,10 @@ def resolution_name(height):
 
 
 class VideoCodec(Enum):
-    H264 = ("libx264", ["h264"])
-    H265 = ("libx265", ["hevc", "h265"])
-    MPEG2 = ("mpeg2video", ["mpeg2video", "mpeg2"])
-    COPY = ("copy", ["copy"])
+    H264 = ("libx264", ["h264"], "h264_nvenc")
+    H265 = ("libx265", ["hevc", "h265"], "hevc_nvenc")
+    MPEG2 = ("mpeg2video", ["mpeg2video", "mpeg2"], None)
+    COPY = ("copy", ["copy"], "copy")
 
     @property
     def ffmpeg_encoder_name(self):
@@ -80,6 +85,10 @@ class VideoCodec(Enum):
     @property
     def codec_names(self):
         return self.value[1]
+
+    @property
+    def nvidia_codec_name(self):
+        return self.value[2]
 
     @staticmethod
     def from_code_name(name):
@@ -115,6 +124,13 @@ class AudioCodec(Enum):
     @property
     def ffmpeg_encoder_name(self):
         return self.ffmpeg_codec_name
+
+    @staticmethod
+    def from_code_name(name):
+        for ac in AudioCodec:
+            if name == ac.ffmpeg_codec_name:
+                return ac
+        return None
 
     def equals(self, to_comp: str) -> bool:
         """

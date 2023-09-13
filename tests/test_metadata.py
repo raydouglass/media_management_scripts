@@ -5,7 +5,12 @@ from media_management_scripts.support.encoding import (
     AudioCodec,
     AudioChannelName,
 )
-from tests import create_test_video, VideoDefinition, AudioDefition, assertAudioLength
+from media_management_scripts.support.test_video import (
+    create_test_video,
+    VideoDefinition,
+    AudioDefition,
+)
+from tests import assertAudioLength
 from media_management_scripts.utils import create_metadata_extractor
 import unittest
 from tempfile import NamedTemporaryFile

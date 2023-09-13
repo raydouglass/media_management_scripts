@@ -14,7 +14,11 @@ from media_management_scripts.support.encoding import (
     AudioCodec,
     AudioChannelName,
 )
-from tests import create_test_video, VideoDefinition, AudioDefition
+from media_management_scripts.support.test_video import (
+    create_test_video,
+    VideoDefinition,
+    AudioDefition,
+)
 from unittest import mock
 from media_management_scripts.commands.search import search
 

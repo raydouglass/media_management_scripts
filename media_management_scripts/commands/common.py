@@ -141,11 +141,7 @@ convert_parent_parser.add_argument(
     action=VideoCodecAction,
     dest="video_codec",
     default=VideoCodec.H264.ffmpeg_encoder_name,
-    choices=list(
-        itertools.chain(
-            ["copy"], itertools.chain.from_iterable(v.codec_names for v in VideoCodec)
-        )
-    ),
+    choices=list(itertools.chain.from_iterable(v.codec_names for v in VideoCodec)),
 )
 
 convert_parent_parser.add_argument(
@@ -153,15 +149,27 @@ convert_parent_parser.add_argument(
     "--ac",
     dest="audio_codec",
     default=AudioCodec.AAC.ffmpeg_codec_name,
-    choices=list(
-        itertools.chain(["copy"], [ac.ffmpeg_codec_name for ac in AudioCodec])
-    ),
+    choices=[ac.ffmpeg_codec_name for ac in AudioCodec],
+)
+
+convert_parent_parser.add_argument(
+    "--hardware-nvidia",
+    "--hw-nv",
+    dest="hardware_nvidia",
+    default=False,
+    action="store_const",
+    const=True,
+    help="Use NVIDIA hardware acceleration for decoding and encoding",
 )
 
 __all__ = [
+    # Parsers
     "parent_parser",
     "input_parser",
     "output_parser",
     "convert_parent_parser",
     "start_end_parser",
+    # Argparse types/actions
+    "DurationType",
+    "VideoCodecAction",
 ]

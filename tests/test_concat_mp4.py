@@ -4,9 +4,14 @@ from media_management_scripts.support.encoding import (
     Resolution,
     AudioCodec,
 )
-from tests import create_test_video, VideoDefinition, assertAudioLength, AudioDefition
+from media_management_scripts.support.test_video import (
+    create_test_video,
+    VideoDefinition,
+    AudioDefition,
+)
 from media_management_scripts.support.concat_mp4 import concat_mp4
 from media_management_scripts.utils import create_metadata_extractor
+from tests import assertAudioLength
 import unittest
 from tempfile import NamedTemporaryFile
 

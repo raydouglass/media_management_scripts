@@ -9,7 +9,7 @@ from media_management_scripts.support.combine_all import (
     combine_all,
     get_combinable_files,
 )
-from tests import (
+from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
     AudioDefition,
