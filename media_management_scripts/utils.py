@@ -105,6 +105,7 @@ class ConvertConfig(NamedTuple):
     scale: int = None
     video_codec: str = VideoCodec.H264.ffmpeg_encoder_name
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
+    hardware_nvidia: bool = False
 
 
 def convert_config_from_config_section(

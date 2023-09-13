@@ -129,12 +129,22 @@ def convert_with_config(
             new_end = metadata.estimated_duration + config.end
             args.extend(["-to", str(new_end)])
 
+    if config.hardware_nvidia:
+        args.extend(["-hwaccel", "cuda", "-hwaccel_output_format", "cuda"])
+
     args.extend(["-i", input])
 
     if config.scale:
         args.extend(["-vf", "scale=-1:{}".format(config.scale)])
-
-    args.extend(["-c:v", config.video_codec])
+    if config.hardware_nvidia:
+        vc = VideoCodec.from_code_name(config.video_codec).nvidia_codec_name
+        if not vc:
+            raise Exception(
+                f"Video codec {config.video_codec} not supported by nvidia hardware acceleration"
+            )
+        args.extend(["-c:v", vc])
+    else:
+        args.extend(["-c:v", config.video_codec])
     crf = config.crf
     bitrate = config.bitrate
     if (
