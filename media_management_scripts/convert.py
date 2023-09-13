@@ -151,6 +151,7 @@ def convert_with_config(
         VideoCodec.H264.equals(config.video_codec)
         and config.bitrate is not None
         and config.bitrate != "disabled"
+        and not config.hardware_nvidia
     ):
         crf = 1
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
@@ -167,7 +168,11 @@ def convert_with_config(
     ):
         raise Exception("Avg Bitrate not supported for H265")
 
-    args.extend(["-crf", str(crf), "-preset", config.preset])
+    if not config.hardware_nvidia:
+        args.extend(["-crf", str(crf)])
+
+    args.extend(["-preset", config.preset])
+
     if config.deinterlace:
         is_interlaced = metadata.interlace_report.is_interlaced(
             config.deinterlace_threshold
