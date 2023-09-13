@@ -2,21 +2,34 @@
 
 This is a collection of command line tools for managing media files such as movies or TV shows.
 
+It also simplifies some common tasks such as converting files by wrapping complex `ffmpeg` commands.
+
+For example, to convert a file to H.265/HEVC with GPU acceleration and AAC audio, plus scale it down to 480p, you would normally have to run a command like:
+```sh
+ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i test.mp4 -vf scale=-1:480 -c:v h264_nvenc -preset fast -c:a aac -c:s copy -map 0 out.mp4
+```
+Using this toolkit, it would be this instead:
+```sh
+manage-media convert --hw-nv --scale 480 --vc h264 test.mp4 out.mp4
+```
+
 ## Installation
 
 Install the tools:
 
 `pip install media_management_scripts`
 
-You also need to install other programs:
+You also need to install `ffmpeg` (for most commands) and `dialog` (for a few commands).
 
 ### MacOS
 
 `brew install ffmpeg dialog`
 
-### Ubuntu
+### Debian/Ubuntu
 
-`apt install ffmpeg dialog`
+`sudo apt update && sudo apt install ffmpeg dialog`
+
+Most distros have an older version of `ffmpeg` (which should still work!). You can install a newer version by following the instructions [here](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu).
 
 ### TVDB
 
@@ -35,7 +48,7 @@ apikey = <your_api_key>
 
 Pass `--help` to the subcommands for detailed help. Major features are explained in detail below.
 
-Most commands that rename or move files have a dry-run mode (`-n` or `--dry-run`) which will output the actions so you can verify the results.
+Most commands that rename or move files have a dry-run mode (`-n` or `--dry-run`) which will output the actions without executing so you can verify the plan.
 
 ## Main tools
 __[convert](#convert)__
@@ -54,24 +67,24 @@ Help output
 usage: manage-media [-h] [-v]
 
 Sub commands
+    create-test-video   Create a test video file with the specified definitions
     combine-subtitles   Combine a video files with subtitle file
-    combine-all         Combine a directory tree of video files with subtitle
-                        file
+    combine-all         Combine a directory tree of video files with subtitle file
     concat-mp4          Concat multiple mp4 files together
     convert             Convert a file
+    executables         Print the executables that will be used in other commands
     find-episodes       Find Season/Episode/Part using file names
-    itunes              Attempts to rename iTunes episodes to the standard
-                        Plex format.
+    itunes              Attempts to rename iTunes episodes to the standard Plex format.
     metadata            Show metadata for a file
     compare             Compare metadata between files
-    compare-directory   Show metadata for a file
+    compare-directory   Compare metadata for files in a directory
     movie-rename        Renames a file based on TheMovieDB
     rename              Renames a set of files to the specified template
+    search              Search for video files matching the specified parameters
     select-streams      Extract specific streams in a video file to a new file
-    split               Split a file
     subtitles           Convert subtitles to SRT
-    tv-rename           Renames files in a directory to sXXeYY. Can also use
-                        TVDB to name files (<show> - SxxeYY - <episode_name>)
+    thumbnail           Extract a number of thumbnails from a video
+    tv-rename           Renames files in a directory to sXXeYY. Can also use TVDB to name files (<show> - SxxeYY - <episode_name>)
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -86,7 +99,7 @@ Convert a video file to different video or audio codecs. By default if no codecs
 
 The source file is left intact.
 
-#### Examples:
+### Examples:
 - Convert to H.264
     - `manage-media convert --video-codec h264 <input> <output>`
 - Convert to HEVC/H.265:
@@ -103,6 +116,15 @@ The source file is left intact.
     - `manage-media convert --vc h264 --bulk <input dir> <output dir>`
 - Extract a portion of the video
     - `manage-media convert --vc copy --ac copy --start 3m45s --end 10m00s <input> <output>`
+
+### Hardware Acceleration
+If your `ffmpeg` [supports it](https://trac.ffmpeg.org/wiki/HWAccelIntro#CUDANVENCNVDEC), you can use NVIDIA GPU hardware acceleration to speed up the conversion. You can see the supported codecs for decoding & encoding for each GPU [here](https://developer.nvidia.com/video-encode-and-decode-gpu-support-matrix-new).
+
+To use this, just add `--hardware-nvidia` or `--hw-nv` to the `manage-media convert` command.
+
+```
+manage-media convert --hw-nv --video-codec hevc --audio-codec ac3 <input> <output>
+```
 
 ## metadata
 
@@ -160,9 +182,7 @@ Battlestar Galatica (2003) - s00e01 - Battlestar Galactica The Miniseries (1).mk
 
 `manage-media rename <template> <input file>` or `manage-media rename --recursive <template> <input directory>`
 
-A flexible tool to rename files
-
-Rename files based on a template.
+A flexible tool to rename files based on a template.
 
 Templates can include variables or expressions by surrounding with ${...}. Functions can be called like `${upper(i)}` or `${i | upper}`.
 
@@ -235,7 +255,7 @@ Others:
 - `resolution` - The resolution name (LOW_DEF, HIGH_DEF, etc)
 
 Metadata:
-- `meta.xyz` - Follows the basic JSON metadata output
+- `meta.xyz` - Follows the basic JSON metadata output (e.g. `meta.title` or `meta.video_streams[0].codec`)
 
 Functions:
 - `isNull(xyz)` - Returns true if the value is null
@@ -292,7 +312,7 @@ Result
 
 You can configuration where to find various executables by creating a file `~/.config/mms/config.ini`. By default, commands will use the executables found in your path.
 
-You can see which tools are being used with `manage-media `
+You can see which tools are being used with `manage-media executables`
 
 Config File Example
 ```ini

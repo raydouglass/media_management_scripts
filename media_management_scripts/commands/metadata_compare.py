@@ -73,7 +73,9 @@ class CompareDirectoryCommand(SubCommand):
 
     def build_argparse(self, subparser):
         parser = subparser.add_parser(
-            self.name, help="Show metadata for a file", parents=[parent_parser]
+            self.name,
+            help="Compare metadata for files in a directory",
+            parents=[parent_parser],
         )
         parser.add_argument("source")
         parser.add_argument("destination")

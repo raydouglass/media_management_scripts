@@ -29,6 +29,8 @@ class ConvertCommand(SubCommand):
         convert --video-codec hevc --audio-codec copy <input> <output>
     Scale to 480p
         convert --scale 480
+    Use NVIDIA Hardware acceleration w/ HEVC/H.265
+        convert --hardware-nvidia --vc h265 <input> <output>
         """
 
         convert_parser = subparser.add_parser(
