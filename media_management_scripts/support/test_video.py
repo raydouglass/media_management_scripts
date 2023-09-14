@@ -24,7 +24,7 @@ class VideoDefinition(NamedTuple):
     interlaced: bool = False
 
 
-class AudioDefition(NamedTuple):
+class AudioDefinition(NamedTuple):
     codec: AudioCodec = AudioCodec.AAC
     channels: AudioChannelName = AudioChannelName.STEREO
 
@@ -38,7 +38,7 @@ def _execute(args):
 def create_test_video(
     length: int = 30,
     video_def: VideoDefinition = VideoDefinition(),
-    audio_defs: List[AudioDefition] = [AudioDefition()],
+    audio_defs: List[AudioDefinition] = [AudioDefinition()],
     output_file=None,
     metadata: Dict[str, str] = None,
 ) -> _TemporaryFileWrapper:
