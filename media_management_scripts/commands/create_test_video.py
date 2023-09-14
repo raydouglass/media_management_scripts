@@ -57,7 +57,7 @@ class CreateTestVideoCommand(SubCommand):
         from media_management_scripts.support.test_video import (
             create_test_video,
             VideoDefinition,
-            AudioDefition,
+            AudioDefinition,
         )
 
         output_file = ns["output"]
@@ -68,7 +68,7 @@ class CreateTestVideoCommand(SubCommand):
         overwrite = ns["overwrite"]
 
         vd = VideoDefinition(codec=video_codec, resolution=resolution)
-        ad = AudioDefition(codec=audio_codec)
+        ad = AudioDefinition(codec=audio_codec)
         if ns["dry_run"]:
             print("Would create test video with the following definitions:")
             print("Video Definition: {}".format(vd))

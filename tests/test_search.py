@@ -17,7 +17,7 @@ from media_management_scripts.support.encoding import (
 from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
-    AudioDefition,
+    AudioDefinition,
 )
 from unittest import mock
 from media_management_scripts.commands.search import search
@@ -29,9 +29,9 @@ MPE2_VIDEO_DEF = VideoDefinition(
     Resolution.LOW_DEF, VideoCodec.MPEG2, VideoFileContainer.MP4
 )
 
-AAC_STEREO_AUDIO_DEF = AudioDefition(AudioCodec.AAC, AudioChannelName.STEREO)
-AAC_SURROUND_AUDIO_DEF = AudioDefition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)
-AC3_STEREO_AUDIO_DEF = AudioDefition(AudioCodec.AC3, AudioChannelName.STEREO)
+AAC_STEREO_AUDIO_DEF = AudioDefinition(AudioCodec.AAC, AudioChannelName.STEREO)
+AAC_SURROUND_AUDIO_DEF = AudioDefinition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)
+AC3_STEREO_AUDIO_DEF = AudioDefinition(AudioCodec.AC3, AudioChannelName.STEREO)
 
 
 class VideoMixin:

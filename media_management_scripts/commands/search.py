@@ -14,7 +14,7 @@ class SearchCommand(SubCommand):
             "search",
             parents=[parent_parser],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Search for video files matching the specified parameters",
+            help="Search for video files in a directory tree matching the specified parameters",
             description="""
     Searches a directory for video files matching parameters.
 

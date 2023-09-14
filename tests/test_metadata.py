@@ -8,7 +8,7 @@ from media_management_scripts.support.encoding import (
 from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
-    AudioDefition,
+    AudioDefinition,
 )
 from tests import assertAudioLength
 from media_management_scripts.utils import create_metadata_extractor
@@ -74,7 +74,7 @@ class MetadataTestCase(unittest.TestCase):
         length = 5
         with create_test_video(
             length=length,
-            audio_defs=[AudioDefition(AudioCodec.AC3, AudioChannelName.STEREO)],
+            audio_defs=[AudioDefinition(AudioCodec.AC3, AudioChannelName.STEREO)],
         ) as file:
             metadata = create_metadata_extractor().extract(file.name)
             self.assertEqual(1, len(metadata.video_streams))
@@ -96,7 +96,7 @@ class MetadataTestCase(unittest.TestCase):
         length = 5
         with create_test_video(
             length=length,
-            audio_defs=[AudioDefition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)],
+            audio_defs=[AudioDefinition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)],
         ) as file:
             metadata = create_metadata_extractor().extract(file.name)
             self.assertEqual(1, len(metadata.video_streams))
@@ -121,7 +121,7 @@ class MetadataTestCase(unittest.TestCase):
             video_def=VideoDefinition(
                 Resolution.HIGH_DEF, VideoCodec.H264, VideoFileContainer.MP4
             ),
-            audio_defs=[AudioDefition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)],
+            audio_defs=[AudioDefinition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)],
         ) as file:
             metadata = create_metadata_extractor().extract(file.name)
             self.assertEqual(1, len(metadata.video_streams))
@@ -142,7 +142,7 @@ class MetadataTestCase(unittest.TestCase):
     def test_h264_stereo_2_audio(self):
         length = 5
         with create_test_video(
-            length=length, audio_defs=[AudioDefition(), AudioDefition()]
+            length=length, audio_defs=[AudioDefinition(), AudioDefinition()]
         ) as file:
             metadata = create_metadata_extractor().extract(file.name)
             self.assertEqual(1, len(metadata.video_streams))
@@ -166,7 +166,7 @@ class MetadataTestCase(unittest.TestCase):
             video_def=VideoDefinition(
                 Resolution.HIGH_DEF, VideoCodec.H265, VideoFileContainer.MKV
             ),
-            audio_defs=[AudioDefition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)],
+            audio_defs=[AudioDefinition(AudioCodec.AAC, AudioChannelName.SURROUND_5_1)],
         ) as file:
             metadata = create_metadata_extractor().extract(file.name)
             self.assertEqual(1, len(metadata.video_streams))

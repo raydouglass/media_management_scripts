@@ -7,7 +7,7 @@ from media_management_scripts.support.encoding import (
 from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
-    AudioDefition,
+    AudioDefinition,
 )
 from media_management_scripts.support.concat_mp4 import concat_mp4
 from media_management_scripts.utils import create_metadata_extractor
@@ -76,7 +76,7 @@ class ConcatMp4TestCase(unittest.TestCase):
         with create_test_video(
             length=5,
             video_def=MP4_VIDEO_DEF,
-            audio_defs=[AudioDefition(codec=AudioCodec.AC3)],
+            audio_defs=[AudioDefinition(codec=AudioCodec.AC3)],
         ) as first, create_test_video(length=5, video_def=MP4_VIDEO_DEF) as second:
             with NamedTemporaryFile(suffix=".mp4") as output:
                 with self.assertRaises(expected_exception=Exception):

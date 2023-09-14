@@ -5,7 +5,7 @@ from media_management_scripts.utils import ConvertConfig, extract_metadata
 from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
-    AudioDefition,
+    AudioDefinition,
     AudioCodec,
     AudioChannelName,
 )
@@ -37,7 +37,7 @@ class ConvertTestCase(unittest.TestCase):
             video_def=VideoDefinition(
                 resolution=Resolution.LOW_DEF, codec=VideoCodec.MPEG2
             ),
-            audio_defs=[AudioDefition(codec=AudioCodec.AC3)],
+            audio_defs=[AudioDefinition(codec=AudioCodec.AC3)],
         ) as file, NamedTemporaryFile(suffix=".mkv") as output:
             convert_with_config(file.name, output.name, config, overwrite=True)
             metadata = extract_metadata(output.name)
@@ -131,7 +131,7 @@ class ConvertTestCase(unittest.TestCase):
     def test_audio_remux(self):
         config = convert_config_from_ns({"audio_codec": "copy"})
         with create_test_video(
-            length=3, audio_defs=[AudioDefition(codec=AudioCodec.AC3)]
+            length=3, audio_defs=[AudioDefinition(codec=AudioCodec.AC3)]
         ) as file, NamedTemporaryFile(suffix=".mkv") as output:
             convert_with_config(file.name, output.name, config, overwrite=True)
             metadata = extract_metadata(output.name)
@@ -155,8 +155,8 @@ class ConvertTestCase(unittest.TestCase):
         with create_test_video(
             length=3,
             audio_defs=[
-                AudioDefition(codec=AudioCodec.AC3),
-                AudioDefition(codec=AudioCodec.AC3),
+                AudioDefinition(codec=AudioCodec.AC3),
+                AudioDefinition(codec=AudioCodec.AC3),
             ],
         ) as file, NamedTemporaryFile(suffix=".mkv") as output:
             convert_with_config(file.name, output.name, config, overwrite=True)
@@ -174,8 +174,8 @@ class ConvertTestCase(unittest.TestCase):
         with create_test_video(
             length=3,
             audio_defs=[
-                AudioDefition(codec=AudioCodec.AAC),
-                AudioDefition(codec=AudioCodec.AC3),
+                AudioDefinition(codec=AudioCodec.AAC),
+                AudioDefinition(codec=AudioCodec.AC3),
             ],
         ) as file, NamedTemporaryFile(suffix=".mkv") as output:
             convert_with_config(
@@ -192,8 +192,8 @@ class ConvertTestCase(unittest.TestCase):
         with create_test_video(
             length=3,
             audio_defs=[
-                AudioDefition(codec=AudioCodec.AAC),
-                AudioDefition(codec=AudioCodec.AC3),
+                AudioDefinition(codec=AudioCodec.AAC),
+                AudioDefinition(codec=AudioCodec.AC3),
             ],
         ) as file, NamedTemporaryFile(suffix=".mkv") as output:
             convert_with_config(

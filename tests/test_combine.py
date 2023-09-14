@@ -12,7 +12,7 @@ from media_management_scripts.support.combine_all import (
 from media_management_scripts.support.test_video import (
     create_test_video,
     VideoDefinition,
-    AudioDefition,
+    AudioDefinition,
     AudioCodec,
     AudioChannelName,
 )
