@@ -10,7 +10,7 @@ class Resolution(Enum):
     STANDARD_DEF = (720, 480, 1600, "auto_bitrate_480")
     MEDIUM_DEF = (1280, 720, 4500, "auto_bitrate_720")
     HIGH_DEF = (1920, 1080, 8000, "auto_bitrate_1080")
-    ULTRA_HIGH_DEF = (3840, 2160, None)
+    ULTRA_HIGH_DEF = (3840, 2160, -1, None)
 
     @property
     def width(self):
@@ -51,7 +51,7 @@ class BitDepth(Enum):
         for i in BitDepth:
             if i.pix_fmt == pix_fmt:
                 return i
-        return None
+        raise ValueError(f"Invalid bit depth: {pix_fmt}")
 
 
 def resolution_name(height):
@@ -98,7 +98,7 @@ class VideoCodec(Enum):
             for n in vc.codec_names:
                 if name == n:
                     return vc
-        return None
+        raise ValueError(f"Invalid video codec: {name}")
 
     def equals(self, to_comp: str) -> bool:
         """
@@ -132,7 +132,7 @@ class AudioCodec(Enum):
         for ac in AudioCodec:
             if name == ac.ffmpeg_codec_name:
                 return ac
-        return None
+        raise ValueError(f"Invalid audio codec: {name}")
 
     def equals(self, to_comp: str) -> bool:
         """
@@ -160,7 +160,7 @@ class AudioChannelName(Enum):
 
     @property
     def name(self):
-        return self.names()[0]
+        return self.names[0]
 
     @staticmethod
     def from_name(name):
@@ -168,7 +168,7 @@ class AudioChannelName(Enum):
             for n in ac.names:
                 if n == name:
                     return ac
-        return None
+        raise ValueError(f"Invalid audio channel name: {name}")
 
 
 class VideoFileContainer(Enum):
@@ -198,4 +198,4 @@ class H264Preset(Enum):
         for preset in H264Preset:
             if preset.value == value:
                 return preset
-        return None
+        raise ValueError(f"Invalid preset: {value}")

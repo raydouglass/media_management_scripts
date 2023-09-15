@@ -40,7 +40,7 @@ def create_test_video(
     video_def: VideoDefinition = VideoDefinition(),
     audio_defs: List[AudioDefinition] = [AudioDefinition()],
     output_file=None,
-    metadata: Dict[str, str] = None,
+    metadata: Dict[str, str] = {},
 ) -> _TemporaryFileWrapper:
     """
     Creates a video file matching the given video & audio definitions. If an output_file is not provided, a NamedTemporaryFile is used and returned
@@ -91,8 +91,12 @@ def create_test_video(
                 _execute(args)
 
     # ffmpeg -f lavfi -i testsrc=duration=10:size=1280x720:rate=30 testsrc.mpg
-    if not output_file:
-        file = NamedTemporaryFile(suffix=".{}".format(video_def.container.extension))
+    file = (
+        NamedTemporaryFile(suffix=".{}".format(video_def.container.extension))
+        if not output_file
+        else output_file
+    )
+
     args = [
         ffmpeg(),
         "-y",

@@ -20,9 +20,9 @@ class SubtitlesCommand(SubCommand):
             "--ext", help="Only convert files with these extensions", nargs="+"
         )
 
-    def _filter(self, file: str):
-        if self.ns.get("ext", None):
-            for i in self.ns["ext"]:
+    def _filter(self, file: str, ns):
+        if ns.get("ext", None):
+            for i in ns["ext"]:
                 if file.endswith("." + i):
                     return True
             return False
@@ -41,7 +41,7 @@ class SubtitlesCommand(SubCommand):
         output_dir = ns.get("output", None)
 
         if os.path.isfile(input_to_cmd):
-            if not self._filter(input_to_cmd):
+            if not self._filter(input_to_cmd, ns):
                 raise Exception("File specified is filtered by arguments.")
             base = os.path.basename(input_to_cmd)
             noext, _ = os.path.splitext(base)

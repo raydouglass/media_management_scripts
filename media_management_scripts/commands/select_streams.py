@@ -92,7 +92,7 @@ def audio_to_str(a: Stream, lang: str) -> Tuple[str, str, bool]:
 
 
 def sub_to_str(
-    s: Stream, lang: str, lang_override: str = None
+    s: Stream, lang: str, lang_override: str | None = None
 ) -> Tuple[str, str, bool]:
     tag = str(s.index)
     language = lang_override if lang_override else s.language
@@ -150,7 +150,7 @@ def select_streams(
     files,
     output_file,
     overwrite=False,
-    convert_config: ConvertConfig = None,
+    convert_config: ConvertConfig | None = None,
     language="eng",
     auto: bool = False,
 ):

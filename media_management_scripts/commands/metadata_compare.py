@@ -25,7 +25,7 @@ def create_table_object(input_to_cmd, interlace="none"):
         data.append(
             duration_to_str(m.estimated_duration) if m.estimated_duration else ""
         )
-        data.append("{:.2f}".format(m.bit_rate / 1024.0))
+        data.append("{:.2f}".format(m.bit_rate / 1024.0) if m.bit_rate else "")
         video = m.video_streams[0]
         data.append(video.codec)
         data.append("{}x{}".format(video.width, video.height))

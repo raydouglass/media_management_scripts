@@ -9,11 +9,11 @@ PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad
 
 
 class PlexTemplateParams(NamedTuple):
-    show: str = None
-    season: int = None
-    episode_num: int = None
-    episode_name: str = None
-    episode_num_final: int = None
+    show: str | None = None
+    season: int | None = None
+    episode_num: int | None = None
+    episode_name: str | None = None
+    episode_num_final: int | None = None
 
 
 class RegexResults(object):
@@ -81,9 +81,7 @@ def create_namespace(size: int = 2):
     return d
 
 
-def rename_plex(
-    file: str, plex_params: PlexTemplateParams = None, output_dir=None
-) -> str:
+def rename_plex(file: str, plex_params: PlexTemplateParams, output_dir=None) -> str:
     return rename_process("{plex}", [file], output_dir=output_dir, params=plex_params)[
         0
     ][1]

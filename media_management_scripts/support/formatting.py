@@ -41,7 +41,7 @@ def duration_from_str(dur_str):
         raise Exception("Invalid duration format: " + dur_str)
 
 
-def bitrate_to_str(bitrate: float):
+def bitrate_to_str(bitrate: float | None):
     if bitrate is None:
         return None
     bitrate = float(bitrate)

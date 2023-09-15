@@ -45,7 +45,9 @@ FORMATS = {
 
 
 class Metadata:
-    def __init__(self, file, ffprobe_output, interlace_report: InterlaceReport = None):
+    def __init__(
+        self, file, ffprobe_output, interlace_report: InterlaceReport | None = None
+    ):
         self.file = file
         self._ffprobe_output = ffprobe_output
         self.mime_type = get_mime(file)
@@ -73,7 +75,7 @@ class Metadata:
         self.estimated_duration = max(durs) if durs else None
 
         if self.video_streams:
-            max_height = max([s.height for s in self.video_streams])
+            max_height = max(self.video_streams, key=lambda s: s.height or 0).height
             self.resolution = resolution_name(max_height)
         else:
             self.resolution = None
@@ -115,7 +117,7 @@ class Metadata:
             match = DATE_PATTERN.search(filename)
             if match:
                 air_date = match.group().replace("_", "-")
-        if not ONLY_DATE_PATTERN.match(air_date):
+        if air_date and not ONLY_DATE_PATTERN.match(air_date):
             air_date = air_date.split("T")[0]
         return air_date
 
@@ -206,8 +208,11 @@ class Stream:
             if self.codec in ("h264", "hevc"):
                 pix_fmt = stream.get("pix_fmt", None)
                 # TODO: This is not really accurate
-                depth = BitDepth.get_from_pix_fmt(pix_fmt)
-                self.bit_depth = depth.bits if depth else None
+                try:
+                    depth = BitDepth.get_from_pix_fmt(pix_fmt)
+                    self.bit_depth = depth.bits if depth else None
+                except ValueError:
+                    self.bit_depth = None
 
     def is_audio(self):
         return self.codec_type == "audio"

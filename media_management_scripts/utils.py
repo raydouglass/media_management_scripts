@@ -11,7 +11,7 @@ from configparser import ConfigParser
 from media_management_scripts.support.executables import ffprobe
 
 
-def to_int(maybe_int) -> int:
+def to_int(maybe_int) -> int | None:
     if maybe_int is None:
         return None
     try:
@@ -91,18 +91,18 @@ def fuzzy_equals_word(a: str, b: str, ratio: float = 0.85):
 class ConvertConfig(NamedTuple):
     crf: int = DEFAULT_CRF
     preset: str = DEFAULT_PRESET
-    bitrate: str = None
+    bitrate: str | None = None
     include_meta: bool = False
     deinterlace: bool = False
     deinterlace_threshold: float = 0.5
     include_subtitles: bool = True
-    start: float = None
-    end: float = None
+    start: float | None = None
+    end: float | None = None
     auto_bitrate_240: int = Resolution.LOW_DEF.auto_bitrate
     auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
     auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
     auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
-    scale: int = None
+    scale: int | None = None
     video_codec: str = VideoCodec.H264.ffmpeg_encoder_name
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
     hardware_nvidia: bool = False
@@ -133,7 +133,7 @@ def convert_config_from_config_section(
     :return:
     """
     # Transcode
-    crf = config.get(section, "crf", fallback=DEFAULT_CRF)
+    crf = int(config.get(section, "crf", fallback=DEFAULT_CRF))
     preset = config.get(section, "preset", fallback=DEFAULT_PRESET)
     bitrate = config.get(section, "bitrate", fallback="disabled")
     if bitrate == "disabled":

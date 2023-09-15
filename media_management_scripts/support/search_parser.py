@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from pyparsing import *
 from functools import total_ordering
 
@@ -19,6 +20,10 @@ class Operation:
         self.s = s
         self.l = l
         self.t = t
+
+    @abstractmethod
+    def _exec(self, context):
+        pass
 
     def exec(self, context):
         return self._exec(context)
@@ -50,6 +55,10 @@ class GenericOperation(Operation):
 
 
 class TwoOperandOperation(Operation):
+    @abstractmethod
+    def _exec_two_operand(self, left, right):
+        pass
+
     def _exec(self, context):
         left = self.resolve(context, self.t[0][0])
         right = self.resolve(context, self.t[0][2])
@@ -58,6 +67,10 @@ class TwoOperandOperation(Operation):
 
 
 class OneOperandOperation(Operation):
+    @abstractmethod
+    def _exec_one_operand(self, op):
+        pass
+
     def _exec(self, context):
         op = self.resolve(context, self.t[0][1])
         return self._exec_one_operand(op)
@@ -153,7 +166,7 @@ class IsNullOperation(Operation):
             for key in var_name.split("."):
                 if key in d:
                     d = d[key]
-        return d is None
+            return d is None
 
     def __repr__(self):
         return "IsNullOperation<{}>".format(self.t[2])
@@ -162,7 +175,7 @@ class IsNullOperation(Operation):
 class AllOperation(Operation):
     def _exec(self, context):
         self.value = self.resolve(context, self.t[2])
-        if issubclass(type(self.value), Variable):
+        if isinstance(self.value, Variable):
             self.value = self.value.value
         return self
 
@@ -273,7 +286,10 @@ expr = infixNotation(
 
 
 def parse(query: str) -> Operation:
-    return expr.parseString(query, parseAll=True)[0]
+    parsed = expr.parseString(query, parseAll=True)[0]
+    if parsed is None or not isinstance(parsed, Operation):
+        raise Exception("Could not parse query: {}".format(query))
+    return parsed
 
 
 def parse_and_execute(query: str, context: dict):

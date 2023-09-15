@@ -97,12 +97,13 @@ class FFMpegProgress(NamedTuple):
             return None
 
     def progress(self, duration: float):
-        return self.time_as_seconds / duration if self.time_as_seconds else None
+        return self.time_as_seconds / duration if self.time_as_seconds else 0
 
     def remaining_time(self, duration: float):
         try:
             speed = float(self.speed[:-1])
-            return (duration - self.time_as_seconds) / speed
+            time_as_seconds = self.time_as_seconds
+            return (duration - time_as_seconds) / speed if time_as_seconds else None
         except ValueError:
             return None
 
@@ -235,7 +236,9 @@ def execute_with_callback(
         return p.poll()
 
 
-def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=None):
+def execute_ffmpeg_with_dialog(
+    args, duration: float | None = None, title=None, text=None
+):
     from media_management_scripts.support.formatting import duration_to_str
 
     if ffmpeg() not in args:
@@ -243,9 +246,7 @@ def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=No
     from dialog import Dialog
 
     d = Dialog(autowidgetsize=False)
-    d.gauge_start(
-        title=title, text=text if text else "", percent=0 if duration else None
-    )
+    d.gauge_start(title=title, text=text if text else "", percent=0)
 
     def cb(ffmpeg_progress: FFMpegProgress):
         if duration:
@@ -254,7 +255,9 @@ def execute_ffmpeg_with_dialog(args, duration: float = None, title=None, text=No
                 remaining_time = duration_to_str(remaining)
                 d.gauge_update(
                     percent=int(ffmpeg_progress.progress(duration) * 100),
-                    text="Remaining: {}".format(remaining_time),
+                    text="Remaining: {}".format(
+                        remaining_time if remaining_time else "Unknown"
+                    ),
                     update_text=True,
                 )
 

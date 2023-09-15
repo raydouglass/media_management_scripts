@@ -132,7 +132,10 @@ class VideoCodecAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         codec = VideoCodec.from_code_name(values)
-        setattr(namespace, self.dest, codec.ffmpeg_encoder_name)
+        if codec:
+            setattr(namespace, self.dest, codec.ffmpeg_encoder_name)
+        else:
+            raise argparse.ArgumentError(self, f"Invalid video codec: {values}")
 
 
 convert_parent_parser.add_argument(
