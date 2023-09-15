@@ -2,18 +2,18 @@ import os
 import re
 
 from tempita import Template
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 season_pattern = re.compile(r"Season (\d+)")
 PLEX_TEMPLATE = '${show}/${season|plex_season_specials}/${show} - S${season|zpad}${plex_episode(episode_num, episode_num_final)}${ifempty(episode_name, "", " - "+str(episode_name))}.${ext}'
 
 
 class PlexTemplateParams(NamedTuple):
-    show: str | None = None
-    season: int | None = None
-    episode_num: int | None = None
-    episode_name: str | None = None
-    episode_num_final: int | None = None
+    show: Optional[str] = None
+    season: Optional[int] = None
+    episode_num: Optional[int] = None
+    episode_name: Optional[str] = None
+    episode_num_final: Optional[int] = None
 
 
 class RegexResults(object):

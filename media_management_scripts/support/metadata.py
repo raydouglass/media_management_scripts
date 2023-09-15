@@ -6,7 +6,7 @@ import copy
 import os
 import re
 import operator
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from media_management_scripts.support.encoding import BitDepth, resolution_name
 from media_management_scripts.support.interlace import find_interlace, InterlaceReport
 from media_management_scripts.support.formatting import (
@@ -46,7 +46,7 @@ FORMATS = {
 
 class Metadata:
     def __init__(
-        self, file, ffprobe_output, interlace_report: InterlaceReport | None = None
+        self, file, ffprobe_output, interlace_report: Optional[InterlaceReport] = None
     ):
         self.file = file
         self._ffprobe_output = ffprobe_output

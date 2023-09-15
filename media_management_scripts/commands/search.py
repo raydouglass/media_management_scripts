@@ -1,3 +1,4 @@
+from typing import Optional
 from . import SubCommand
 from .common import *
 import argparse
@@ -176,7 +177,7 @@ def _filter(file: str):
     return not os.path.basename(file).startswith(".") and movie_files_filter(file)
 
 
-def search(input_dir: str, query: str, db_file: str | None = None, recursive=False):
+def search(input_dir: str, query: str, db_file: Optional[str] = None, recursive=False):
     from media_management_scripts.support.search_parser import parse
     from media_management_scripts.utils import create_metadata_extractor
     from media_management_scripts.support.files import list_files

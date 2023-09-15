@@ -6,12 +6,12 @@ from media_management_scripts.support.encoding import (
     AudioCodec,
 )
 from media_management_scripts.support.metadata import MetadataExtractor, Metadata
-from typing import Iterable, NamedTuple
+from typing import Iterable, NamedTuple, Optional
 from configparser import ConfigParser
 from media_management_scripts.support.executables import ffprobe
 
 
-def to_int(maybe_int) -> int | None:
+def to_int(maybe_int) -> Optional[int]:
     if maybe_int is None:
         return None
     try:
@@ -91,18 +91,18 @@ def fuzzy_equals_word(a: str, b: str, ratio: float = 0.85):
 class ConvertConfig(NamedTuple):
     crf: int = DEFAULT_CRF
     preset: str = DEFAULT_PRESET
-    bitrate: str | None = None
+    bitrate: Optional[str] = None
     include_meta: bool = False
     deinterlace: bool = False
     deinterlace_threshold: float = 0.5
     include_subtitles: bool = True
-    start: float | None = None
-    end: float | None = None
+    start: Optional[float] = None
+    end: Optional[float] = None
     auto_bitrate_240: int = Resolution.LOW_DEF.auto_bitrate
     auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
     auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
     auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
-    scale: int | None = None
+    scale: Optional[int] = None
     video_codec: str = VideoCodec.H264.ffmpeg_encoder_name
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
     hardware_nvidia: bool = False

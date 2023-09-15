@@ -2,7 +2,7 @@ from io import StringIO
 import logging
 import subprocess
 import re
-from typing import Tuple, Callable, List, NamedTuple
+from typing import Optional, Tuple, Callable, List, NamedTuple
 
 import configparser
 import os
@@ -237,7 +237,7 @@ def execute_with_callback(
 
 
 def execute_ffmpeg_with_dialog(
-    args, duration: float | None = None, title=None, text=None
+    args, duration: Optional[float] = None, title=None, text=None
 ):
     from media_management_scripts.support.formatting import duration_to_str
 

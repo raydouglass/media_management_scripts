@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Optional
 
 from texttable import Texttable
 
@@ -263,7 +263,7 @@ def convert(
     output,
     crf=DEFAULT_CRF,
     preset=DEFAULT_PRESET,
-    bitrate: str | None = None,
+    bitrate: Optional[str] = None,
     include_meta=True,
     print_output=True,
 ):
