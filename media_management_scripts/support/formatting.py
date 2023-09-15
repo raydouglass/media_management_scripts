@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 DURATION_PATTERN = re.compile(r"-?(((\d+(\.\d+)?)h)?(\d+(\.\d+)?)m)?(\d+(\.\d+)?)s")
 
@@ -41,7 +42,7 @@ def duration_from_str(dur_str):
         raise Exception("Invalid duration format: " + dur_str)
 
 
-def bitrate_to_str(bitrate: float):
+def bitrate_to_str(bitrate: Optional[float]):
     if bitrate is None:
         return None
     bitrate = float(bitrate)

@@ -1,3 +1,4 @@
+from typing import Optional
 from . import SubCommand
 from .common import *
 import argparse
@@ -176,12 +177,12 @@ def _filter(file: str):
     return not os.path.basename(file).startswith(".") and movie_files_filter(file)
 
 
-def search(input_dir: str, query: str, db_file: str = None, recursive=False):
+def search(input_dir: str, query: str, db_file: Optional[str] = None, recursive=False):
     from media_management_scripts.support.search_parser import parse
     from media_management_scripts.utils import create_metadata_extractor
     from media_management_scripts.support.files import list_files
 
-    query = parse(query)
+    parsed_query = parse(query)
     db_exists = os.path.exists(db_file) if db_file else False
     with create_metadata_extractor(db_file) as extractor:
         if recursive:
@@ -192,7 +193,7 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
             ]
         for file in files:
             path = os.path.join(input_dir, file)
-            if db_exists and os.path.samefile(db_file, path):
+            if db_exists and db_file and os.path.samefile(db_file, path):
                 # Skip if db file is in the same directory
                 continue
             try:
@@ -214,10 +215,12 @@ def search(input_dir: str, query: str, db_file: str = None, recursive=False):
                     },
                     "ripped": metadata.ripped,
                     "bit_rate": metadata.bit_rate,
-                    "resolution": metadata.resolution._name_,
+                    "resolution": metadata.resolution._name_
+                    if metadata.resolution
+                    else None,
                     "meta": metadata.to_dict(),
                 }
-                if query.exec(context) is True:
+                if parsed_query.exec(context) is True:
                     yield path, metadata, True
             except Exception:
                 yield path, None, False

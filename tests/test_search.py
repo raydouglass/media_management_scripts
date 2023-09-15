@@ -34,7 +34,7 @@ AAC_SURROUND_AUDIO_DEF = AudioDefinition(AudioCodec.AAC, AudioChannelName.SURROU
 AC3_STEREO_AUDIO_DEF = AudioDefinition(AudioCodec.AC3, AudioChannelName.STEREO)
 
 
-class VideoMixin:
+class VideoMixin(unittest.TestCase):
     def create(self, video_def, audio_def):
         self.count += 1
         create_test_video(
@@ -60,7 +60,7 @@ class VideoMixin:
         self.assertEqual(expected_count, len(self.search(query)))
 
 
-class SearchTestCase(unittest.TestCase, VideoMixin):
+class SearchTestCase(VideoMixin):
     def setUp(self):
         self.setup()
 

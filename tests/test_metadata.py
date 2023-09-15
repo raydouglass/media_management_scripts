@@ -192,7 +192,9 @@ class MetadataTestCase(unittest.TestCase):
             metadata = create_metadata_extractor().extract(file.name, True)
             self.assertEqual(1, len(metadata.video_streams))
             self.assertEqual(1, len(metadata.audio_streams))
-            self.assertFalse(metadata.interlace_report.is_interlaced())
+            self.assertFalse(
+                metadata.interlace_report and metadata.interlace_report.is_interlaced()
+            )
 
             v = metadata.video_streams[0]
             a = metadata.audio_streams[0]
@@ -215,7 +217,10 @@ class MetadataTestCase(unittest.TestCase):
             metadata = create_metadata_extractor().extract(file.name, True)
             self.assertEqual(1, len(metadata.video_streams))
             self.assertEqual(1, len(metadata.audio_streams))
-            self.assertTrue(metadata.interlace_report.is_interlaced(threshold=0.4))
+            self.assertTrue(
+                metadata.interlace_report
+                and metadata.interlace_report.is_interlaced(threshold=0.4)
+            )
 
             v = metadata.video_streams[0]
             a = metadata.audio_streams[0]

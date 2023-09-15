@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Optional
 
 from texttable import Texttable
 
@@ -125,9 +125,13 @@ def convert_with_config(
     if config.end:
         if config.end > 0:
             args.extend(["-to", str(config.end)])
-        else:
+        elif metadata.estimated_duration:
             new_end = metadata.estimated_duration + config.end
             args.extend(["-to", str(new_end)])
+        else:
+            raise Exception(
+                "Could not estimate duration, so negative end time cannot be used"
+            )
 
     if config.hardware_nvidia:
         args.extend(["-hwaccel", "cuda", "-hwaccel_output_format", "cuda"])
@@ -259,7 +263,7 @@ def convert(
     output,
     crf=DEFAULT_CRF,
     preset=DEFAULT_PRESET,
-    bitrate=None,
+    bitrate: Optional[str] = None,
     include_meta=True,
     print_output=True,
 ):

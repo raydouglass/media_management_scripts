@@ -66,7 +66,7 @@ from media_management_scripts.support.metadata import Stream
 from media_management_scripts.utils import extract_metadata, ConvertConfig
 from media_management_scripts.convert import convert_with_config, create_remux_args
 from dialog import Dialog
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 
 
 def video_to_str(v: Stream) -> Tuple[str, str, bool]:
@@ -92,7 +92,7 @@ def audio_to_str(a: Stream, lang: str) -> Tuple[str, str, bool]:
 
 
 def sub_to_str(
-    s: Stream, lang: str, lang_override: str = None
+    s: Stream, lang: str, lang_override: Optional[str] = None
 ) -> Tuple[str, str, bool]:
     tag = str(s.index)
     language = lang_override if lang_override else s.language
@@ -150,7 +150,7 @@ def select_streams(
     files,
     output_file,
     overwrite=False,
-    convert_config: ConvertConfig = None,
+    convert_config: Optional[ConvertConfig] = None,
     language="eng",
     auto: bool = False,
 ):

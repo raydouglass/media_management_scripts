@@ -4,12 +4,12 @@ from pyparsing import ParseException
 from media_management_scripts.support.search_parser import parse_and_execute, parse
 
 
-class ParseTestCase:
+class ParseTestCase(unittest.TestCase):
     def parse(self, query, expected, context={}):
         self.assertEqual(parse_and_execute(query, context), expected)
 
 
-class SimpleTest(unittest.TestCase, ParseTestCase):
+class SimpleTest(ParseTestCase):
     def test_basic(self):
         self.parse("1+1", 2)
         self.parse("1-1", 0)

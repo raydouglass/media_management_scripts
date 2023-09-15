@@ -160,8 +160,6 @@ def _find_interlace(
     undetermined_threshold: float = 0.5,
     metadata=None,
 ) -> InterlaceReport:
-    if frames > max_frames:
-        return None
     # ffmpeg -filter:v idet -frames:v 100 -an -f rawvideo -y /dev/null -i
     if metadata and metadata.estimated_duration and metadata.estimated_duration < 200:
         start = 0
@@ -174,11 +172,10 @@ def _find_interlace(
         report2 = _execute_ffmpeg(input_file, frames, start=midpoint)
         report = report.combine(report2)
     if report.is_undetermined(undetermined_threshold):
-        new_report = _find_interlace(
-            input_file, frames * 2, max_frames, undetermined_threshold, metadata
-        )
-        if new_report:
-            return new_report
+        if frames * 2 < max_frames:
+            report = _find_interlace(
+                input_file, frames * 2, max_frames, undetermined_threshold, metadata
+            )
     return report
 
 
