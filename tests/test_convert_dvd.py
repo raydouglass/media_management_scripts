@@ -105,20 +105,20 @@ class ConvertDvdTestCase(unittest.TestCase):
             "tv.dir.out": self.tv_out.name,
         }
         config["backup"] = {
-            "enabled": True,
+            "enabled": "true",
             "rclone": "does/not/exist",
             "split": "/usr/local/bin/gsplit",
-            "max.size": 25,
+            "max.size": "25",
             "split.size": "5G",
             "backup.path": "/not",
         }
         config["movie.transcode"] = {
             "bitrate": "auto",
-            "crf": DEFAULT_CRF,
+            "crf": str(DEFAULT_CRF),
             "preset": DEFAULT_PRESET,
-            "deinterlace": True,
-            "deinterlace_threshold": 0.5,
-            "auto_bitrate_480": 2000,
+            "deinterlace": "true",
+            "deinterlace_threshold": "0.5",
+            "auto_bitrate_480": "2000",
         }
         config["logging"] = {
             "level": "DEBUG",
