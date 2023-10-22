@@ -139,7 +139,10 @@ def convert_with_config(
     args.extend(["-i", input])
 
     if config.scale:
-        args.extend(["-vf", "scale=-1:{}".format(config.scale)])
+        if config.hardware_nvidia:
+            args.extend(["-vf", "scale_cuda=-1:{}".format(config.scale)])
+        else:
+            args.extend(["-vf", "scale=-1:{}".format(config.scale)])
     if config.hardware_nvidia:
         vc = VideoCodec.from_code_name(config.video_codec).nvidia_codec_name
         if not vc:
