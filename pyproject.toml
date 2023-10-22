@@ -25,18 +25,15 @@ authors = [
 license = { text = "Apache 2.0" }
 requires-python = ">=3.9"
 dependencies = [
-  "requests",
-  "pyOpenSSL",
-  "texttable",
-  "tmdbsimple",
-  "argcomplete",
-  "tempita",
-  "pysrt",
+  "pycaption",
+  "pyparsing",
+  "python-magic",
   "pythondialog",
   "pyyaml",
-  "pyparsing",
-  "pycaption",
-  "python-magic",
+  "requests",
+  "tempita",
+  "texttable",
+  "tmdbsimple",
 ]
 classifiers = [
   "License :: OSI Approved :: Apache Software License",

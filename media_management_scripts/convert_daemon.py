@@ -295,7 +295,7 @@ class ConvertDvds:
 
 
 def main():
-    import argparse, argcomplete
+    import argparse
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="Sub commands", dest="command")
@@ -311,7 +311,6 @@ def main():
     )
     list_parser.add_argument("-0", action="store_const", const=True, default=False)
 
-    argcomplete.autocomplete(parser)
     ns = vars(parser.parse_args())
     cmd = ns["command"]
     config = ns["config"]

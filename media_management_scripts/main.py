@@ -1,5 +1,4 @@
 import argparse
-import argcomplete
 import sys
 
 from media_management_scripts.commands import *
@@ -37,7 +36,6 @@ def build_argparse():
 
     for cmd in COMMANDS.values():
         cmd.build_argparse(subparsers)
-    argcomplete.autocomplete(parser)
     return parser
 
 
