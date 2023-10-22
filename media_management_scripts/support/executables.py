@@ -108,6 +108,22 @@ class FFMpegProgress(NamedTuple):
             return None
 
 
+def log_command(args, print_output=False):
+    import shlex
+
+    logger.debug(f"Executing: {shlex.join(args)}")
+    if print_output:
+        print(f"Executing: {shlex.join(args)}")
+
+
+def maybe_add_nice(args, use_nice=False):
+    if args and use_nice and nice_exe and args[0] != nice_exe:
+        a = [nice_exe]
+        a.extend(args)
+        return a
+    return args
+
+
 def create_ffmpeg_callback(
     cb: Callable[[FFMpegProgress], None]
 ) -> Callable[[str], None]:
@@ -136,11 +152,8 @@ def create_ffmpeg_callback(
 def execute_with_timeout(
     args, timeout: int, use_nice=True, log_output=False
 ) -> Tuple[int, str]:
-    if use_nice:
-        a = [nice_exe]
-        a.extend(args)
-        args = a
-    logger.debug("Executing: {}".format(args))
+    args = maybe_add_nice(args, use_nice)
+    log_command(args, False)
     with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         stdout, stderr = p.communicate()
         if stdout and log_output:
@@ -158,13 +171,8 @@ def execute_with_timeout(
 def execute_with_output(args, print_output=False, use_nice=True) -> Tuple[int, str]:
     if not args:
         raise ValueError("No args provided")
-    if use_nice and nice_exe and args[0] != nice_exe:
-        a = [nice_exe]
-        a.extend(args)
-        args = a
-    logger.debug("Executing: {}".format(args))
-    if print_output:
-        print("Executing: {}".format(" ".join([str(a) for a in args])))
+    args = maybe_add_nice(args, use_nice)
+    log_command(args, print_output)
     if DEBUG_MODE:
         logger.debug("Debug mod enabled, skipping actual execution")
         return 0
@@ -203,11 +211,8 @@ def execute_with_output(args, print_output=False, use_nice=True) -> Tuple[int, s
 def execute_with_callback(
     args: List[str], callback: Callable[[str], None], use_nice: bool = True
 ) -> int:
-    if use_nice and nice_exe:
-        a = [nice_exe]
-        a.extend(args)
-        args = a
-    logger.debug("Executing: {}".format(args))
+    args = maybe_add_nice(args, use_nice)
+    log_command(args, False)
     with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
         output = StringIO()
 
