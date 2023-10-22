@@ -6,11 +6,11 @@ It also simplifies some common tasks such as converting files by wrapping comple
 
 For example, to convert a file to H.265/HEVC with GPU acceleration and AAC audio, plus scale it down to 480p, you would normally have to run a command like:
 ```sh
-ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i test.mp4 -vf scale=-1:480 -c:v h264_nvenc -preset fast -c:a aac -c:s copy -map 0 out.mp4
+ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i test.mp4 -vf scale=-1:480 -c:v hevc_nvenc -preset fast -c:a aac -c:s copy -map 0 out.mp4
 ```
 Using this toolkit, it would be this instead:
 ```sh
-manage-media convert --hw-nv --scale 480 --vc h264 test.mp4 out.mp4
+manage-media convert --hw-nv --scale 480 --vc h265 test.mp4 out.mp4
 ```
 
 ## Installation

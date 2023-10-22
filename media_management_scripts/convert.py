@@ -16,6 +16,7 @@ from media_management_scripts.support.executables import (
     execute_with_output,
     ffmpeg,
     nice_exe,
+    log_command,
 )
 from media_management_scripts.support.files import (
     check_exists,
@@ -70,6 +71,7 @@ def convert_with_config(
     metadata=None,
     mappings=None,
     use_nice=True,
+    dry_run=False,
 ):
     """
 
@@ -218,7 +220,10 @@ def convert_with_config(
         args.extend(["-metadata:s:v:0", "ripped=true"])
     args.append(output)
 
-    return execute(args, print_output)
+    if dry_run:
+        log_command(args, True)
+    else:
+        return execute(args, print_output)
 
 
 def create_remux_args(
