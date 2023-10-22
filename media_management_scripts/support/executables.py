@@ -156,7 +156,9 @@ def execute_with_timeout(
 
 
 def execute_with_output(args, print_output=False, use_nice=True) -> Tuple[int, str]:
-    if use_nice and nice_exe:
+    if not args:
+        raise ValueError("No args provided")
+    if use_nice and nice_exe and args[0] != nice_exe:
         a = [nice_exe]
         a.extend(args)
         args = a
