@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
 import shutil
+import sys
 from typing import List, Tuple, Callable
 from media_management_scripts.support.files import check_exists, create_dirs
+from media_management_scripts.utils import to_int
 
 
 class SubCommand(metaclass=ABCMeta):
@@ -25,22 +27,25 @@ class SubCommand(metaclass=ABCMeta):
     def execute(self, ns):
         self.dry_run = ns["dry_run"]
         self.ns = ns
-        self.subexecute(ns)
+        result = self.subexecute(ns)
+        result = to_int(result)
+        if result is not None and result != 0:
+            sys.exit(int(result))
 
-    def _move(self, src, dst, overwrite=False):
-        if self.dry_run:
+    def _move(self, src, dst, overwrite=False, print_output=False):
+        if self.dry_run or print_output:
             print("Move: {}=>{}".format(src, dst))
-        else:
+        if not self.dry_run:
             if not overwrite and check_exists(dst, log=self.dry_run):
                 return False
             create_dirs(dst)
             shutil.move(src, dst)
             return True
 
-    def _copy(self, src, dst, overwrite=False):
-        if self.dry_run:
+    def _copy(self, src, dst, overwrite=False, print_output=False):
+        if self.dry_run or print_output:
             print("Copy: {}=>{}".format(src, dst))
-        else:
+        if not self.dry_run:
             if not overwrite and check_exists(dst, log=self.dry_run):
                 return False
             create_dirs(dst)
@@ -151,6 +156,7 @@ __all__ = [
     "executables",
     "find_episodes",
     "itunes",
+    "map_rename",
     "metadata",
     "metadata_compare",
     "movie_rename",
