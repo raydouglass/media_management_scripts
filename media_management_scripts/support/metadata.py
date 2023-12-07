@@ -204,6 +204,7 @@ class Stream:
                     parts = [float(s) for s in self.tags[tag].split(":")]
                     self.duration = parts[0] * 60 * 60 + parts[1] * 60 + parts[2]
         if self.is_video():
+            self.level = stream.get("level", None)
             self.bit_depth = None
             if self.codec in ("h264", "hevc"):
                 pix_fmt = stream.get("pix_fmt", None)
@@ -249,6 +250,7 @@ class Stream:
             d["width"] = self.width
             d["height"] = self.height
             d["bit_depth"] = self.bit_depth
+            d["level"] = self.level
         d["tags"] = self.tags
         return d
 
