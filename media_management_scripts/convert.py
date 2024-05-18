@@ -58,8 +58,10 @@ def auto_bitrate_from_config(resolution, convert_config):
         return convert_config.auto_bitrate_720
     elif resolution == Resolution.HIGH_DEF:
         return convert_config.auto_bitrate_1080
+    elif resolution == Resolution.ULTRA_HIGH_DEF:
+        return convert_config.auto_bitrate_2160
     else:
-        raise Exception("Not auto bitrate for {}".format(resolution))
+        raise Exception("No auto bitrate for {}".format(resolution))
 
 
 def convert_with_config(
@@ -99,23 +101,6 @@ def convert_with_config(
             "Metadata provided without interlace report, but convert requires deinterlace checks"
         )
 
-    if (
-        metadata.resolution
-        not in (
-            Resolution.LOW_DEF,
-            Resolution.STANDARD_DEF,
-            Resolution.MEDIUM_DEF,
-            Resolution.HIGH_DEF,
-        )
-        and not config.scale
-    ):
-        print(
-            "{}: Resolution not supported for conversion: {}".format(
-                input, metadata.resolution
-            )
-        )
-        # TODO Handle converting 4k content in H.265/HVEC
-        return -2
     if use_nice and nice_exe:
         args = [nice_exe, ffmpeg()]
     else:
@@ -166,6 +151,8 @@ def convert_with_config(
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
         if config.bitrate == "auto":
             bitrate = auto_bitrate_from_config(metadata.resolution, config)
+        else:
+            bitrate = int(config.bitrate)
         params = "vbv-maxrate={}:vbv-bufsize={}:crf-max=25:qpmax=34".format(
             str(bitrate), str(bitrate * 2)
         )

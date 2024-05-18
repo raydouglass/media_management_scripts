@@ -102,6 +102,7 @@ class ConvertConfig(NamedTuple):
     auto_bitrate_480: int = Resolution.STANDARD_DEF.auto_bitrate
     auto_bitrate_720: int = Resolution.MEDIUM_DEF.auto_bitrate
     auto_bitrate_1080: int = Resolution.HIGH_DEF.auto_bitrate
+    auto_bitrate_2160: int = Resolution.ULTRA_HIGH_DEF.auto_bitrate
     scale: Optional[int] = None
     video_codec: str = VideoCodec.H264.ffmpeg_encoder_name
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
