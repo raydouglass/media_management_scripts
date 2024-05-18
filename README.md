@@ -6,7 +6,7 @@ It also simplifies some common tasks such as converting files by wrapping comple
 
 For example, to convert a file to H.265/HEVC with GPU acceleration and AAC audio, plus scale it down to 480p, you would normally have to run a command like:
 ```sh
-ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i test.mp4 -vf scale=-1:480 -c:v hevc_nvenc -preset fast -c:a aac -c:s copy -map 0 out.mp4
+ffmpeg -hwaccel cuda -hwaccel_output_format cuda -i test.mp4 -vf scale=-1:480 -c:v hevc_nvenc -preset fast -c:a aac -c:s copy -map 0:v -map 0:a -map 0:s out.mp4
 ```
 Using this toolkit, it would be this instead:
 ```sh
@@ -118,13 +118,30 @@ The source file is left intact.
     - `manage-media convert --vc copy --ac copy --start 3m45s --end 10m00s <input> <output>`
 
 ### Hardware Acceleration
-If your `ffmpeg` [supports it](https://trac.ffmpeg.org/wiki/HWAccelIntro#CUDANVENCNVDEC), you can use NVIDIA GPU hardware acceleration to speed up the conversion. You can see the supported codecs for decoding & encoding for each GPU [here](https://developer.nvidia.com/video-encode-and-decode-gpu-support-matrix-new).
+
+Your `ffmpeg` must support the hardware acceleration you want to use. You can check this with `ffmpeg -hwaccels`. If you see `cuda` or `videotoolbox`, then you can use the hardware acceleration below.
+
+Using this can speed up the conversion process significantly!
+
+#### NVIDIA (`cuda`)
+
+If your `ffmpeg` [supports it](https://trac.ffmpeg.org/wiki/HWAccelIntro#CUDANVENCNVDEC) and you have an NVIDIA GPU, you can use hardware acceleration to speed up the conversion. You can see the supported codecs for decoding & encoding for each GPU [here](https://developer.nvidia.com/video-encode-and-decode-gpu-support-matrix-new).
 
 To use this, just add `--hardware-nvidia` or `--hw-nv` to the `manage-media convert` command.
 
 ```
 manage-media convert --hw-nv --video-codec hevc --audio-codec ac3 <input> <output>
 ```
+
+#### Apple (`videotoolbox`)
+
+If your `ffmpeg` [supports it](https://trac.ffmpeg.org/wiki/HWAccelIntro#VideoToolbox) and you are using a Mac with Apple Silicon, you can use hardware acceleration for encoding by adding `--hardware-apple` or `--hw-apple` to the `manage-media convert` command.
+
+```
+manage-media convert --hw-apple --video-codec h264 --audio-codec copy <input> <output>
+```
+
+Note: this might also work onn Intel Macs, but it is untested.
 
 ## metadata
 

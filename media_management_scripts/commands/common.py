@@ -165,6 +165,16 @@ convert_parent_parser.add_argument(
     help="Use NVIDIA hardware acceleration for decoding and encoding",
 )
 
+convert_parent_parser.add_argument(
+    "--hardware-apple",
+    "--hw-apple",
+    dest="hardware_apple",
+    default=False,
+    action="store_const",
+    const=True,
+    help="Use Apple Silicon hardware acceleration for encoding",
+)
+
 __all__ = [
     # Parsers
     "parent_parser",
