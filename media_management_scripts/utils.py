@@ -107,6 +107,11 @@ class ConvertConfig(NamedTuple):
     video_codec: str = VideoCodec.H264.ffmpeg_encoder_name
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
     hardware_nvidia: bool = False
+    hardware_apple: bool = False
+
+    @property
+    def hardware_accelerated(self):
+        return self.hardware_nvidia or self.hardware_apple
 
 
 def convert_config_from_config_section(

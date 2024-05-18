@@ -47,7 +47,7 @@ def execute(args, print_output=True):
     return ret
 
 
-def auto_bitrate_from_config(resolution, convert_config):
+def auto_bitrate_from_config(resolution, convert_config: ConvertConfig):
     if convert_config.scale:
         resolution = resolution_name(convert_config.scale)
     if resolution == Resolution.LOW_DEF:
@@ -137,6 +137,13 @@ def convert_with_config(
                 f"Video codec {config.video_codec} not supported by nvidia hardware acceleration"
             )
         args.extend(["-c:v", vc])
+    elif config.hardware_apple:
+        vc = VideoCodec.from_code_name(config.video_codec).apple_codec_name
+        if not vc:
+            raise Exception(
+                f"Video codec {config.video_codec} not supported by nvidia hardware acceleration"
+            )
+        args.extend(["-c:v", vc])
     else:
         args.extend(["-c:v", config.video_codec])
     crf = config.crf
@@ -145,7 +152,7 @@ def convert_with_config(
         VideoCodec.H264.equals(config.video_codec)
         and config.bitrate is not None
         and config.bitrate != "disabled"
-        and not config.hardware_nvidia
+        and not config.hardware_accelerated
     ):
         crf = 1
         # -x264-params vbv-maxrate=1666:vbv-bufsize=3332:crf-max=22:qpmax=34
@@ -157,6 +164,13 @@ def convert_with_config(
             str(bitrate), str(bitrate * 2)
         )
         args.extend(["-x264-params", params])
+    elif (
+        VideoCodec.H264.equals(config.video_codec)
+        and config.bitrate == "auto"
+        and config.hardware_apple
+    ):
+        # TODO this is probably not the best way to do this
+        args.extend(["-constant_bit_rate", "true"])
     elif (
         VideoCodec.H265.equals(config.video_codec)
         and config.bitrate is not None

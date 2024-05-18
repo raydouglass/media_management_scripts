@@ -69,10 +69,10 @@ def resolution_name(height):
 
 
 class VideoCodec(Enum):
-    H264 = ("libx264", ["h264"], "h264_nvenc")
-    H265 = ("libx265", ["hevc", "h265"], "hevc_nvenc")
-    MPEG2 = ("mpeg2video", ["mpeg2video", "mpeg2"], None)
-    COPY = ("copy", ["copy"], "copy")
+    H264 = ("libx264", ["h264"], "h264_nvenc", "h264_videotoolbox")
+    H265 = ("libx265", ["hevc", "h265"], "hevc_nvenc", "hevc_videotoolbox")
+    MPEG2 = ("mpeg2video", ["mpeg2video", "mpeg2"], None, None)
+    COPY = ("copy", ["copy"], "copy", "copy")
 
     @property
     def ffmpeg_encoder_name(self):
@@ -89,6 +89,10 @@ class VideoCodec(Enum):
     @property
     def nvidia_codec_name(self):
         return self.value[2]
+
+    @property
+    def apple_codec_name(self):
+        return self.value[3]
 
     @staticmethod
     def from_code_name(name):
