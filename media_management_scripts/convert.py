@@ -207,7 +207,12 @@ def convert_with_config(
         args.extend(["-c:s", "copy"])
 
     if not mappings:
-        args.extend(["-map", "0"])
+        if metadata.video_streams:
+            args.extend(["-map", "0:v"])
+        if metadata.audio_streams:
+            args.extend(["-map", "0:a"])
+        if metadata.subtitle_streams:
+            args.extend(["-map", "0:s"])
     else:
         for m in mappings:
             if type(m) == int:
