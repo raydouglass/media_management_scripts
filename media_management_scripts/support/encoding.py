@@ -10,7 +10,7 @@ class Resolution(Enum):
     STANDARD_DEF = (720, 480, 1600, "auto_bitrate_480")
     MEDIUM_DEF = (1280, 720, 4500, "auto_bitrate_720")
     HIGH_DEF = (1920, 1080, 8000, "auto_bitrate_1080")
-    ULTRA_HIGH_DEF = (3840, 2160, -1, None)
+    ULTRA_HIGH_DEF = (3840, 2160, 14_500, None)
 
     @property
     def width(self):

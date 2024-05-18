@@ -76,7 +76,13 @@ class Metadata:
 
         if self.video_streams:
             max_height = max(self.video_streams, key=lambda s: s.height or 0).height
-            self.resolution = resolution_name(max_height)
+            max_width = max(self.video_streams, key=lambda s: s.width or 0).width
+            if max_height and max_width:
+                self.resolution = resolution_name(min(max_height, max_width))
+            elif max_height:
+                self.resolution = resolution_name(max_height)
+            elif max_width:
+                self.resolution = resolution_name(max_width)
         else:
             self.resolution = None
 
