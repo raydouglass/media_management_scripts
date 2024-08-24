@@ -8,6 +8,7 @@ from media_management_scripts.support.encoding import (
     DEFAULT_PRESET,
     DEFAULT_CRF,
     Resolution,
+    SubtitleCodec,
     resolution_name,
     VideoCodec,
     AudioCodec,
@@ -204,15 +205,20 @@ def convert_with_config(
             args.extend(["-ac:a:{}".format(index), "8"])
         index += 1
 
-    if config.include_subtitles:
-        args.extend(["-c:s", "copy"])
+    include_subtitles = (
+        config.include_subtitles
+        and config.subtitle_codec != SubtitleCodec.NONE.ffmpeg_codec_name
+    )
+
+    if include_subtitles:
+        args.extend(["-c:s", config.subtitle_codec])
 
     if not mappings:
         if metadata.video_streams:
             args.extend(["-map", "0:v"])
         if metadata.audio_streams:
             args.extend(["-map", "0:a"])
-        if metadata.subtitle_streams:
+        if metadata.subtitle_streams and include_subtitles:
             args.extend(["-map", "0:s"])
     else:
         for m in mappings:

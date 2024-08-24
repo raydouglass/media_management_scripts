@@ -117,6 +117,7 @@ class AudioCodec(Enum):
     AAC = "aac"
     AC3 = "ac3"
     DTS = "dts"
+    FLAC = "flac"
     COPY = "copy"
 
     @property
@@ -203,3 +204,15 @@ class H264Preset(Enum):
             if preset.value == value:
                 return preset
         raise ValueError(f"Invalid preset: {value}")
+
+
+class SubtitleCodec(Enum):
+    COPY = "copy"
+    SRT = "srt"
+    ASS = "ass"
+    WEBVTT = "webvtt"
+    NONE = "none"
+
+    @property
+    def ffmpeg_codec_name(self):
+        return self.value

@@ -4,6 +4,7 @@ from media_management_scripts.support.encoding import (
     DEFAULT_CRF,
     DEFAULT_PRESET,
     Resolution,
+    SubtitleCodec,
     VideoCodec,
     AudioCodec,
 )
@@ -153,6 +154,14 @@ convert_parent_parser.add_argument(
     dest="audio_codec",
     default=AudioCodec.AAC.ffmpeg_codec_name,
     choices=[ac.ffmpeg_codec_name for ac in AudioCodec],
+)
+
+convert_parent_parser.add_argument(
+    "--subtitles",
+    "--subs",
+    dest="subtitle_codec",
+    default=SubtitleCodec.COPY.ffmpeg_codec_name,
+    choices=[sc.ffmpeg_codec_name for sc in SubtitleCodec],
 )
 
 convert_parent_parser.add_argument(

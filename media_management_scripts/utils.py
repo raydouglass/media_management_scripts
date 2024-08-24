@@ -2,6 +2,7 @@ from media_management_scripts.support.encoding import (
     DEFAULT_CRF,
     DEFAULT_PRESET,
     Resolution,
+    SubtitleCodec,
     VideoCodec,
     AudioCodec,
 )
@@ -106,6 +107,7 @@ class ConvertConfig(NamedTuple):
     scale: Optional[int] = None
     video_codec: str = VideoCodec.H264.ffmpeg_encoder_name
     audio_codec: str = AudioCodec.AAC.ffmpeg_codec_name
+    subtitle_codec: str = SubtitleCodec.COPY.ffmpeg_codec_name
     hardware_nvidia: bool = False
     hardware_apple: bool = False
 
